@@ -9,8 +9,10 @@ pub mod services {
     pub mod metadata;
     pub mod playback;
     pub mod playlist;
+    pub mod shortcuts;
     pub mod skin;
     pub mod settings;
+    pub mod tray;
     pub mod window;
 }
 
@@ -300,8 +302,10 @@ pub mod commands {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-        tauri::Builder::default()
+    tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(|app| {
             let app_data_dir = app
                 .path()
@@ -309,6 +313,7 @@ pub fn run() {
                 .map_err(|err| Box::<dyn std::error::Error>::from(err))?;
             let state = AppState::new(app_data_dir)?;
             app.manage(state);
+            services::tray::setup_tray(app.handle())?;
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(
