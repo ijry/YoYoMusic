@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -108,4 +110,44 @@ pub struct SkinPackage {
     pub manifest_path: String,
     pub theme_path: String,
     pub asset_root: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EqualizerSettings {
+    pub enabled: bool,
+    pub preset: String,
+    pub bands: Vec<f32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppSettings {
+    pub default_skin: String,
+    pub shortcuts: HashMap<String, String>,
+    pub enrichment_enabled: bool,
+    pub cache_retention_days: u32,
+    pub recent_playlists: Vec<String>,
+    pub restore_session: bool,
+    pub visualization_mode: String,
+    pub equalizer: EqualizerSettings,
+}
+
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            default_skin: "default".into(),
+            shortcuts: HashMap::new(),
+            enrichment_enabled: true,
+            cache_retention_days: 30,
+            recent_playlists: vec![],
+            restore_session: true,
+            visualization_mode: "spectrum".into(),
+            equalizer: EqualizerSettings {
+                enabled: false,
+                preset: "flat".into(),
+                bands: vec![0.0; 10],
+            },
+        }
+    }
 }
