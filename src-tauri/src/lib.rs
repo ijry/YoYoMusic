@@ -3,6 +3,7 @@ pub mod models;
 pub mod state;
 
 pub mod services {
+    pub mod playback;
     pub mod playlist;
     pub mod settings;
 }
@@ -13,7 +14,11 @@ use tauri::Manager;
 pub mod commands {
     use std::path::PathBuf;
 
-    use crate::{errors, models::{AppSettings, PlayMode, PlaylistSnapshot}, state::AppState};
+    use crate::{
+        errors,
+        models::{AppSettings, PlayMode, PlaybackState, PlaylistSnapshot},
+        state::AppState,
+    };
 
     #[tauri::command]
     pub fn get_playlist(
@@ -65,12 +70,154 @@ pub mod commands {
     pub fn set_play_mode(
         play_mode: PlayMode,
         state: tauri::State<'_, AppState>,
-    ) -> Result<PlaylistSnapshot, errors::AppError> {
+    ) -> Result<PlaybackState, errors::AppError> {
         let mut playlist = state
             .playlist
             .lock()
             .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-        Ok(playlist.set_play_mode(play_mode))
+        playlist.set_play_mode(play_mode.clone());
+        drop(playlist);
+
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.set_play_mode(play_mode))
+    }
+
+    #[tauri::command]
+    pub fn get_playback_state(
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.current_state())
+    }
+
+    #[tauri::command]
+    pub fn play_track(
+        track_id: String,
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let track = {
+            let playlist = state
+                .playlist
+                .lock()
+                .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+            playlist
+                .track_by_id(&track_id)
+                .ok_or_else(|| errors::AppError::FileMissing(track_id.clone()))?
+        };
+
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.play(track))
+    }
+
+    #[tauri::command]
+    pub fn toggle_playback(
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.toggle())
+    }
+
+    #[tauri::command]
+    pub fn pause_playback(
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.pause())
+    }
+
+    #[tauri::command]
+    pub fn next_track(state: tauri::State<'_, AppState>) -> Result<PlaybackState, errors::AppError> {
+        let track = {
+            let mut playlist = state
+                .playlist
+                .lock()
+                .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+            playlist.next_track()
+        };
+
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+
+        Ok(match track {
+            Some(track) => playback.play(track),
+            None => playback.current_state(),
+        })
+    }
+
+    #[tauri::command]
+    pub fn previous_track(
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let track = {
+            let mut playlist = state
+                .playlist
+                .lock()
+                .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+            playlist.previous_track()
+        };
+
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+
+        Ok(match track {
+            Some(track) => playback.play(track),
+            None => playback.current_state(),
+        })
+    }
+
+    #[tauri::command]
+    pub fn seek(
+        position_ms: u64,
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.seek(position_ms))
+    }
+
+    #[tauri::command]
+    pub fn set_volume(
+        value: f32,
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.set_volume(value))
+    }
+
+    #[tauri::command]
+    pub fn set_muted(
+        value: bool,
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let mut playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.set_muted(value))
     }
 
     #[tauri::command]
@@ -121,6 +268,15 @@ pub fn run() {
             commands::remove_track,
             commands::clear_playlist,
             commands::set_play_mode,
+            commands::get_playback_state,
+            commands::play_track,
+            commands::toggle_playback,
+            commands::pause_playback,
+            commands::next_track,
+            commands::previous_track,
+            commands::seek,
+            commands::set_volume,
+            commands::set_muted,
             commands::load_settings,
             commands::save_settings
         ])

@@ -3,10 +3,11 @@ use std::{path::PathBuf, sync::Mutex};
 use crate::{
     errors::AppError,
     models::AppSettings,
-    services::{playlist::PlaylistService, settings::SettingsService},
+    services::{playback::PlaybackService, playlist::PlaylistService, settings::SettingsService},
 };
 
 pub struct AppState {
+    pub playback: Mutex<PlaybackService>,
     pub playlist: Mutex<PlaylistService>,
     pub settings_service: SettingsService,
     pub settings: Mutex<AppSettings>,
@@ -18,6 +19,7 @@ impl AppState {
         let settings = settings_service.load()?;
 
         Ok(Self {
+            playback: Mutex::new(PlaybackService::new_null()),
             playlist: Mutex::new(PlaylistService::default()),
             settings_service,
             settings: Mutex::new(settings),

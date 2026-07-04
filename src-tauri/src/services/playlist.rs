@@ -88,6 +88,43 @@ impl PlaylistService {
         self.snapshot()
     }
 
+    pub fn track_by_id(&self, track_id: &str) -> Option<Track> {
+        self.tracks
+            .iter()
+            .find(|track| track.id == track_id)
+            .cloned()
+    }
+
+    pub fn current_track(&self) -> Option<Track> {
+        let track_id = self.playlist.track_ids.get(self.playlist.current_index)?;
+        self.track_by_id(track_id)
+    }
+
+    pub fn next_track(&mut self) -> Option<Track> {
+        if self.playlist.track_ids.is_empty() {
+            return None;
+        }
+
+        self.playlist.current_index = match self.playlist.play_mode {
+            PlayMode::RepeatOne => self.playlist.current_index,
+            _ => (self.playlist.current_index + 1) % self.playlist.track_ids.len(),
+        };
+        self.current_track()
+    }
+
+    pub fn previous_track(&mut self) -> Option<Track> {
+        if self.playlist.track_ids.is_empty() {
+            return None;
+        }
+
+        self.playlist.current_index = if self.playlist.current_index == 0 {
+            self.playlist.track_ids.len() - 1
+        } else {
+            self.playlist.current_index - 1
+        };
+        self.current_track()
+    }
+
     pub fn set_play_mode(&mut self, play_mode: PlayMode) -> PlaylistSnapshot {
         self.playlist.play_mode = play_mode;
         self.snapshot()
