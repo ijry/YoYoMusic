@@ -3,6 +3,8 @@ pub mod models;
 pub mod state;
 
 pub mod services {
+    pub mod artwork;
+    pub mod metadata;
     pub mod playback;
     pub mod playlist;
     pub mod settings;
@@ -17,6 +19,7 @@ pub mod commands {
     use crate::{
         errors,
         models::{AppSettings, PlayMode, PlaybackState, PlaylistSnapshot},
+        services::metadata::apply_tag_edit,
         state::AppState,
     };
 
@@ -221,6 +224,27 @@ pub mod commands {
     }
 
     #[tauri::command]
+    pub fn save_tags(
+        track_id: String,
+        title: String,
+        artist: String,
+        album: String,
+        cover_path: Option<String>,
+        state: tauri::State<'_, AppState>,
+    ) -> Result<crate::models::Track, errors::AppError> {
+        let mut playlist = state
+            .playlist
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        let track = playlist
+            .track_by_id(&track_id)
+            .ok_or_else(|| errors::AppError::FileMissing(track_id.clone()))?;
+        let updated = apply_tag_edit(track, title, artist, album, cover_path)?;
+        playlist.replace_track(updated.clone())?;
+        Ok(updated)
+    }
+
+    #[tauri::command]
     pub fn load_settings(
         state: tauri::State<'_, AppState>,
     ) -> Result<AppSettings, errors::AppError> {
@@ -277,6 +301,7 @@ pub fn run() {
             commands::seek,
             commands::set_volume,
             commands::set_muted,
+            commands::save_tags,
             commands::load_settings,
             commands::save_settings
         ])

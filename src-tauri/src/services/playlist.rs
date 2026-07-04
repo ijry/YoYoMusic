@@ -95,6 +95,16 @@ impl PlaylistService {
             .cloned()
     }
 
+    pub fn replace_track(&mut self, updated: Track) -> Result<PlaylistSnapshot, AppError> {
+        let track = self
+            .tracks
+            .iter_mut()
+            .find(|track| track.id == updated.id)
+            .ok_or_else(|| AppError::FileMissing(updated.id.clone()))?;
+        *track = updated;
+        Ok(self.snapshot())
+    }
+
     pub fn current_track(&self) -> Option<Track> {
         let track_id = self.playlist.track_ids.get(self.playlist.current_index)?;
         self.track_by_id(track_id)
