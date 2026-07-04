@@ -11,6 +11,7 @@ pub mod services {
     pub mod playlist;
     pub mod skin;
     pub mod settings;
+    pub mod window;
 }
 
 use state::AppState;
@@ -25,6 +26,7 @@ pub mod commands {
         services::lyrics::parse_lrc,
         services::metadata::apply_tag_edit,
         services::skin::{validate_skin_package as validate_skin_package_service, SkinManifest},
+        services::window::{open_mini_player_window, toggle_desktop_lyrics_window},
         state::AppState,
     };
 
@@ -265,6 +267,16 @@ pub mod commands {
     }
 
     #[tauri::command]
+    pub async fn open_mini_player(app: tauri::AppHandle) -> Result<String, errors::AppError> {
+        open_mini_player_window(app).await
+    }
+
+    #[tauri::command]
+    pub async fn toggle_desktop_lyrics(app: tauri::AppHandle) -> Result<String, errors::AppError> {
+        toggle_desktop_lyrics_window(app).await
+    }
+
+    #[tauri::command]
     pub fn load_settings(
         state: tauri::State<'_, AppState>,
     ) -> Result<AppSettings, errors::AppError> {
@@ -326,6 +338,8 @@ pub fn run() {
             commands::load_lyrics,
             commands::validate_skin_package,
             commands::apply_skin,
+            commands::open_mini_player,
+            commands::toggle_desktop_lyrics,
             commands::load_settings,
             commands::save_settings
         ])

@@ -248,6 +248,54 @@ input {
   color: var(--color-muted);
 }
 
+.mini-player {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  color: var(--color-text);
+  background: rgba(8, 11, 18, 0.86);
+}
+
+.mini-cover {
+  width: 72px;
+  aspect-ratio: 1;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+}
+
+.mini-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.mini-copy span {
+  color: var(--color-muted);
+}
+
+.desktop-lyrics {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: 18px;
+  color: #fff;
+  background: transparent;
+}
+
+.desktop-lyrics__line {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 4.8rem);
+  font-weight: 800;
+  text-align: center;
+  text-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.9),
+    0 0 24px rgba(49, 214, 163, 0.7);
+}
+
 @media (max-width: 860px) {
   .workspace {
     grid-template-columns: 1fr;
