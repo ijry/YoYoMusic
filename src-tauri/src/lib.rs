@@ -4,6 +4,7 @@ pub mod state;
 
 pub mod services {
     pub mod artwork;
+    pub mod lyrics;
     pub mod metadata;
     pub mod playback;
     pub mod playlist;
@@ -19,6 +20,7 @@ pub mod commands {
     use crate::{
         errors,
         models::{AppSettings, PlayMode, PlaybackState, PlaylistSnapshot},
+        services::lyrics::parse_lrc,
         services::metadata::apply_tag_edit,
         state::AppState,
     };
@@ -245,6 +247,11 @@ pub mod commands {
     }
 
     #[tauri::command]
+    pub fn load_lyrics(contents: String) -> Result<crate::models::LyricsDocument, errors::AppError> {
+        parse_lrc(&contents)
+    }
+
+    #[tauri::command]
     pub fn load_settings(
         state: tauri::State<'_, AppState>,
     ) -> Result<AppSettings, errors::AppError> {
@@ -302,6 +309,7 @@ pub fn run() {
             commands::set_volume,
             commands::set_muted,
             commands::save_tags,
+            commands::load_lyrics,
             commands::load_settings,
             commands::save_settings
         ])
