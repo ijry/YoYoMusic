@@ -3,6 +3,7 @@ pub mod models;
 pub mod state;
 
 pub mod services {
+    pub mod playlist;
     pub mod settings;
 }
 
@@ -10,7 +11,67 @@ use state::AppState;
 use tauri::Manager;
 
 pub mod commands {
-    use crate::{errors, models::AppSettings, state::AppState};
+    use std::path::PathBuf;
+
+    use crate::{errors, models::{AppSettings, PlayMode, PlaylistSnapshot}, state::AppState};
+
+    #[tauri::command]
+    pub fn get_playlist(
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaylistSnapshot, errors::AppError> {
+        let playlist = state
+            .playlist
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playlist.snapshot())
+    }
+
+    #[tauri::command]
+    pub fn add_tracks(
+        paths: Vec<String>,
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaylistSnapshot, errors::AppError> {
+        let mut playlist = state
+            .playlist
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        playlist.add_paths(paths.into_iter().map(PathBuf::from).collect())
+    }
+
+    #[tauri::command]
+    pub fn remove_track(
+        track_id: String,
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaylistSnapshot, errors::AppError> {
+        let mut playlist = state
+            .playlist
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        playlist.remove_track(&track_id)
+    }
+
+    #[tauri::command]
+    pub fn clear_playlist(
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaylistSnapshot, errors::AppError> {
+        let mut playlist = state
+            .playlist
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playlist.clear())
+    }
+
+    #[tauri::command]
+    pub fn set_play_mode(
+        play_mode: PlayMode,
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaylistSnapshot, errors::AppError> {
+        let mut playlist = state
+            .playlist
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playlist.set_play_mode(play_mode))
+    }
 
     #[tauri::command]
     pub fn load_settings(
@@ -55,6 +116,11 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::get_playlist,
+            commands::add_tracks,
+            commands::remove_track,
+            commands::clear_playlist,
+            commands::set_play_mode,
             commands::load_settings,
             commands::save_settings
         ])
