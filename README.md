@@ -36,3 +36,16 @@ npm run tauri build
 ```
 
 更多说明见 [docs/building.md](docs/building.md)。
+
+## 发布验证
+
+本地发布前执行：
+
+```powershell
+npm test
+npm run build
+cargo test --manifest-path src-tauri/Cargo.toml
+npm run tauri build
+```
+
+Windows 安装包可在本机生成；macOS 和 Linux 安装包通过 GitHub Actions 的手动 `Build installers` workflow 生成并验证。

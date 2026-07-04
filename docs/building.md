@@ -37,3 +37,16 @@ Artifacts:
 - `yoyomusic-windows-installers`
 - `yoyomusic-macos-installers`
 - `yoyomusic-linux-installers`
+
+## Release readiness checks
+
+Run these before tagging or publishing an installer:
+
+```powershell
+npm test
+npm run build
+cargo test --manifest-path src-tauri/Cargo.toml
+npm run tauri build
+```
+
+On Windows, `npm run tauri build` produces MSI and NSIS installers under `src-tauri/target/release/bundle/`. macOS and Linux installers are verified from the manual `Build installers` workflow artifacts after a GitHub Actions run completes.
