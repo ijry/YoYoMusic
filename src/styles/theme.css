@@ -1,0 +1,17 @@
+:root {
+  color-scheme: dark;
+  --color-bg: #080b12;
+  --color-surface: rgba(18, 24, 38, 0.86);
+  --color-surface-strong: #151c2d;
+  --color-primary: #31d6a3;
+  --color-accent: #8fd3ff;
+  --color-text: #f8fafc;
+  --color-muted: #9fb0c7;
+  --shadow-panel: 0 24px 70px rgba(0, 0, 0, 0.42);
+  --radius-panel: 28px;
+  font-family:
+    "Poppins",
+    "Noto Sans SC",
+    "Microsoft YaHei",
+    sans-serif;
+}
