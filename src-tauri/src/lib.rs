@@ -4,6 +4,7 @@ pub mod state;
 
 pub mod services {
     pub mod artwork;
+    pub mod enrichment;
     pub mod lyrics;
     pub mod metadata;
     pub mod playback;
@@ -275,7 +276,8 @@ pub mod commands {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+        tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
         .setup(|app| {
             let app_data_dir = app
                 .path()
