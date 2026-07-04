@@ -32,3 +32,7 @@ export function invokeCommand<T>(
 ): Promise<T> {
   return invoke<T>(command, payload);
 }
+
+export function isTauriRuntime() {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+}

@@ -1,10 +1,14 @@
-use std::path::{Path, PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use uuid::Uuid;
 
 use crate::{
     errors::AppError,
     models::{PlayMode, Playlist, PlaylistSnapshot, TagStatus, Track, TrackStatus},
+    services::metadata::read_track_metadata,
 };
 
 #[derive(Debug)]
@@ -37,28 +41,19 @@ impl PlaylistService {
     }
 
     pub fn add_paths(&mut self, paths: Vec<PathBuf>) -> Result<PlaylistSnapshot, AppError> {
-        for path in paths {
-            if !is_supported_audio_path(&path) {
-                continue;
-            }
-
+        for path in collect_audio_paths(paths) {
             let id = Uuid::new_v4().to_string();
-            let title = path
-                .file_stem()
-                .and_then(|value| value.to_str())
-                .filter(|value| !value.trim().is_empty())
-                .unwrap_or("未知歌曲")
-                .to_string();
+            let metadata = read_track_metadata(&path);
 
             self.playlist.track_ids.push(id.clone());
             self.tracks.push(Track {
                 id,
                 file_path: path.to_string_lossy().to_string(),
-                title,
-                artist: String::new(),
-                album: String::new(),
-                duration_ms: 0,
-                cover_art_ref: None,
+                title: metadata.title,
+                artist: metadata.artist,
+                album: metadata.album,
+                duration_ms: metadata.duration_ms,
+                cover_art_ref: metadata.cover_art_ref,
                 lyrics_ref: None,
                 tag_status: TagStatus::Clean,
                 status: TrackStatus::Ready,
@@ -93,6 +88,16 @@ impl PlaylistService {
             .iter()
             .find(|track| track.id == track_id)
             .cloned()
+    }
+
+    pub fn select_track(&mut self, track_id: &str) -> Option<Track> {
+        let index = self
+            .playlist
+            .track_ids
+            .iter()
+            .position(|id| id == track_id)?;
+        self.playlist.current_index = index;
+        self.track_by_id(track_id)
     }
 
     pub fn replace_track(&mut self, updated: Track) -> Result<PlaylistSnapshot, AppError> {
@@ -151,4 +156,28 @@ pub fn is_supported_audio_path(path: &Path) -> bool {
             )
         })
         .unwrap_or(false)
+}
+
+fn collect_audio_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut collected = Vec::new();
+    for path in paths {
+        collect_audio_path(path, &mut collected);
+    }
+    collected.sort();
+    collected.dedup();
+    collected
+}
+
+fn collect_audio_path(path: PathBuf, collected: &mut Vec<PathBuf>) {
+    if path.is_dir() {
+        let Ok(entries) = fs::read_dir(path) else {
+            return;
+        };
+
+        for entry in entries.flatten() {
+            collect_audio_path(entry.path(), collected);
+        }
+    } else if is_supported_audio_path(&path) {
+        collected.push(path);
+    }
 }

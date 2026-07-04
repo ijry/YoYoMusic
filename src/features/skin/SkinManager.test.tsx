@@ -16,6 +16,9 @@ describe("SkinManager", () => {
       />,
     );
 
+    await user.click(screen.getByRole("button", { name: "预览 怀旧经典" }));
+    expect(screen.getByText("预览中")).toBeInTheDocument();
+
     await user.click(screen.getByRole("button", { name: "应用 怀旧经典" }));
 
     expect(onApply).toHaveBeenCalledWith("classic");

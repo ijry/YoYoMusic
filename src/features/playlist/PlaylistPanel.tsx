@@ -5,9 +5,20 @@ interface PlaylistPanelProps {
   currentTrackId: string | null;
   onPlay: (trackId: string) => void;
   onRemove: (trackId: string) => void;
+  onAddFiles?: () => void;
+  onAddFolder?: () => void;
+  onClear?: () => void;
 }
 
-export function PlaylistPanel({ tracks, currentTrackId, onPlay, onRemove }: PlaylistPanelProps) {
+export function PlaylistPanel({
+  tracks,
+  currentTrackId,
+  onPlay,
+  onRemove,
+  onAddFiles,
+  onAddFolder,
+  onClear,
+}: PlaylistPanelProps) {
   return (
     <section className="playlist-panel" aria-labelledby="playlist-title">
       <div className="panel-heading">
@@ -16,6 +27,18 @@ export function PlaylistPanel({ tracks, currentTrackId, onPlay, onRemove }: Play
           <h2 id="playlist-title">当前播放列表</h2>
         </div>
         <span>{tracks.length} 首</span>
+      </div>
+
+      <div className="playlist-actions" aria-label="播放列表操作">
+        <button type="button" onClick={onAddFiles}>
+          添加文件
+        </button>
+        <button type="button" onClick={onAddFolder}>
+          添加文件夹
+        </button>
+        <button type="button" onClick={onClear} disabled={tracks.length === 0}>
+          清空
+        </button>
       </div>
 
       {tracks.length === 0 ? (

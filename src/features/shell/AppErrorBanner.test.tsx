@@ -8,4 +8,10 @@ describe("AppErrorBanner", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("文件丢失：a.mp3");
   });
+
+  it("renders preformatted string errors", () => {
+    render(<AppErrorBanner error="导入失败" />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("导入失败");
+  });
 });

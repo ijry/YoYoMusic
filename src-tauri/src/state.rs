@@ -19,7 +19,7 @@ impl AppState {
         let settings = settings_service.load()?;
 
         Ok(Self {
-            playback: Mutex::new(PlaybackService::new_null()),
+            playback: Mutex::new(PlaybackService::new_best_effort()),
             playlist: Mutex::new(PlaylistService::default()),
             settings_service,
             settings: Mutex::new(settings),

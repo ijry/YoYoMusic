@@ -29,7 +29,11 @@ async fn open_or_focus_window(
     }
 
     let mut builder = WebviewWindowBuilder::new(&app, label, WebviewUrl::App(route.into()))
-        .title(if lyrics_window { "桌面歌词" } else { "悠悠乐听迷你模式" })
+        .title(if lyrics_window {
+            "桌面歌词"
+        } else {
+            "悠悠乐听迷你模式"
+        })
         .always_on_top(true)
         .resizable(!lyrics_window);
 

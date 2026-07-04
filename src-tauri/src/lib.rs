@@ -9,9 +9,9 @@ pub mod services {
     pub mod metadata;
     pub mod playback;
     pub mod playlist;
+    pub mod settings;
     pub mod shortcuts;
     pub mod skin;
-    pub mod settings;
     pub mod tray;
     pub mod window;
 }
@@ -114,12 +114,12 @@ pub mod commands {
         state: tauri::State<'_, AppState>,
     ) -> Result<PlaybackState, errors::AppError> {
         let track = {
-            let playlist = state
+            let mut playlist = state
                 .playlist
                 .lock()
                 .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
             playlist
-                .track_by_id(&track_id)
+                .select_track(&track_id)
                 .ok_or_else(|| errors::AppError::FileMissing(track_id.clone()))?
         };
 
@@ -127,7 +127,7 @@ pub mod commands {
             .playback
             .lock()
             .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-        Ok(playback.play(track))
+        playback.play(track)
     }
 
     #[tauri::command]
@@ -153,7 +153,9 @@ pub mod commands {
     }
 
     #[tauri::command]
-    pub fn next_track(state: tauri::State<'_, AppState>) -> Result<PlaybackState, errors::AppError> {
+    pub fn next_track(
+        state: tauri::State<'_, AppState>,
+    ) -> Result<PlaybackState, errors::AppError> {
         let track = {
             let mut playlist = state
                 .playlist
@@ -168,7 +170,7 @@ pub mod commands {
             .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
 
         Ok(match track {
-            Some(track) => playback.play(track),
+            Some(track) => playback.play(track)?,
             None => playback.current_state(),
         })
     }
@@ -191,7 +193,7 @@ pub mod commands {
             .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
 
         Ok(match track {
-            Some(track) => playback.play(track),
+            Some(track) => playback.play(track)?,
             None => playback.current_state(),
         })
     }
@@ -205,7 +207,7 @@ pub mod commands {
             .playback
             .lock()
             .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-        Ok(playback.seek(position_ms))
+        playback.seek(position_ms)
     }
 
     #[tauri::command]
@@ -254,7 +256,9 @@ pub mod commands {
     }
 
     #[tauri::command]
-    pub fn load_lyrics(contents: String) -> Result<crate::models::LyricsDocument, errors::AppError> {
+    pub fn load_lyrics(
+        contents: String,
+    ) -> Result<crate::models::LyricsDocument, errors::AppError> {
         parse_lrc(&contents)
     }
 
@@ -304,6 +308,7 @@ pub mod commands {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(|app| {

@@ -7,8 +7,9 @@ use tauri::{
 use crate::errors::AppError;
 
 pub fn setup_tray(app: &AppHandle) -> Result<(), AppError> {
-    let toggle_playback = MenuItem::with_id(app, "toggle_playback", "播放/暂停", true, None::<&str>)
-        .map_err(|err| AppError::StorageFailed(err.to_string()))?;
+    let toggle_playback =
+        MenuItem::with_id(app, "toggle_playback", "播放/暂停", true, None::<&str>)
+            .map_err(|err| AppError::StorageFailed(err.to_string()))?;
     let previous_track = MenuItem::with_id(app, "previous_track", "上一首", true, None::<&str>)
         .map_err(|err| AppError::StorageFailed(err.to_string()))?;
     let next_track = MenuItem::with_id(app, "next_track", "下一首", true, None::<&str>)

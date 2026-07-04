@@ -2,7 +2,7 @@ import type { AppErrorPayload } from "../../shared/errors";
 import { mapAppError } from "../../shared/errors";
 
 interface AppErrorBannerProps {
-  error: AppErrorPayload | null;
+  error: AppErrorPayload | string | null;
 }
 
 export function AppErrorBanner({ error }: AppErrorBannerProps) {
@@ -10,7 +10,7 @@ export function AppErrorBanner({ error }: AppErrorBannerProps) {
 
   return (
     <div className="app-error-banner" role="alert">
-      {mapAppError(error)}
+      {typeof error === "string" ? error : mapAppError(error)}
     </div>
   );
 }

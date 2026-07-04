@@ -24,6 +24,11 @@ export interface Playlist {
   playMode: PlayMode;
 }
 
+export interface PlaylistSnapshot {
+  playlist: Playlist;
+  tracks: Track[];
+}
+
 export interface PlaybackState {
   trackId: string | null;
   positionMs: number;
