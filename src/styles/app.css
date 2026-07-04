@@ -248,6 +248,16 @@ input {
   color: var(--color-muted);
 }
 
+.app-error-banner,
+.error-text {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 118, 118, 0.35);
+  border-radius: 16px;
+  color: #ffd6d6;
+  background: rgba(130, 24, 26, 0.32);
+}
+
 .mini-player {
   min-height: 100vh;
   display: grid;

@@ -2,6 +2,7 @@ import "./styles/theme.css";
 import "./styles/app.css";
 import { PlayerControls } from "./features/player/PlayerControls";
 import { PlaylistPanel } from "./features/playlist/PlaylistPanel";
+import { AppErrorBanner } from "./features/shell/AppErrorBanner";
 import type { CommandName, CommandPayload } from "./shared/tauri";
 import type { PlaybackState, Track } from "./shared/types";
 
@@ -50,6 +51,8 @@ export default function App() {
             <button type="button">迷你模式</button>
           </nav>
         </header>
+
+        <AppErrorBanner error={null} />
 
         <div className="workspace">
           <PlaylistPanel
