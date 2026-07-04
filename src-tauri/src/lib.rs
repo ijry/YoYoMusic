@@ -9,6 +9,7 @@ pub mod services {
     pub mod metadata;
     pub mod playback;
     pub mod playlist;
+    pub mod skin;
     pub mod settings;
 }
 
@@ -23,6 +24,7 @@ pub mod commands {
         models::{AppSettings, PlayMode, PlaybackState, PlaylistSnapshot},
         services::lyrics::parse_lrc,
         services::metadata::apply_tag_edit,
+        services::skin::{validate_skin_package as validate_skin_package_service, SkinManifest},
         state::AppState,
     };
 
@@ -253,6 +255,16 @@ pub mod commands {
     }
 
     #[tauri::command]
+    pub fn validate_skin_package(path: String) -> Result<SkinManifest, errors::AppError> {
+        validate_skin_package_service(PathBuf::from(path))
+    }
+
+    #[tauri::command]
+    pub fn apply_skin(skin_id: String) -> Result<String, errors::AppError> {
+        Ok(skin_id)
+    }
+
+    #[tauri::command]
     pub fn load_settings(
         state: tauri::State<'_, AppState>,
     ) -> Result<AppSettings, errors::AppError> {
@@ -312,6 +324,8 @@ pub fn run() {
             commands::set_muted,
             commands::save_tags,
             commands::load_lyrics,
+            commands::validate_skin_package,
+            commands::apply_skin,
             commands::load_settings,
             commands::save_settings
         ])
