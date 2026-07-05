@@ -50,3 +50,11 @@ npm run tauri build
 ```
 
 On Windows, `npm run tauri build` produces MSI and NSIS installers under `src-tauri/target/release/bundle/`. macOS and Linux installers are verified from the manual `Build installers` workflow artifacts after a GitHub Actions run completes.
+
+Autoplay smoke check:
+
+1. Add at least two local audio files.
+2. Set play mode to `顺序播放` and play the first track.
+3. Wait for the first track to finish and confirm the second track starts automatically.
+4. Set play mode to `列表循环` and confirm the final track wraps to the first track.
+5. Open mini mode and confirm it follows automatic track changes.
