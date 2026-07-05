@@ -18,9 +18,9 @@ export function ClassicBlueSilverLayout(props: PlayerLayoutProps) {
         <DeviceShellHardware variant="classic" />
         <header className="title-bar skin-title skin-title--classic device-shell__header">
           <AppTitle
-            eyebrow="Classic Blue Silver Player"
-            model="MODEL YB-01"
-            serial="Blue Silver Separate Console"
+            eyebrow="本地音乐播放器"
+            model="经典蓝银分体机"
+            serial="蓝银经典皮肤"
           />
           <TitleActions {...props} />
         </header>
@@ -28,36 +28,36 @@ export function ClassicBlueSilverLayout(props: PlayerLayoutProps) {
         <div className="skin-grid skin-grid--classic">
           <PlaylistBlock
             {...props}
-            moduleLabel="曲目仓"
-            eyebrow="Drawer Playlist"
+            moduleLabel="播放列表"
+            eyebrow="本地曲目"
             moduleClassName="device-module--classic-playlist"
           />
           <div className="classic-center-deck">
             <NowPlayingBlock
               {...props}
               variant="classic"
-              moduleLabel="状态窗"
-              eyebrow="Blue Backlit Display"
+              moduleLabel="正在播放"
+              eyebrow="歌曲信息"
               moduleClassName="device-module--classic-status"
             />
             <HeroVisualization
               {...props}
-              moduleLabel="主控舱"
-              eyebrow="Spectrum Bridge"
+              moduleLabel="频谱可视化"
+              eyebrow="音乐动态"
               moduleClassName="device-module--classic-visualization"
             />
           </div>
           <FeatureSidebar
             {...props}
-            moduleLabel="功能仓"
-            eyebrow="Expansion Bay"
+            moduleLabel="功能面板"
+            eyebrow="歌词 / 皮肤 / 设置"
             moduleClassName="device-module--classic-feature"
           />
         </div>
         <ControlsBlock
           {...props}
-          moduleLabel="控制台"
-          eyebrow="Mechanical Transport"
+          moduleLabel="播放控制"
+          eyebrow="播放 / 进度 / 音量"
           moduleClassName="device-module--classic-controls"
         />
       </section>

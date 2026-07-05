@@ -7,10 +7,25 @@ it("renders the default classic layout skin landmarks", () => {
 
   expect(container.querySelector(".skin-layout--classic-blue-silver")).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "悠悠乐听" })).toBeInTheDocument();
+  expect(screen.getByText("本地音乐播放器")).toBeInTheDocument();
+  expect(screen.getByText("经典蓝银分体机")).toBeInTheDocument();
+  expect(screen.getByText("蓝银经典皮肤")).toBeInTheDocument();
+  expect(screen.getAllByText("正在播放").length).toBeGreaterThanOrEqual(1);
+  expect(screen.getByText("就绪")).toBeInTheDocument();
   expect(screen.getByRole("region", { name: "当前播放列表" })).toBeInTheDocument();
   expect(screen.getByRole("region", { name: "当前播放" })).toBeInTheDocument();
   expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
   expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
+
+  const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
+  expect(within(windowActions).getByRole("button", { name: "皮肤" })).toBeInTheDocument();
+  expect(within(windowActions).getByRole("button", { name: "设置" })).toBeInTheDocument();
+  expect(within(windowActions).getByRole("button", { name: "迷你" })).toBeInTheDocument();
+  expect(within(windowActions).getByRole("button", { name: "桌面歌词" })).toBeInTheDocument();
+  expect(screen.queryByText("SKN")).not.toBeInTheDocument();
+  expect(screen.queryByText("CFG")).not.toBeInTheDocument();
+  expect(screen.queryByText("MINI")).not.toBeInTheDocument();
+  expect(screen.queryByText("LRC")).not.toBeInTheDocument();
 
   const controls = screen.getByRole("region", { name: "播放控制" });
   expect(within(controls).getByRole("button", { name: "播放" })).toBeInTheDocument();

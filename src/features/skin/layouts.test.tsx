@@ -9,7 +9,7 @@ const machineLabels: Record<
 > = {
   "classic-blue-silver": {
     shellClass: "device-shell--classic",
-    labels: ["主控舱", "曲目仓", "状态窗", "功能仓", "控制台"],
+    labels: ["频谱可视化", "播放列表", "正在播放", "功能面板", "播放控制"],
     hardware: [
       { selector: ".device-shell__split-rail", count: 2 },
       { selector: ".device-shell__center-seam", count: 1 },
@@ -143,7 +143,7 @@ describe("layout skins", () => {
 
     expect(container.querySelector(`.${expected.shellClass}`)).toBeInTheDocument();
     expected.labels.forEach((label) => {
-      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     });
 
     expect(screen.getByRole("heading", { name: "悠悠乐听" })).toBeInTheDocument();
@@ -165,6 +165,11 @@ describe("layout skins", () => {
     expect(container.querySelectorAll(".device-module__rivet")).toHaveLength(10);
     expect(container.querySelector(".title-status-cluster")).toBeInTheDocument();
     expect(container.querySelectorAll(".title-action-button")).toHaveLength(4);
+    expect(container.querySelector(".title-action-button__code")).not.toBeInTheDocument();
+    expect(screen.queryByText("SKN")).not.toBeInTheDocument();
+    expect(screen.queryByText("CFG")).not.toBeInTheDocument();
+    expect(screen.queryByText("MINI")).not.toBeInTheDocument();
+    expect(screen.queryByText("LRC")).not.toBeInTheDocument();
     expect(container.querySelector(".feature-tab__slot")).toBeInTheDocument();
 
     const controls = screen.getByRole("region", { name: "播放控制" });

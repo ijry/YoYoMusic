@@ -128,15 +128,9 @@ export function TitleActions(props: PlayerLayoutProps) {
       </div>
       <div className="title-actions__buttons">
         <button className="title-action-button" type="button" onClick={() => props.onActivePanelChange("skin")}>
-          <span className="title-action-button__code" aria-hidden="true">
-            SKN
-          </span>
           <span className="title-action-button__label">皮肤</span>
         </button>
         <button className="title-action-button" type="button" onClick={() => props.onActivePanelChange("settings")}>
-          <span className="title-action-button__code" aria-hidden="true">
-            CFG
-          </span>
           <span className="title-action-button__label">设置</span>
         </button>
         <button
@@ -144,19 +138,13 @@ export function TitleActions(props: PlayerLayoutProps) {
           type="button"
           onClick={() => props.onPlayerCommand("open_mini_player", {})}
         >
-          <span className="title-action-button__code" aria-hidden="true">
-            MINI
-          </span>
-          <span className="title-action-button__label">迷你模式</span>
+          <span className="title-action-button__label">迷你</span>
         </button>
         <button
           className="title-action-button"
           type="button"
           onClick={() => props.onPlayerCommand("toggle_desktop_lyrics", {})}
         >
-          <span className="title-action-button__code" aria-hidden="true">
-            LRC
-          </span>
           <span className="title-action-button__label">桌面歌词</span>
         </button>
       </div>
@@ -239,8 +227,8 @@ export function NowPlayingBlock({
 
         <div className="now-playing-copy now-playing-display">
           <div className="now-playing-display__header">
-            <p className="eyebrow">Now Playing</p>
-            <span className="now-playing-status">{props.playback.isPlaying ? "PLAYING" : "READY"}</span>
+            <p className="eyebrow">正在播放</p>
+            <span className="now-playing-status">{props.playback.isPlaying ? "播放中" : "就绪"}</span>
           </div>
           <div className="now-playing-display__body">
             <h2>{props.currentTrack?.title ?? "等待添加本地音乐"}</h2>
