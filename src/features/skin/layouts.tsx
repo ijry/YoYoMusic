@@ -1,9 +1,7 @@
 import {
   AppTitle,
   ControlsBlock,
-  FeatureContent,
   FeatureSidebar,
-  FeatureTabs,
   HeroVisualization,
   LayoutErrorBanner,
   NowPlayingBlock,
