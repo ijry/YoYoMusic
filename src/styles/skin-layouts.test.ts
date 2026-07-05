@@ -144,6 +144,22 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell--wood .skin-manager__note")).toContain("color: rgba(255, 239, 205, 0.9);");
   });
 
+  it("keeps feature panels usable and decorative notice markers click-through", () => {
+    expect(rule(".skin-layout .playlist-panel")).toContain("grid-template-rows: auto auto auto minmax(0, 1fr);");
+    expect(rule(".skin-layout .playlist-actions")).toContain("flex-wrap: nowrap;");
+    expect(rule(".skin-layout .playlist-action-button")).toContain("min-height: 38px;");
+    expect(rule(".skin-layout .playlist-panel .empty-state")).toContain("min-height: 46px;");
+    expect(rule(".skin-layout .feature-sidebar")).toContain("grid-template-rows: auto minmax(0, 1fr);");
+    expect(rule(".skin-layout .feature-content")).toContain("overflow: auto;");
+    expect(rule(".skin-layout .feature-tabs")).toContain("display: flex;");
+    expect(rule(".skin-layout .feature-tabs")).toContain("flex-wrap: nowrap;");
+    expect(rule(".feature-tab")).toContain("min-width: 104px;");
+    expect(rule(".skin-layout button")).toContain("cursor: pointer;");
+    expect(rule(".skin-layout .empty-state::before")).toContain("pointer-events: none;");
+    expect(rule(".skin-layout .error-text::before")).toContain("pointer-events: none;");
+    expect(rule(".skin-layout .skin-manager__note::before")).toContain("pointer-events: none;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");

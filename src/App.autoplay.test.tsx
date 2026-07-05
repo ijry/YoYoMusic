@@ -1,6 +1,8 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+import { invokeCommand } from "./shared/tauri";
 import type { AppSettings, PlaybackState, PlaylistSnapshot, Track } from "./shared/types";
 
 const testState = vi.hoisted(() => {
@@ -42,7 +44,7 @@ const testState = vi.hoisted(() => {
       eqEnabled: false,
     } satisfies PlaybackState,
     settings: {
-      defaultSkin: "default",
+      defaultSkin: "classic-blue-silver",
       shortcuts: {},
       enrichmentEnabled: false,
       cacheRetentionDays: 30,
@@ -60,10 +62,15 @@ const testState = vi.hoisted(() => {
 
 vi.mock("./shared/tauri", () => ({
   isTauriRuntime: () => true,
-  invokeCommand: vi.fn(async (command: string) => {
+  invokeCommand: vi.fn(async (command: string, payload?: Record<string, unknown>) => {
     if (command === "get_playlist") return testState.playlistSnapshot;
     if (command === "get_playback_state") return testState.stoppedPlayback;
     if (command === "load_settings") return testState.settings;
+    if (command === "apply_skin") return payload?.skinId;
+    if (command === "save_settings") {
+      testState.settings = payload?.settings as AppSettings;
+      return testState.settings;
+    }
     return {};
   }),
   listenToAppEvent: vi.fn(async (event: string, handler: (payload: unknown) => void) => {
@@ -81,6 +88,7 @@ vi.mock("./shared/fileDialog", () => ({
 describe("App autoplay events", () => {
   beforeEach(() => {
     testState.listeners.clear();
+    vi.mocked(invokeCommand).mockClear();
   });
 
   it("updates the now playing card from playlist and playback events", async () => {
@@ -101,5 +109,19 @@ describe("App autoplay events", () => {
 
     expect(screen.getByRole("heading", { name: "Song B" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "暂停" })).toBeInTheDocument();
+  });
+
+  it("opens the skin panel and applies a built-in layout skin in Tauri mode", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    const windowActions = await screen.findByRole("navigation", { name: "窗口操作" });
+    await user.click(within(windowActions).getByRole("button", { name: "皮肤" }));
+    expect(screen.getByRole("heading", { name: "皮肤管理" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "应用 暗夜黑胶舱" }));
+
+    expect(invokeCommand).toHaveBeenCalledWith("apply_skin", { skinId: "dark-vinyl" });
+    expect(container.querySelector(".skin-layout--dark-vinyl")).toBeInTheDocument();
   });
 });
