@@ -52,20 +52,52 @@ function DeviceModuleFrame({
 }
 
 export function TitleActions(props: PlayerLayoutProps) {
+  const panelLabel = featurePanels.find((panel) => panel.id === props.activePanel)?.label ?? "歌词";
+  const currentTrackTitle = props.currentTrack?.title ?? "未装载曲目";
+
   return (
     <nav className="title-actions" aria-label="窗口操作">
-      <button type="button" onClick={() => props.onActivePanelChange("skin")}>
-        皮肤
-      </button>
-      <button type="button" onClick={() => props.onActivePanelChange("settings")}>
-        设置
-      </button>
-      <button type="button" onClick={() => props.onPlayerCommand("open_mini_player", {})}>
-        迷你模式
-      </button>
-      <button type="button" onClick={() => props.onPlayerCommand("toggle_desktop_lyrics", {})}>
-        桌面歌词
-      </button>
+      <div className="title-status-cluster">
+        <span className="title-status-pill">{props.playback.isPlaying ? "播放中" : "待机"}</span>
+        <span className="title-status-pill title-status-pill--track" title={currentTrackTitle}>
+          {currentTrackTitle}
+        </span>
+        <span className="title-status-pill">面板 {panelLabel}</span>
+      </div>
+      <div className="title-actions__buttons">
+        <button className="title-action-button" type="button" onClick={() => props.onActivePanelChange("skin")}>
+          <span className="title-action-button__code" aria-hidden="true">
+            SKN
+          </span>
+          <span className="title-action-button__label">皮肤</span>
+        </button>
+        <button className="title-action-button" type="button" onClick={() => props.onActivePanelChange("settings")}>
+          <span className="title-action-button__code" aria-hidden="true">
+            CFG
+          </span>
+          <span className="title-action-button__label">设置</span>
+        </button>
+        <button
+          className="title-action-button"
+          type="button"
+          onClick={() => props.onPlayerCommand("open_mini_player", {})}
+        >
+          <span className="title-action-button__code" aria-hidden="true">
+            MINI
+          </span>
+          <span className="title-action-button__label">迷你模式</span>
+        </button>
+        <button
+          className="title-action-button"
+          type="button"
+          onClick={() => props.onPlayerCommand("toggle_desktop_lyrics", {})}
+        >
+          <span className="title-action-button__code" aria-hidden="true">
+            LRC
+          </span>
+          <span className="title-action-button__label">桌面歌词</span>
+        </button>
+      </div>
     </nav>
   );
 }
@@ -174,14 +206,18 @@ export function HeroVisualization({
 export function FeatureTabs(props: PlayerLayoutProps) {
   return (
     <div className="feature-tabs" aria-label="功能面板标签">
-      {featurePanels.map((panel) => (
+      {featurePanels.map((panel, index) => (
         <button
           key={panel.id}
+          className="feature-tab"
           type="button"
           aria-pressed={props.activePanel === panel.id}
           onClick={() => props.onActivePanelChange(panel.id)}
         >
-          {panel.label}
+          <span className="feature-tab__slot" aria-hidden="true">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="feature-tab__label">{panel.label}</span>
         </button>
       ))}
     </div>

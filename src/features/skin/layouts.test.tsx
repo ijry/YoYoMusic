@@ -130,6 +130,9 @@ describe("layout skins", () => {
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
     expect(container.querySelector(".now-playing-display")).toBeInTheDocument();
     expect(container.querySelector(".cover-card__hub")).toBeInTheDocument();
+    expect(container.querySelector(".title-status-cluster")).toBeInTheDocument();
+    expect(container.querySelectorAll(".title-action-button")).toHaveLength(4);
+    expect(container.querySelector(".feature-tab__slot")).toBeInTheDocument();
 
     const controls = screen.getByRole("region", { name: "播放控制" });
     expect(within(controls).getByRole("button", { name: "播放" })).toBeInTheDocument();

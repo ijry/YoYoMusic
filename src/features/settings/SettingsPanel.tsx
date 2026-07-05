@@ -18,7 +18,7 @@ export function SettingsPanel({
           <p className="eyebrow">Settings</p>
           <h2 id="settings-title">设置</h2>
         </div>
-        <span>{enrichmentEnabled ? "联网补全已开启" : "联网补全已关闭"}</span>
+        <span className="settings-panel__status">{enrichmentEnabled ? "联网补全已开启" : "联网补全已关闭"}</span>
       </div>
 
       {errorCode === "shortcut_conflict" ? (
@@ -27,7 +27,7 @@ export function SettingsPanel({
         </p>
       ) : null}
 
-      <label>
+      <label className="settings-panel__field">
         播放/暂停快捷键
         <input
           aria-label="播放/暂停快捷键"
@@ -35,7 +35,7 @@ export function SettingsPanel({
           onChange={(event) => onShortcutChange("toggle_playback", event.currentTarget.value)}
         />
       </label>
-      <label>
+      <label className="settings-panel__field">
         下一首快捷键
         <input
           aria-label="下一首快捷键"

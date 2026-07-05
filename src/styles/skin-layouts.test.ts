@@ -60,4 +60,12 @@ describe("layout skin CSS", () => {
     expect(css).toContain(".track-index");
     expect(css).toContain(".playlist-panel__counter");
   });
+
+  it("styles the title control cabin and feature bay hooks", () => {
+    expect(css).toContain(".title-status-cluster");
+    expect(css).toContain(".title-action-button");
+    expect(css).toContain(".feature-tab__slot");
+    expect(css).toContain(".settings-panel__status");
+    expect(css).toContain(".settings-panel__field");
+  });
 });
