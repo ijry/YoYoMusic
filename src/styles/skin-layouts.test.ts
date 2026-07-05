@@ -68,6 +68,14 @@ describe("layout skin CSS", () => {
     expect(rule(".device-module--wood-feature::before")).toContain("inset: 12px;");
   });
 
+  it("defines skin-specific control console framing hooks", () => {
+    expect(rule(".device-module--classic-controls::before")).toContain("height: 12px;");
+    expect(rule(".device-module--vinyl-controls::before")).toContain("border-radius: 999px 999px 26px 26px;");
+    expect(rule(".device-module--crystal-controls")).toContain("transform: translateY(6px);");
+    expect(rule(".device-module--rack-controls")).toContain("border-radius: 14px;");
+    expect(rule(".device-module--wood-controls::before")).toContain("inset: 12px;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");
