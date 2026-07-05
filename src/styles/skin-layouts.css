@@ -1,1 +1,278 @@
-/* Temporary placeholder. Task 5 replaces this file with the real layout skin styles. */
+.skin-layout {
+  height: 100%;
+  overflow: hidden;
+  color: var(--color-text);
+}
+
+.skin-layout--classic-blue-silver {
+  --skin-primary: #6f8fb8;
+  --skin-accent: #d9e8fb;
+  --skin-panel: rgba(19, 34, 55, 0.82);
+  --skin-border: rgba(218, 232, 251, 0.34);
+}
+
+.skin-layout--dark-vinyl {
+  --skin-primary: #d8dde8;
+  --skin-accent: #71f5c4;
+  --skin-panel: rgba(4, 5, 8, 0.88);
+  --skin-border: rgba(216, 221, 232, 0.18);
+}
+
+.skin-layout--transparent-crystal {
+  --skin-primary: #7dd3fc;
+  --skin-accent: #e0faff;
+  --skin-panel: rgba(186, 230, 253, 0.16);
+  --skin-border: rgba(224, 250, 255, 0.48);
+}
+
+.skin-layout--metal-rack {
+  --skin-primary: #facc15;
+  --skin-accent: #22c55e;
+  --skin-panel: rgba(15, 23, 42, 0.9);
+  --skin-border: rgba(250, 204, 21, 0.22);
+}
+
+.skin-layout--warm-wood {
+  --skin-primary: #f3b56b;
+  --skin-accent: #ffe4b8;
+  --skin-panel: rgba(73, 36, 18, 0.84);
+  --skin-border: rgba(255, 228, 184, 0.28);
+}
+
+.skin-chrome {
+  width: min(1280px, calc(100vw - 24px));
+  height: calc(100vh - 24px);
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  overflow: hidden;
+  padding: 16px;
+  border: 1px solid var(--skin-border);
+  border-radius: var(--radius-panel);
+  background:
+    radial-gradient(circle at 12% 14%, color-mix(in srgb, var(--skin-primary) 28%, transparent), transparent 28rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.025)),
+    var(--color-surface);
+  box-shadow: var(--shadow-panel);
+}
+
+.skin-grid {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.skin-grid--classic {
+  grid-template-columns: minmax(260px, 0.82fr) minmax(320px, 1.18fr) minmax(280px, 0.9fr);
+}
+
+.skin-grid--vinyl {
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+}
+
+.skin-grid--crystal {
+  grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.15fr);
+  grid-template-rows: minmax(0, 1fr) minmax(160px, 0.45fr);
+}
+
+.skin-grid--rack {
+  grid-template-rows: minmax(0, 1.1fr) minmax(180px, 0.72fr);
+}
+
+.skin-grid--wood {
+  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+}
+
+.classic-center-deck,
+.vinyl-stage,
+.vinyl-side-rail,
+.crystal-now-panel,
+.crystal-playlist-drawer,
+.crystal-feature-float,
+.rack-meter-bridge,
+.rack-lower-console,
+.wood-album-sleeve {
+  min-width: 0;
+  min-height: 0;
+}
+
+.classic-center-deck,
+.vinyl-stage,
+.crystal-now-panel,
+.wood-album-sleeve {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(100px, 0.42fr);
+  gap: 12px;
+  overflow: hidden;
+}
+
+.vinyl-side-rail,
+.wood-liner-notes {
+  display: grid;
+  grid-template-rows: minmax(160px, 0.72fr) minmax(0, 1fr);
+  gap: 12px;
+  overflow: hidden;
+}
+
+.vinyl-side-rail {
+  overflow: hidden;
+}
+
+.wood-liner-notes {
+  overflow: hidden;
+}
+
+.rack-meter-bridge,
+.rack-lower-console {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.82fr);
+  gap: 12px;
+  overflow: hidden;
+}
+
+.skin-layout .playlist-panel,
+.skin-layout .feature-sidebar,
+.skin-layout .now-playing,
+.skin-layout .workbench-visualization,
+.skin-layout .player-controls {
+  border-color: var(--skin-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    var(--skin-panel);
+}
+
+.skin-layout .track-item.is-current {
+  border-color: color-mix(in srgb, var(--skin-primary) 62%, transparent);
+  box-shadow: inset 3px 0 0 var(--skin-primary);
+}
+
+.skin-layout .visualization-preview span {
+  background: linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
+}
+
+.skin-title--classic {
+  background: linear-gradient(90deg, rgba(217, 232, 251, 0.16), rgba(111, 143, 184, 0.08));
+}
+
+.skin-title--vinyl,
+.skin-chrome--vinyl .cover-card {
+  border-radius: 999px;
+}
+
+.skin-title--crystal,
+.skin-chrome--crystal .playlist-panel,
+.skin-chrome--crystal .feature-sidebar {
+  backdrop-filter: blur(18px);
+}
+
+.skin-title--rack,
+.skin-chrome--rack .player-controls {
+  box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.16);
+}
+
+.skin-title--wood,
+.skin-chrome--wood .player-controls {
+  background:
+    linear-gradient(90deg, rgba(255, 228, 184, 0.16), rgba(120, 53, 15, 0.2)),
+    var(--skin-panel);
+}
+
+.skin-thumbnail {
+  height: 86px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.skin-thumbnail span {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.skin-thumbnail--classic-blue-silver {
+  grid-template-columns: 0.9fr 1.1fr;
+  background: linear-gradient(135deg, #e2edf9, #6985aa 48%, #162033);
+}
+
+.skin-thumbnail--dark-vinyl {
+  grid-template-columns: 1fr 0.7fr;
+  background: radial-gradient(circle at 30% 50%, #e5e7eb 0 9%, #020617 10% 38%, #111827 39%), #020617;
+}
+
+.skin-thumbnail--transparent-crystal {
+  grid-template-columns: 1fr 1fr;
+  background: linear-gradient(135deg, rgba(236, 254, 255, 0.82), rgba(15, 23, 42, 0.62));
+}
+
+.skin-thumbnail--metal-rack {
+  grid-template-rows: 0.4fr 0.6fr 1fr;
+  background: linear-gradient(180deg, #64748b, #111827);
+}
+
+.skin-thumbnail--warm-wood {
+  grid-template-columns: 0.85fr 1.15fr;
+  background: linear-gradient(90deg, #4a2412, #b8743c, #2f160b);
+}
+
+.skin-thumbnail--custom {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+}
+
+.skin-manager__note,
+.skin-card__tone,
+.skin-card__status {
+  color: var(--color-muted);
+}
+
+.skin-card.is-active {
+  border-color: color-mix(in srgb, var(--skin-primary, var(--color-primary)) 52%, transparent);
+}
+
+.skin-card__copy,
+.skin-card__actions,
+.skin-card__status {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .skin-chrome {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
+    padding: 14px;
+  }
+
+  .skin-grid--classic,
+  .skin-grid--vinyl,
+  .skin-grid--wood {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .skin-grid--crystal {
+    grid-template-columns: 1fr;
+  }
+
+  .rack-meter-bridge,
+  .rack-lower-console {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .skin-grid,
+  .skin-grid--classic,
+  .skin-grid--vinyl,
+  .skin-grid--crystal,
+  .skin-grid--rack,
+  .skin-grid--wood {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+}
