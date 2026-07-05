@@ -48,7 +48,7 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
         </p>
       ) : null}
 
-      <div className="skin-grid">
+      <div className="skin-manager__grid" aria-label="可用皮肤">
         {skins.map((skin) => {
           const isActive = skin.id === activeSkinId;
           const isPreviewing = skin.id === previewSkinId && !isActive;

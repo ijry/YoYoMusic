@@ -174,13 +174,19 @@ describe("layout skin CSS", () => {
   });
 
   it("defines skin manager library card usability hooks", () => {
-    expect(rule(".skin-layout .skin-card")).toContain("grid-template-rows: minmax(150px, 0.92fr) auto auto;");
+    expect(rule(".skin-layout .skin-manager")).toContain("grid-template-rows: auto minmax(0, 1fr);");
+    expect(rule(".skin-manager__grid")).toContain("overflow-x: auto;");
+    expect(rule(".skin-layout .skin-card")).toContain("flex: 0 0 176px;");
+    expect(rule(".skin-layout .skin-card")).toContain("grid-template-rows: minmax(54px, 0.8fr) auto auto;");
+    expect(rule(".skin-manager .eyebrow")).toContain("display: none;");
+    expect(rule(".skin-layout .skin-manager__grid .skin-card")).toContain("height: 46px;");
+    expect(rule(".skin-manager__grid .skin-card__preview-button")).toContain("grid-template-columns: 28px minmax(0, 1fr);");
     expect(rule(".skin-card__preview-button")).toContain("cursor: pointer;");
     expect(rule(".skin-card__preview-button")).toContain("text-align: left;");
     expect(rule(".skin-card__preview-button:hover")).toContain("border-color:");
     expect(rule(".skin-card__preview-button:focus-visible")).toContain("outline: none;");
     expect(rule(".skin-card.is-previewing")).toContain("border-color:");
-    expect(rule(".skin-card__frame")).toContain("min-height: 132px;");
+    expect(rule(".skin-card__frame")).toContain("min-height: 54px;");
     expect(rule(".skin-card__name")).toContain("font-size: 1rem;");
     expect(rule(".skin-card__apply-button")).toContain("min-height: 38px;");
     expect(rule(".skin-card__apply-button:disabled")).toContain("cursor: default;");

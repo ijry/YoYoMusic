@@ -42,6 +42,7 @@ describe("SkinManager", () => {
     expect(screen.getByRole("heading", { name: "皮肤库" })).toBeInTheDocument();
     expect(screen.getByText("内置皮肤会切换整个播放器布局；导入皮肤包只替换颜色和资源。")).toBeInTheDocument();
     expect(container.querySelector(".skin-manager__status")).toHaveTextContent("2 套内置皮肤");
+    expect(screen.getByLabelText("可用皮肤")).toBeInTheDocument();
     expect(container.querySelectorAll(".skin-card__preview-button")).toHaveLength(2);
     expect(container.querySelectorAll(".skin-card__apply-button")).toHaveLength(2);
     expect(container.querySelectorAll(".skin-card__machine-id")).toHaveLength(0);

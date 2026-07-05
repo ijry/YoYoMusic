@@ -1305,9 +1305,16 @@
 .skin-layout .lyrics-panel,
 .skin-layout .visualization-panel,
 .skin-layout .equalizer-panel,
-.skin-layout .tag-editor,
-.skin-layout .skin-manager {
+.skin-layout .tag-editor {
   gap: 12px;
+  overflow: hidden;
+}
+
+.skin-layout .skin-manager {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
   overflow: hidden;
 }
 
@@ -1493,9 +1500,9 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  min-height: 132px;
+  min-height: 54px;
   display: grid;
-  padding: 10px;
+  padding: 6px;
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
@@ -1510,10 +1517,11 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  flex: 0 0 176px;
   display: grid;
-  grid-template-rows: minmax(150px, 0.92fr) auto auto;
-  gap: 10px;
-  padding: 10px;
+  grid-template-rows: minmax(54px, 0.8fr) auto auto;
+  gap: 6px;
+  padding: 8px;
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
@@ -1738,11 +1746,48 @@
     rgba(3, 8, 16, 0.18);
 }
 
+.skin-manager .panel-heading {
+  min-height: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.skin-manager .eyebrow {
+  display: none;
+}
+
+.skin-manager .panel-heading h2 {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.skin-manager .panel-heading button {
+  min-height: 28px;
+  padding: 5px 10px;
+}
+
+.skin-manager__grid {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 2px 4px;
+  scrollbar-width: thin;
+}
+
+.skin-manager__note,
+.skin-manager__status {
+  display: none;
+}
+
 .skin-card__preview-button {
   min-width: 0;
   display: grid;
-  grid-template-rows: minmax(132px, 1fr) auto;
-  gap: 10px;
+  grid-template-rows: minmax(54px, 1fr) auto;
+  gap: 6px;
   padding: 0;
   border: 1px solid transparent;
   border-radius: 18px;
@@ -1765,13 +1810,13 @@
 }
 
 .skin-card__frame .skin-thumbnail {
-  min-height: 112px;
+  min-height: 42px;
 }
 
 .skin-card__copy {
   display: grid;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 4px;
+  padding: 8px 10px;
   border: 1px solid color-mix(in srgb, var(--skin-border) 78%, transparent);
   border-radius: 16px;
   background:
@@ -1786,6 +1831,7 @@
 }
 
 .skin-card__description {
+  display: none;
   color: var(--color-muted);
   font-size: 0.8rem;
   line-height: 1.45;
@@ -1808,9 +1854,87 @@
     rgba(3, 8, 16, 0.36);
 }
 
-.skin-card__apply-button:disabled {
+.skin-layout .skin-card__actions .skin-card__apply-button:disabled {
   cursor: default;
   opacity: 0.82;
+}
+
+.skin-layout .skin-manager__grid .skin-card {
+  flex: 0 0 168px;
+  height: 46px;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+}
+
+.skin-manager__grid .skin-card__preview-button {
+  min-height: 0;
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  border-radius: 10px;
+}
+
+.skin-layout .skin-manager__grid .skin-card__frame {
+  min-height: 0;
+  min-width: 28px;
+  padding: 3px;
+  border-radius: 9px;
+}
+
+.skin-manager__grid .skin-card__frame .skin-thumbnail {
+  min-height: 20px;
+}
+
+.skin-layout .skin-manager__grid .skin-card__copy {
+  min-height: 0;
+  gap: 1px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.skin-manager__grid .skin-card__tone,
+.skin-manager__grid .skin-card__name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.skin-manager__grid .skin-card__tone {
+  font-size: 0.56rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+.skin-manager__grid .skin-card__name {
+  font-size: 0.74rem;
+  line-height: 1.08;
+}
+
+.skin-manager__grid .skin-card__meta,
+.skin-manager__grid .skin-card__description,
+.skin-manager__grid .skin-card__status {
+  display: none;
+}
+
+.skin-layout .skin-manager__grid .skin-card__actions {
+  min-width: 0;
+  display: grid;
+  align-self: stretch;
+}
+
+.skin-layout .skin-manager__grid .skin-card__apply-button {
+  min-height: 0;
+  height: 100%;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  line-height: 1;
 }
 
 .skin-title--classic {
