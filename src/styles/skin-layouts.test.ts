@@ -117,6 +117,15 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell--wood .lyrics-panel__viewport")).toContain("scrollbar-color: rgba(210, 150, 82, 0.66) rgba(54, 28, 14, 0.28);");
   });
 
+  it("defines shared hardwareized notice layer hooks", () => {
+    expect(rule(".skin-layout .empty-state")).toContain("min-height: 76px;");
+    expect(rule(".skin-layout .error-text")).toContain("border-color: rgba(255, 118, 118, 0.48);");
+    expect(rule(".skin-layout .skin-manager__note")).toContain("padding: 12px 14px 12px 42px;");
+    expect(rule(".skin-layout .empty-state::before")).toContain("width: 16px;");
+    expect(rule(".skin-layout .error-text::before")).toContain("background: linear-gradient(180deg, #ff8a8a, #c92828);");
+    expect(rule(".skin-layout .skin-manager__note::before")).toContain("border-radius: 4px;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");

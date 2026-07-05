@@ -3161,6 +3161,112 @@
   font-size: 0.82rem;
 }
 
+.skin-layout .empty-state {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0;
+  min-height: 76px;
+  display: grid;
+  align-content: center;
+  padding: 16px 18px 16px 46px;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: 0.03em;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.14);
+}
+
+.skin-layout .error-text {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0;
+  padding: 14px 16px 14px 44px;
+  border: 1px solid rgba(255, 118, 118, 0.48);
+  border-color: rgba(255, 118, 118, 0.48);
+  border-radius: 18px;
+  color: #ffdada;
+  font-size: 0.88rem;
+  font-weight: 850;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  background:
+    linear-gradient(180deg, rgba(255, 118, 118, 0.18), rgba(127, 29, 29, 0.08)),
+    rgba(69, 10, 10, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 24px rgba(127, 29, 29, 0.16);
+}
+
+.skin-layout .skin-manager__note {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0;
+  padding: 12px 14px 12px 42px;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  color: var(--color-text);
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.5;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.skin-layout .empty-state::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--skin-border);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--skin-primary) 42%, transparent);
+  transform: translateY(-50%);
+}
+
+.skin-layout .error-text::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 14px;
+  height: 22px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff8a8a, #c92828);
+  box-shadow: 0 0 16px rgba(248, 113, 113, 0.42);
+  transform: translateY(-50%);
+}
+
+.skin-layout .skin-manager__note::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 12px;
+  height: 22px;
+  border: 1px solid var(--skin-border);
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04)),
+    var(--skin-panel);
+  transform: translateY(-50%);
+}
+
 .device-shell--classic .skin-card {
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   border-radius: 20px;
