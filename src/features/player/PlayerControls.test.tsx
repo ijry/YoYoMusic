@@ -31,6 +31,9 @@ describe("PlayerControls", () => {
     expect(progress).toHaveClass("progress-rail");
     expect(volume).toHaveClass("volume-input");
     expect(container.querySelector(".volume-well__tick")).toBeInTheDocument();
+    expect(container.querySelector(".transport-status-strip")).toBeInTheDocument();
+    expect(container.querySelectorAll(".transport-status-light")).toHaveLength(3);
+    expect(container.querySelectorAll(".control-monitor")).toHaveLength(2);
 
     await user.click(playButton);
     await user.click(screen.getByRole("button", { name: "下一首" }));

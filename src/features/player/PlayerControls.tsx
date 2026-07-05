@@ -18,6 +18,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
   const volumePercent = Math.round(state.volume * 100);
   const [volumeInput, setVolumeInput] = useState(String(volumePercent));
   const volumeNeedleRotation = `${Math.round(volumePercent * 2.4 - 120)}deg`;
+  const currentPlayModeLabel = playModeLabel(state.playMode);
 
   useEffect(() => {
     setVolumeInput(String(volumePercent));
@@ -25,6 +26,12 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
 
   return (
     <section className="player-controls player-controls--deck" aria-label="播放控制">
+      <div className="transport-status-strip" aria-label="控制台状态">
+        <span className="transport-status-light">{state.isPlaying ? "播放中" : "待机"}</span>
+        <span className="transport-status-light">{state.isMuted ? "静音" : "输出正常"}</span>
+        <span className="transport-status-light">模式 {currentPlayModeLabel}</span>
+      </div>
+
       <div className="transport-row transport-row--deck">
         <button
           type="button"
@@ -56,7 +63,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
         </button>
       </div>
 
-      <label className="control-field control-field--progress">
+      <label className="control-field control-field--progress control-monitor">
         <span className="control-label">播放进度</span>
         <input
           aria-label="播放进度"
@@ -72,7 +79,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
         </span>
       </label>
 
-      <label className="control-field control-field--compact control-field--volume">
+      <label className="control-field control-field--compact control-field--volume control-monitor">
         <span className="control-label">音量</span>
         <span className="volume-well" aria-hidden="true">
           <span className="volume-well__ring" />
@@ -98,7 +105,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
         className="play-mode-button play-mode-button--deck"
         onClick={() => onCommand("set_play_mode", { playMode: nextPlayMode(state.playMode) })}
       >
-        播放模式：{playModeLabel(state.playMode)}
+        播放模式：{currentPlayModeLabel}
       </button>
     </section>
   );

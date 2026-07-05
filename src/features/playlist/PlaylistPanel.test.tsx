@@ -4,7 +4,7 @@ import { PlaylistPanel } from "./PlaylistPanel";
 
 describe("PlaylistPanel", () => {
   it("marks current and missing tracks", () => {
-    render(
+    const { container } = render(
       <PlaylistPanel
         currentTrackId="2"
         tracks={[
@@ -39,10 +39,13 @@ describe("PlaylistPanel", () => {
     );
 
     expect(screen.getByText("2 首")).toHaveClass("playlist-panel__counter");
+    expect(container.querySelector(".playlist-panel__status")).toHaveTextContent("当前 b");
+    expect(container.querySelectorAll(".playlist-action-button")).toHaveLength(3);
     expect(screen.getByText("01")).toHaveClass("track-index");
     expect(screen.getByText("02")).toHaveClass("track-index");
     expect(screen.getByText("a")).toBeInTheDocument();
     expect(screen.getByText("文件丢失")).toBeInTheDocument();
     expect(screen.getByText("正在播放")).toBeInTheDocument();
+    expect(container.querySelectorAll(".track-flag")).toHaveLength(2);
   });
 });

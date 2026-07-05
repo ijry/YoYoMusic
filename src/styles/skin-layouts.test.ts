@@ -52,6 +52,9 @@ describe("layout skin CSS", () => {
     expect(css).toContain(".progress-rail");
     expect(css).toContain(".volume-well");
     expect(css).toContain(".play-mode-button--deck");
+    expect(css).toContain(".transport-status-strip");
+    expect(css).toContain(".transport-status-light");
+    expect(css).toContain(".control-monitor");
   });
 
   it("styles the now-playing display and playlist drawer hooks", () => {
@@ -59,6 +62,9 @@ describe("layout skin CSS", () => {
     expect(css).toContain(".cover-card__hub");
     expect(css).toContain(".track-index");
     expect(css).toContain(".playlist-panel__counter");
+    expect(css).toContain(".playlist-panel__status");
+    expect(css).toContain(".playlist-action-button");
+    expect(css).toContain(".track-flag");
   });
 
   it("styles the title control cabin and feature bay hooks", () => {
