@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import "./styles/theme.css";
 import "./styles/app.css";
-import { EqualizerPanel } from "./features/equalizer/EqualizerPanel";
-import { LyricsPanel } from "./features/lyrics/LyricsPanel";
-import { PlayerControls } from "./features/player/PlayerControls";
-import { PlaylistPanel } from "./features/playlist/PlaylistPanel";
-import { SettingsPanel } from "./features/settings/SettingsPanel";
-import { AppErrorBanner } from "./features/shell/AppErrorBanner";
-import { SkinManager, type SkinSummary } from "./features/skin/SkinManager";
-import { TagEditor, type TagDraft } from "./features/tags/TagEditor";
-import { VisualizationPanel } from "./features/visualization/VisualizationPanel";
+import "./styles/skin-layouts.css";
+import {
+  DEFAULT_LAYOUT_SKIN_ID,
+  builtInLayoutSkinSummaries,
+  resolveLayoutSkin,
+} from "./features/skin/layoutRegistry";
+import type { SkinSummary } from "./features/skin/SkinManager";
+import type { FeaturePanel } from "./features/skin/layoutTypes";
+import type { TagDraft } from "./features/tags/TagEditor";
 import { mapAppError } from "./shared/errors";
 import { openAudioFiles, openAudioFolders, openSkinPackageFolder } from "./shared/fileDialog";
 import {
@@ -27,8 +27,6 @@ import type {
   Track,
   VisualizationMode,
 } from "./shared/types";
-
-type FeaturePanel = "lyrics" | "visualization" | "tags" | "equalizer" | "skin" | "settings";
 
 interface SkinManifest {
   name: string;
@@ -59,7 +57,7 @@ const initialPlayback: PlaybackState = {
 };
 
 const defaultSettings: AppSettings = {
-  defaultSkin: "default",
+  defaultSkin: DEFAULT_LAYOUT_SKIN_ID,
   shortcuts: {
     toggle_playback: "Ctrl+Alt+P",
     previous_track: "Ctrl+Alt+Left",
@@ -81,9 +79,7 @@ export default function App() {
   const [playlist, setPlaylist] = useState<PlaylistSnapshot>(emptyPlaylist);
   const [playback, setPlayback] = useState<PlaybackState>(initialPlayback);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
-  const [skins, setSkins] = useState<SkinSummary[]>([
-    { id: "default", name: "默认青绿", author: "YoYoMusic", version: "1.0.0" },
-  ]);
+  const [skins, setSkins] = useState<SkinSummary[]>(builtInLayoutSkinSummaries);
   const [lyricsDocument] = useState<LyricsDocument | null>(null);
   const [activePanel, setActivePanel] = useState<FeaturePanel>("lyrics");
   const [error, setError] = useState<string | null>(null);
@@ -162,6 +158,8 @@ export default function App() {
 
   const currentTrack = findCurrentTrack(playlist, playback.trackId);
   const visualizationFrame = createVisualizationFrame(playback.positionMs);
+  const activeLayoutSkin = resolveLayoutSkin(settings.defaultSkin);
+  const ActiveLayout = activeLayoutSkin.Layout;
 
   async function addPaths(paths: string[]) {
     if (paths.length === 0) return;
@@ -321,190 +319,31 @@ export default function App() {
   }
 
   return (
-    <main className="app-shell">
-      <section className="chrome" aria-labelledby="app-title">
-        <header className="title-bar">
-          <div>
-            <p className="eyebrow">YoYoMusic Desktop Player</p>
-            <h1 id="app-title">悠悠乐听</h1>
-          </div>
-          <nav className="title-actions" aria-label="窗口操作">
-            <button type="button" onClick={() => setActivePanel("skin")}>
-              皮肤
-            </button>
-            <button type="button" onClick={() => setActivePanel("settings")}>
-              设置
-            </button>
-            <button type="button" onClick={() => void handleCommand("open_mini_player")}>
-              迷你模式
-            </button>
-            <button type="button" onClick={() => void handleCommand("toggle_desktop_lyrics")}>
-              桌面歌词
-            </button>
-          </nav>
-        </header>
-
-        <AppErrorBanner error={error} />
-
-        <div className="workspace">
-          <PlaylistPanel
-            currentTrackId={playback.trackId}
-            tracks={playlist.tracks}
-            onPlay={(trackId) => void handleCommand("play_track", { trackId })}
-            onRemove={(trackId) => void handleCommand("remove_track", { trackId })}
-            onAddFiles={() => void handleAddFiles()}
-            onAddFolder={() => void handleAddFolder()}
-            onClear={() => void handleCommand("clear_playlist")}
-          />
-
-          <section className="now-playing" aria-label="当前播放">
-            <div className={playback.isPlaying ? "cover-card is-playing" : "cover-card"} aria-hidden="true">
-              <div className="disc-ring" />
-            </div>
-
-            <div className="now-playing-copy">
-              <p className="eyebrow">Now Playing</p>
-              <h2>{currentTrack?.title ?? "等待添加本地音乐"}</h2>
-              <p className="subtitle">{currentTrack?.artist || currentTrack?.album || "选择文件或文件夹开始播放"}</p>
-            </div>
-
-            <div className="workbench-visualization" role="img" aria-label="播放动态可视化">
-              <div className="visualization-preview visualization-preview--hero" aria-hidden="true">
-                {visualizationFrame.values.slice(0, 18).map((value, index) => (
-                  <span key={index} style={{ height: `${Math.max(10, value * 100)}%` }} />
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <aside className="feature-sidebar" role="complementary" aria-label="功能面板">
-            <div className="feature-tabs" aria-label="功能面板标签">
-              {featurePanels.map((panel) => (
-                <button
-                  key={panel.id}
-                  type="button"
-                  aria-pressed={activePanel === panel.id}
-                  onClick={() => setActivePanel(panel.id)}
-                >
-                  {panel.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="feature-content">
-              {renderFeaturePanel({
-                activePanel,
-                currentTrack,
-                lyricsDocument,
-                playback,
-                settings,
-                skins,
-                settingsErrorCode,
-                skinError,
-                onSaveTags: handleSaveTags,
-                onApplySkin: (skinId) => void handleApplySkin(skinId),
-                onImportSkin: () => void handleImportSkin(),
-                onShortcutChange: handleShortcutChange,
-                onVisualizationModeChange: handleVisualizationModeChange,
-                onSettingsChange: updateSettings,
-              })}
-            </div>
-          </aside>
-        </div>
-
-        <PlayerControls state={playback} onCommand={(command, payload) => void handleCommand(command, payload)} />
-      </section>
-    </main>
+    <ActiveLayout
+      playlist={playlist}
+      playback={playback}
+      currentTrack={currentTrack}
+      lyricsDocument={lyricsDocument}
+      settings={settings}
+      skins={skins}
+      activePanel={activePanel}
+      error={error}
+      skinError={skinError}
+      settingsErrorCode={settingsErrorCode}
+      visualizationFrame={visualizationFrame}
+      onActivePanelChange={setActivePanel}
+      onPlayerCommand={(command, payload = {}) => void handleCommand(command, payload)}
+      onAddFiles={() => void handleAddFiles()}
+      onAddFolder={() => void handleAddFolder()}
+      onClearPlaylist={() => void handleCommand("clear_playlist")}
+      onSaveTags={handleSaveTags}
+      onApplySkin={(skinId) => void handleApplySkin(skinId)}
+      onImportSkin={() => void handleImportSkin()}
+      onShortcutChange={handleShortcutChange}
+      onVisualizationModeChange={handleVisualizationModeChange}
+      onSettingsChange={updateSettings}
+    />
   );
-}
-
-const featurePanels: Array<{ id: FeaturePanel; label: string }> = [
-  { id: "lyrics", label: "歌词" },
-  { id: "visualization", label: "可视化" },
-  { id: "tags", label: "标签" },
-  { id: "equalizer", label: "均衡器" },
-  { id: "skin", label: "皮肤" },
-  { id: "settings", label: "设置" },
-];
-
-function renderFeaturePanel({
-  activePanel,
-  currentTrack,
-  lyricsDocument,
-  playback,
-  settings,
-  skins,
-  settingsErrorCode,
-  skinError,
-  onSaveTags,
-  onApplySkin,
-  onImportSkin,
-  onShortcutChange,
-  onVisualizationModeChange,
-  onSettingsChange,
-}: {
-  activePanel: FeaturePanel;
-  currentTrack: Track | null;
-  lyricsDocument: LyricsDocument | null;
-  playback: PlaybackState;
-  settings: AppSettings;
-  skins: SkinSummary[];
-  settingsErrorCode: string | null;
-  skinError: string | null;
-  onSaveTags: (draft: TagDraft) => void;
-  onApplySkin: (skinId: string) => void;
-  onImportSkin: () => void;
-  onShortcutChange: (action: string, shortcut: string) => void;
-  onVisualizationModeChange: (mode: VisualizationMode) => void;
-  onSettingsChange: (settings: AppSettings) => void;
-}) {
-  if (activePanel === "visualization") {
-    return (
-      <VisualizationPanel
-        mode={settings.visualizationMode}
-        frame={createVisualizationFrame(playback.positionMs)}
-        onModeChange={onVisualizationModeChange}
-      />
-    );
-  }
-
-  if (activePanel === "tags") {
-    return <TagEditor track={currentTrack} onSave={onSaveTags} />;
-  }
-
-  if (activePanel === "equalizer") {
-    return (
-      <EqualizerPanel
-        settings={settings.equalizer}
-        onChange={(equalizer) => onSettingsChange({ ...settings, equalizer })}
-      />
-    );
-  }
-
-  if (activePanel === "skin") {
-    return (
-      <SkinManager
-        skins={skins}
-        activeSkinId={settings.defaultSkin}
-        error={skinError}
-        onApply={onApplySkin}
-        onImport={onImportSkin}
-      />
-    );
-  }
-
-  if (activePanel === "settings") {
-    return (
-      <SettingsPanel
-        shortcuts={settings.shortcuts}
-        enrichmentEnabled={settings.enrichmentEnabled}
-        errorCode={settingsErrorCode}
-        onShortcutChange={onShortcutChange}
-      />
-    );
-  }
-
-  return <LyricsPanel document={lyricsDocument} positionMs={playback.positionMs} />;
 }
 
 function findCurrentTrack(snapshot: PlaylistSnapshot, trackId: string | null) {
