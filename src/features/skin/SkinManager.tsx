@@ -5,6 +5,10 @@ export interface SkinSummary {
   name: string;
   author: string;
   version: string;
+  description?: string;
+  tone?: string;
+  thumbnailClassName?: string;
+  builtIn?: boolean;
 }
 
 interface SkinManagerProps {
@@ -34,25 +38,53 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
         </button>
       </div>
 
-      {error ? <p role="alert" className="error-text">{error}</p> : null}
+      <p className="skin-manager__note">导入皮肤包只应用颜色和资源，不改变布局。</p>
+
+      {error ? (
+        <p role="alert" className="error-text">
+          {error}
+        </p>
+      ) : null}
 
       <div className="skin-grid">
-        {skins.map((skin) => (
-          <article key={skin.id} className="skin-card">
-            <h3>{skin.name}</h3>
-            <p>
-              {skin.author} · {skin.version}
-            </p>
-            {skin.id === activeSkinId ? <span>当前皮肤</span> : null}
-            {skin.id === previewSkinId && skin.id !== activeSkinId ? <span>预览中</span> : null}
-            <button type="button" onClick={() => setPreviewSkinId(skin.id)}>
-              预览 {skin.name}
-            </button>
-            <button type="button" onClick={() => onApply(skin.id)}>
-              应用 {skin.name}
-            </button>
-          </article>
-        ))}
+        {skins.map((skin) => {
+          const isActive = skin.id === activeSkinId;
+          const isPreviewing = skin.id === previewSkinId && !isActive;
+          const thumbnailClassName = skin.thumbnailClassName ?? "skin-thumbnail--custom";
+
+          return (
+            <article key={skin.id} className={isActive ? "skin-card is-active" : "skin-card"}>
+              <div className={`skin-thumbnail ${thumbnailClassName}`} role="img" aria-label={`${skin.name} 布局缩略图`}>
+                <span />
+                <span />
+                <span />
+              </div>
+
+              <div className="skin-card__copy">
+                <p className="skin-card__tone">{skin.tone ?? (skin.builtIn ? "内置布局" : "导入主题")}</p>
+                <h3>{skin.name}</h3>
+                <p>
+                  {skin.author} · {skin.version}
+                </p>
+                {skin.description ? <p>{skin.description}</p> : null}
+              </div>
+
+              <div className="skin-card__status">
+                {isActive ? <span>当前皮肤</span> : null}
+                {isPreviewing ? <span>预览中</span> : null}
+              </div>
+
+              <div className="skin-card__actions">
+                <button type="button" onClick={() => setPreviewSkinId(skin.id)}>
+                  预览 {skin.name}
+                </button>
+                <button type="button" onClick={() => onApply(skin.id)}>
+                  应用 {skin.name}
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
