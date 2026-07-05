@@ -21,6 +21,9 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell")).toContain("position: relative;");
     expect(rule(".device-shell")).toContain("isolation: isolate;");
     expect(rule(".device-shell__plate")).toContain("display: inline-grid;");
+    expect(rule(".device-shell__handle")).toContain("position: absolute;");
+    expect(rule(".device-shell__vent")).toContain("min-height: 4px;");
+    expect(rule(".device-shell__foot")).toContain("position: absolute;");
     expect(rule(".device-module")).toContain("grid-template-rows: auto minmax(0, 1fr);");
     expect(rule(".device-module__trim")).toContain("min-height: 8px;");
     expect(rule(".device-module__rivet")).toContain("border-radius: 999px;");

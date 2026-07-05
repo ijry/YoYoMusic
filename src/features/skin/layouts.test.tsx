@@ -130,6 +130,9 @@ describe("layout skins", () => {
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
     expect(container.querySelector(".app-title__model")).toBeInTheDocument();
     expect(container.querySelector(".device-shell__plate")).toBeInTheDocument();
+    expect(container.querySelectorAll(".device-shell__handle")).toHaveLength(2);
+    expect(container.querySelectorAll(".device-shell__vent")).toHaveLength(4);
+    expect(container.querySelectorAll(".device-shell__foot")).toHaveLength(2);
     expect(container.querySelector(".now-playing-display")).toBeInTheDocument();
     expect(container.querySelector(".cover-card__hub")).toBeInTheDocument();
     expect(container.querySelector(".device-module__trim")).toBeInTheDocument();

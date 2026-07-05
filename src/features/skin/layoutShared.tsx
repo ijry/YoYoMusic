@@ -58,6 +58,23 @@ function DeviceModuleFrame({
   );
 }
 
+export function DeviceShellHardware() {
+  return (
+    <div className="device-shell__hardware" aria-hidden="true">
+      <span className="device-shell__handle device-shell__handle--left" />
+      <span className="device-shell__handle device-shell__handle--right" />
+      <div className="device-shell__vent-bank">
+        <span className="device-shell__vent" />
+        <span className="device-shell__vent" />
+        <span className="device-shell__vent" />
+        <span className="device-shell__vent" />
+      </div>
+      <span className="device-shell__foot device-shell__foot--left" />
+      <span className="device-shell__foot device-shell__foot--right" />
+    </div>
+  );
+}
+
 export function TitleActions(props: PlayerLayoutProps) {
   const panelLabel = featurePanels.find((panel) => panel.id === props.activePanel)?.label ?? "歌词";
   const currentTrackTitle = props.currentTrack?.title ?? "未装载曲目";
