@@ -12,7 +12,13 @@ import { TagEditor, type TagDraft } from "./features/tags/TagEditor";
 import { VisualizationPanel } from "./features/visualization/VisualizationPanel";
 import { mapAppError } from "./shared/errors";
 import { openAudioFiles, openAudioFolders, openSkinPackageFolder } from "./shared/fileDialog";
-import { invokeCommand, isTauriRuntime, type CommandName, type CommandPayload } from "./shared/tauri";
+import {
+  invokeCommand,
+  isTauriRuntime,
+  listenToAppEvent,
+  type CommandName,
+  type CommandPayload,
+} from "./shared/tauri";
 import type {
   AppSettings,
   LyricsDocument,
@@ -110,6 +116,33 @@ export default function App() {
     void loadInitialState();
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isTauriRuntime()) return;
+
+    let cancelled = false;
+    const unlisteners: Array<() => void> = [];
+
+    void listenToAppEvent<PlaylistSnapshot>("playlist_changed", setPlaylist).then((unlisten) => {
+      if (cancelled) {
+        unlisten();
+      } else {
+        unlisteners.push(unlisten);
+      }
+    });
+    void listenToAppEvent<PlaybackState>("playback_state_changed", setPlayback).then((unlisten) => {
+      if (cancelled) {
+        unlisten();
+      } else {
+        unlisteners.push(unlisten);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unlisteners.forEach((unlisten) => unlisten());
     };
   }, []);
 
