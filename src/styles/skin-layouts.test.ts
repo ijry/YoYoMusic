@@ -93,6 +93,14 @@ describe("layout skin CSS", () => {
     expect(rule(".skin-layout .ghost-button:focus-visible")).toContain("box-shadow: 0 0 0 2px");
   });
 
+  it("defines skin-specific interior panel card hooks", () => {
+    expect(rule(".device-shell--classic .skin-card")).toContain("grid-template-rows: auto minmax(0, 1fr) auto auto;");
+    expect(rule(".device-shell--vinyl .skin-card__actions")).toContain("grid-template-columns: 1fr;");
+    expect(rule(".device-shell--crystal .skin-card__frame::before")).toContain("backdrop-filter: blur(16px);");
+    expect(rule(".device-shell--rack .settings-panel__field::before")).toContain("width: 14px;");
+    expect(rule(".device-shell--wood .tag-editor__field::before")).toContain("inset: 10px;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");
