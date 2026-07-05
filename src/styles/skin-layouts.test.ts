@@ -60,6 +60,14 @@ describe("layout skin CSS", () => {
     expect(rule(".device-module--wood-playlist::before")).toContain("inset: 14px;");
   });
 
+  it("defines skin-specific title-cabin and feature-bay framing hooks", () => {
+    expect(rule(".skin-title--classic::before")).toContain("width: 120px;");
+    expect(rule(".skin-title--vinyl::after")).toContain("border-radius: 999px;");
+    expect(rule(".skin-title--crystal::before")).toContain("backdrop-filter: blur(16px);");
+    expect(rule(".device-module--rack-feature::before")).toContain("width: 18px;");
+    expect(rule(".device-module--wood-feature::before")).toContain("inset: 12px;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");
