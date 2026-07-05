@@ -15,7 +15,7 @@ export function ClassicBlueSilverLayout(props: PlayerLayoutProps) {
   return (
     <main className="app-shell skin-layout skin-layout--classic-blue-silver">
       <section className="chrome skin-chrome skin-chrome--classic device-shell device-shell--classic" aria-labelledby="app-title">
-        <DeviceShellHardware />
+        <DeviceShellHardware variant="classic" />
         <header className="title-bar skin-title skin-title--classic device-shell__header">
           <AppTitle
             eyebrow="Classic Blue Silver Player"
@@ -69,7 +69,7 @@ export function DarkVinylLayout(props: PlayerLayoutProps) {
   return (
     <main className="app-shell skin-layout skin-layout--dark-vinyl">
       <section className="chrome skin-chrome skin-chrome--vinyl device-shell device-shell--vinyl" aria-labelledby="app-title">
-        <DeviceShellHardware />
+        <DeviceShellHardware variant="vinyl" />
         <header className="title-bar skin-title skin-title--vinyl device-shell__header">
           <AppTitle eyebrow="Night Vinyl Chamber" model="MODEL DV-02" serial="Night Vinyl Performance Deck" />
           <TitleActions {...props} />
@@ -121,7 +121,7 @@ export function TransparentCrystalLayout(props: PlayerLayoutProps) {
   return (
     <main className="app-shell skin-layout skin-layout--transparent-crystal">
       <section className="chrome skin-chrome skin-chrome--crystal device-shell device-shell--crystal" aria-labelledby="app-title">
-        <DeviceShellHardware />
+        <DeviceShellHardware variant="crystal" />
         <header className="title-bar skin-title skin-title--crystal device-shell__header">
           <AppTitle
             eyebrow="Crystal Floating Console"
@@ -177,7 +177,7 @@ export function MetalRackLayout(props: PlayerLayoutProps) {
   return (
     <main className="app-shell skin-layout skin-layout--metal-rack">
       <section className="chrome skin-chrome skin-chrome--rack device-shell device-shell--rack" aria-labelledby="app-title">
-        <DeviceShellHardware />
+        <DeviceShellHardware variant="rack" />
         <header className="title-bar skin-title skin-title--rack device-shell__header">
           <AppTitle eyebrow="Metal Rack Equalizer" model="MODEL MR-04" serial="Rackmount Monitoring Array" />
           <TitleActions {...props} />
@@ -229,7 +229,7 @@ export function WarmWoodLayout(props: PlayerLayoutProps) {
   return (
     <main className="app-shell skin-layout skin-layout--warm-wood">
       <section className="chrome skin-chrome skin-chrome--wood device-shell device-shell--wood" aria-labelledby="app-title">
-        <DeviceShellHardware />
+        <DeviceShellHardware variant="wood" />
         <header className="title-bar skin-title skin-title--wood device-shell__header">
           <AppTitle eyebrow="Warm Wood Turntable" model="MODEL WW-05" serial="Warm Wood Listening Cabinet" />
           <TitleActions {...props} />

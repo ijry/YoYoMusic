@@ -186,6 +186,204 @@
   right: 82px;
 }
 
+.device-shell__split-rail {
+  position: absolute;
+  top: 104px;
+  bottom: 72px;
+  width: 20px;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 16px rgba(0, 0, 0, 0.14);
+}
+
+.device-shell__split-rail--left {
+  left: 34px;
+}
+
+.device-shell__split-rail--right {
+  right: 34px;
+}
+
+.device-shell__center-seam {
+  position: absolute;
+  left: 156px;
+  right: 156px;
+  bottom: 92px;
+  height: 8px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 12px rgba(0, 0, 0, 0.12);
+}
+
+.device-shell__arc-platter {
+  position: absolute;
+  top: 98px;
+  left: 92px;
+  width: 360px;
+  height: 360px;
+  border: 1px solid var(--skin-border);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 58%),
+    rgba(3, 8, 16, 0.12);
+  box-shadow:
+    inset 0 0 0 22px rgba(255, 255, 255, 0.03),
+    inset 0 0 0 44px rgba(0, 0, 0, 0.16);
+}
+
+.device-shell__arc-rail {
+  position: absolute;
+  left: 112px;
+  right: 234px;
+  bottom: 94px;
+  height: 116px;
+  border: 1px solid var(--skin-border);
+  border-radius: 999px 999px 28px 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 68%),
+    rgba(3, 8, 16, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.device-shell__standoff {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--skin-border);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04)),
+    rgba(148, 163, 184, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 18px rgba(7, 18, 33, 0.14);
+}
+
+.device-shell__standoff--tl {
+  top: 90px;
+  left: 54px;
+}
+
+.device-shell__standoff--tr {
+  top: 90px;
+  right: 54px;
+}
+
+.device-shell__standoff--bl {
+  bottom: 86px;
+  left: 54px;
+}
+
+.device-shell__standoff--br {
+  bottom: 86px;
+  right: 54px;
+}
+
+.device-shell__glass-bracket {
+  position: absolute;
+  top: 112px;
+  right: 124px;
+  width: 124px;
+  bottom: 110px;
+  border: 1px solid var(--skin-border);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(224, 250, 255, 0.04)),
+    rgba(148, 163, 184, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.device-shell__rack-ear {
+  position: absolute;
+  top: 102px;
+  bottom: 78px;
+  width: 38px;
+  border: 1px solid var(--skin-border);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)),
+    rgba(3, 8, 16, 0.2);
+}
+
+.device-shell__rack-ear--left {
+  left: 18px;
+}
+
+.device-shell__rack-ear--right {
+  right: 18px;
+}
+
+.device-shell__rack-rail {
+  position: absolute;
+  left: 74px;
+  right: 74px;
+  height: 10px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.device-shell__rack-rail--upper {
+  top: 92px;
+}
+
+.device-shell__rack-rail--lower {
+  bottom: 84px;
+}
+
+.device-shell__molding {
+  position: absolute;
+  left: 42px;
+  right: 42px;
+  height: 18px;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 228, 184, 0.18), rgba(120, 53, 15, 0.04)),
+    rgba(54, 28, 14, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 214, 0.12),
+    0 8px 12px rgba(28, 13, 6, 0.16);
+}
+
+.device-shell__molding--top {
+  top: 82px;
+}
+
+.device-shell__molding--bottom {
+  bottom: 82px;
+}
+
+.device-shell__brass-plaque {
+  position: absolute;
+  top: 98px;
+  left: 50%;
+  display: inline-flex;
+  justify-content: center;
+  width: 158px;
+  height: 32px;
+  border: 1px solid rgba(255, 228, 184, 0.42);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 220, 0.28), rgba(210, 150, 82, 0.08)),
+    rgba(120, 53, 15, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 220, 0.18),
+    0 10px 16px rgba(28, 13, 6, 0.16);
+  transform: translateX(-50%);
+}
+
 .app-title {
   display: grid;
   gap: 8px;
@@ -1239,6 +1437,8 @@
 .device-shell--classic .device-shell__handle,
 .device-shell--classic .device-shell__vent,
 .device-shell--classic .device-shell__foot,
+.device-shell--classic .device-shell__split-rail,
+.device-shell--classic .device-shell__center-seam,
 .device-shell--classic .device-module__trim-bar,
 .device-shell--classic .device-module__rivet {
   background:
@@ -1310,6 +1510,8 @@
 .device-shell--vinyl .device-shell__handle,
 .device-shell--vinyl .device-shell__vent,
 .device-shell--vinyl .device-shell__foot,
+.device-shell--vinyl .device-shell__arc-platter,
+.device-shell--vinyl .device-shell__arc-rail,
 .device-shell--vinyl .device-module__trim-bar,
 .device-shell--vinyl .device-module__rivet {
   border-radius: 999px;
@@ -1371,6 +1573,17 @@
     rgba(6, 8, 11, 0.72);
 }
 
+.device-shell--vinyl .device-shell__arc-platter {
+  box-shadow:
+    inset 0 0 0 18px rgba(255, 255, 255, 0.03),
+    inset 0 0 0 38px rgba(0, 0, 0, 0.24),
+    0 24px 46px rgba(0, 0, 0, 0.3);
+}
+
+.device-shell--vinyl .device-shell__arc-rail {
+  border-color: rgba(113, 245, 196, 0.24);
+}
+
 .device-shell--crystal {
   background:
     linear-gradient(145deg, rgba(236, 254, 255, 0.18), rgba(125, 211, 252, 0.06)),
@@ -1388,6 +1601,8 @@
 .device-shell--crystal .device-shell__handle,
 .device-shell--crystal .device-shell__vent,
 .device-shell--crystal .device-shell__foot,
+.device-shell--crystal .device-shell__standoff,
+.device-shell--crystal .device-shell__glass-bracket,
 .device-shell--crystal .device-module__trim-bar,
 .device-shell--crystal .device-module__rivet {
   background:
@@ -1466,6 +1681,8 @@
 .device-shell--rack .device-shell__handle,
 .device-shell--rack .device-shell__vent,
 .device-shell--rack .device-shell__foot,
+.device-shell--rack .device-shell__rack-ear,
+.device-shell--rack .device-shell__rack-rail,
 .device-shell--rack .device-module__trim-bar,
 .device-shell--rack .device-module__rivet {
   border-radius: 10px;
@@ -1558,6 +1775,8 @@
 .device-shell--wood .device-shell__handle,
 .device-shell--wood .device-shell__vent,
 .device-shell--wood .device-shell__foot,
+.device-shell--wood .device-shell__molding,
+.device-shell--wood .device-shell__brass-plaque,
 .device-shell--wood .device-module__trim-bar,
 .device-shell--wood .device-module__rivet {
   color: #fbe6bf;
@@ -1731,7 +1950,15 @@
   }
 
   .device-shell__handle,
-  .device-shell__vent-bank {
+  .device-shell__vent-bank,
+  .device-shell__split-rail,
+  .device-shell__center-seam,
+  .device-shell__arc-platter,
+  .device-shell__arc-rail,
+  .device-shell__glass-bracket,
+  .device-shell__rack-ear,
+  .device-shell__rack-rail,
+  .device-shell__molding {
     display: none;
   }
 
@@ -1741,6 +1968,31 @@
 
   .device-shell__foot--right {
     right: 24px;
+  }
+
+  .device-shell__standoff--tl {
+    top: 86px;
+    left: 24px;
+  }
+
+  .device-shell__standoff--tr {
+    top: 86px;
+    right: 24px;
+  }
+
+  .device-shell__standoff--bl {
+    bottom: 98px;
+    left: 24px;
+  }
+
+  .device-shell__standoff--br {
+    bottom: 98px;
+    right: 24px;
+  }
+
+  .device-shell__brass-plaque {
+    top: 90px;
+    width: 128px;
   }
 
   .skin-layout .title-actions {

@@ -24,6 +24,11 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell__handle")).toContain("position: absolute;");
     expect(rule(".device-shell__vent")).toContain("min-height: 4px;");
     expect(rule(".device-shell__foot")).toContain("position: absolute;");
+    expect(rule(".device-shell__split-rail")).toContain("position: absolute;");
+    expect(rule(".device-shell__arc-platter")).toContain("border-radius: 50%;");
+    expect(rule(".device-shell__standoff")).toContain("border-radius: 999px;");
+    expect(rule(".device-shell__rack-ear")).toContain("position: absolute;");
+    expect(rule(".device-shell__molding")).toContain("position: absolute;");
     expect(rule(".device-module")).toContain("grid-template-rows: auto minmax(0, 1fr);");
     expect(rule(".device-module__trim")).toContain("min-height: 8px;");
     expect(rule(".device-module__rivet")).toContain("border-radius: 999px;");
@@ -37,6 +42,14 @@ describe("layout skin CSS", () => {
     expect(rule(".skin-layout--transparent-crystal")).toContain("--shell-edge: rgba(224, 250, 255, 0.5);");
     expect(rule(".skin-layout--metal-rack")).toContain("--shell-edge: rgba(250, 204, 21, 0.34);");
     expect(rule(".skin-layout--warm-wood")).toContain("--shell-edge: rgba(255, 228, 184, 0.34);");
+  });
+
+  it("defines skin-specific silhouette hardware hooks", () => {
+    expect(rule(".device-shell__center-seam")).toContain("height: 8px;");
+    expect(rule(".device-shell__arc-rail")).toContain("border-radius: 999px 999px 28px 28px;");
+    expect(rule(".device-shell__glass-bracket")).toContain("backdrop-filter: blur(16px);");
+    expect(rule(".device-shell__rack-rail")).toContain("height: 10px;");
+    expect(rule(".device-shell__brass-plaque")).toContain("justify-content: center;");
   });
 
   it("preserves fixed shell and internal scroll zones", () => {

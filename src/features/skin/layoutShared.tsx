@@ -33,6 +33,8 @@ interface DeviceBlockProps {
   moduleClassName?: string;
 }
 
+type DeviceShellVariant = "classic" | "vinyl" | "crystal" | "rack" | "wood";
+
 function DeviceModuleFrame({
   moduleLabel,
   eyebrow,
@@ -58,7 +60,42 @@ function DeviceModuleFrame({
   );
 }
 
-export function DeviceShellHardware() {
+export function DeviceShellHardware({ variant }: { variant: DeviceShellVariant }) {
+  const variantHardware =
+    variant === "classic" ? (
+      <>
+        <span className="device-shell__split-rail device-shell__split-rail--left" />
+        <span className="device-shell__split-rail device-shell__split-rail--right" />
+        <span className="device-shell__center-seam" />
+      </>
+    ) : variant === "vinyl" ? (
+      <>
+        <span className="device-shell__arc-platter" />
+        <span className="device-shell__arc-rail" />
+      </>
+    ) : variant === "crystal" ? (
+      <>
+        <span className="device-shell__standoff device-shell__standoff--tl" />
+        <span className="device-shell__standoff device-shell__standoff--tr" />
+        <span className="device-shell__standoff device-shell__standoff--bl" />
+        <span className="device-shell__standoff device-shell__standoff--br" />
+        <span className="device-shell__glass-bracket" />
+      </>
+    ) : variant === "rack" ? (
+      <>
+        <span className="device-shell__rack-ear device-shell__rack-ear--left" />
+        <span className="device-shell__rack-ear device-shell__rack-ear--right" />
+        <span className="device-shell__rack-rail device-shell__rack-rail--upper" />
+        <span className="device-shell__rack-rail device-shell__rack-rail--lower" />
+      </>
+    ) : (
+      <>
+        <span className="device-shell__molding device-shell__molding--top" />
+        <span className="device-shell__molding device-shell__molding--bottom" />
+        <span className="device-shell__brass-plaque" />
+      </>
+    );
+
   return (
     <div className="device-shell__hardware" aria-hidden="true">
       <span className="device-shell__handle device-shell__handle--left" />
@@ -71,6 +108,7 @@ export function DeviceShellHardware() {
       </div>
       <span className="device-shell__foot device-shell__foot--left" />
       <span className="device-shell__foot device-shell__foot--right" />
+      {variantHardware}
     </div>
   );
 }

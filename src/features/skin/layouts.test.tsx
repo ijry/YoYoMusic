@@ -3,26 +3,49 @@ import { describe, expect, it, vi } from "vitest";
 import { builtInLayoutSkins } from "./layoutRegistry";
 import type { PlayerLayoutProps } from "./layoutTypes";
 
-const machineLabels: Record<string, { shellClass: string; labels: string[] }> = {
+const machineLabels: Record<
+  string,
+  { shellClass: string; labels: string[]; hardware: Array<{ selector: string; count: number }> }
+> = {
   "classic-blue-silver": {
     shellClass: "device-shell--classic",
     labels: ["主控舱", "曲目仓", "状态窗", "功能仓", "控制台"],
+    hardware: [
+      { selector: ".device-shell__split-rail", count: 2 },
+      { selector: ".device-shell__center-seam", count: 1 },
+    ],
   },
   "dark-vinyl": {
     shellClass: "device-shell--vinyl",
     labels: ["唱盘舱", "舞台频谱", "曲目塔", "控制塔", "控制台"],
+    hardware: [
+      { selector: ".device-shell__arc-platter", count: 1 },
+      { selector: ".device-shell__arc-rail", count: 1 },
+    ],
   },
   "transparent-crystal": {
     shellClass: "device-shell--crystal",
     labels: ["透明舱", "资料匣", "悬浮仓", "底座控制台"],
+    hardware: [
+      { selector: ".device-shell__standoff", count: 4 },
+      { selector: ".device-shell__glass-bracket", count: 1 },
+    ],
   },
   "metal-rack": {
     shellClass: "device-shell--rack",
     labels: ["频谱桥", "机柜面板", "状态机柜", "机架控制台"],
+    hardware: [
+      { selector: ".device-shell__rack-ear", count: 2 },
+      { selector: ".device-shell__rack-rail", count: 2 },
+    ],
   },
   "warm-wood": {
     shellClass: "device-shell--wood",
     labels: ["陈列窗", "节目单仓", "暖光铭牌窗", "黄铜控制台"],
+    hardware: [
+      { selector: ".device-shell__molding", count: 2 },
+      { selector: ".device-shell__brass-plaque", count: 1 },
+    ],
   },
 };
 
@@ -133,6 +156,9 @@ describe("layout skins", () => {
     expect(container.querySelectorAll(".device-shell__handle")).toHaveLength(2);
     expect(container.querySelectorAll(".device-shell__vent")).toHaveLength(4);
     expect(container.querySelectorAll(".device-shell__foot")).toHaveLength(2);
+    expected.hardware.forEach(({ selector, count }) => {
+      expect(container.querySelectorAll(selector)).toHaveLength(count);
+    });
     expect(container.querySelector(".now-playing-display")).toBeInTheDocument();
     expect(container.querySelector(".cover-card__hub")).toBeInTheDocument();
     expect(container.querySelector(".device-module__trim")).toBeInTheDocument();
