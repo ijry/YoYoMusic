@@ -46,4 +46,11 @@ describe("layout skin CSS", () => {
     expect(css).toContain(".skin-grid--classic");
     expect(css).toContain("grid-template-columns: 1fr;");
   });
+
+  it("styles the control deck with transport buttons, progress rail, and volume well hooks", () => {
+    expect(css).toContain(".transport-button");
+    expect(css).toContain(".progress-rail");
+    expect(css).toContain(".volume-well");
+    expect(css).toContain(".play-mode-button--deck");
+  });
 });

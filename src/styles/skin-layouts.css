@@ -268,6 +268,163 @@
   grid-row: auto;
 }
 
+.skin-layout .player-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(132px, 0.48fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+.transport-row--deck {
+  align-items: center;
+  gap: 10px;
+}
+
+.transport-button,
+.play-mode-button--deck {
+  min-height: 42px;
+  border: 1px solid var(--skin-border);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 20px rgba(0, 0, 0, 0.16);
+}
+
+.transport-button {
+  min-width: 68px;
+  padding: 10px 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02)),
+    color-mix(in srgb, var(--skin-panel) 92%, black);
+}
+
+.transport-button--play {
+  min-width: 84px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.control-label,
+.control-readout {
+  color: var(--color-muted);
+}
+
+.control-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.control-readout {
+  font-size: 0.82rem;
+}
+
+.progress-rail {
+  width: 100%;
+  height: 16px;
+  appearance: none;
+  border: 1px solid var(--skin-border);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(2, 7, 14, 0.48);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+.progress-rail::-webkit-slider-runnable-track {
+  height: 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--skin-primary) 32%, transparent), transparent),
+    rgba(2, 7, 14, 0.34);
+}
+
+.progress-rail::-moz-range-track {
+  height: 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--skin-primary) 32%, transparent), transparent),
+    rgba(2, 7, 14, 0.34);
+}
+
+.progress-rail::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -2px;
+  appearance: none;
+  border: 1px solid var(--skin-border);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.7), transparent 34%),
+    linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.12),
+    0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.progress-rail::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--skin-border);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.7), transparent 34%),
+    linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.12),
+    0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.control-field--volume {
+  justify-items: center;
+}
+
+.volume-well {
+  width: 58px;
+  aspect-ratio: 1;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.volume-well__ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--skin-border);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.2), transparent 42%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.18);
+}
+
+.volume-well__tick {
+  width: 2px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--skin-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--skin-accent) 52%, transparent);
+  transform-origin: center 22px;
+}
+
+.volume-input {
+  width: 100%;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.play-mode-button--deck {
+  min-width: 144px;
+  justify-self: end;
+  padding-inline: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(4, 10, 18, 0.34);
+}
+
 .skin-title--classic {
   background: linear-gradient(90deg, rgba(217, 232, 251, 0.16), rgba(111, 143, 184, 0.08));
 }
@@ -308,6 +465,13 @@
     rgba(8, 15, 26, 0.62);
 }
 
+.device-shell--classic .transport-button,
+.device-shell--classic .play-mode-button--deck {
+  background:
+    linear-gradient(180deg, rgba(226, 237, 249, 0.26), rgba(61, 87, 125, 0.06)),
+    rgba(12, 22, 38, 0.68);
+}
+
 .device-shell--vinyl {
   border-radius: 34px;
   background:
@@ -318,6 +482,15 @@
 .device-shell--vinyl .device-module--now-playing .cover-card,
 .device-shell--vinyl .device-module--visualization .workbench-visualization {
   border-radius: 999px;
+}
+
+.device-shell--vinyl .transport-button,
+.device-shell--vinyl .play-mode-button--deck {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.08)),
+    rgba(6, 8, 11, 0.74);
 }
 
 .device-shell--crystal {
@@ -349,6 +522,18 @@
   letter-spacing: 0.24em;
 }
 
+.device-shell--rack .transport-button,
+.device-shell--rack .play-mode-button--deck {
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(9, 13, 20, 0.82);
+}
+
+.device-shell--rack .volume-well__tick {
+  background: #22c55e;
+}
+
 .device-shell--wood {
   background:
     linear-gradient(180deg, rgba(255, 228, 184, 0.12), transparent 18%),
@@ -359,6 +544,28 @@
   background:
     linear-gradient(180deg, rgba(255, 228, 184, 0.08), rgba(73, 36, 18, 0.05)),
     rgba(39, 18, 9, 0.66);
+}
+
+.device-shell--crystal .transport-button,
+.device-shell--crystal .play-mode-button--deck {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+    rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.device-shell--wood .transport-button,
+.device-shell--wood .play-mode-button--deck {
+  color: #fdf1d5;
+  background:
+    linear-gradient(180deg, rgba(255, 228, 184, 0.24), rgba(120, 53, 15, 0.08)),
+    rgba(54, 28, 14, 0.72);
+}
+
+.device-shell--wood .volume-well__ring {
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 248, 220, 0.18), transparent 42%),
+    linear-gradient(145deg, rgba(210, 150, 82, 0.2), rgba(53, 24, 10, 0.12));
 }
 
 .skin-thumbnail {
@@ -448,6 +655,14 @@
   .rack-lower-console {
     grid-template-columns: 1fr;
   }
+
+  .skin-layout .player-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .play-mode-button--deck {
+    justify-self: stretch;
+  }
 }
 
 @media (max-width: 760px) {
@@ -464,5 +679,9 @@
   .device-module__header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .skin-layout .player-controls {
+    grid-template-columns: 1fr;
   }
 }

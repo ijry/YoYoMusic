@@ -17,47 +17,70 @@ function formatTime(ms: number) {
 export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
   const volumePercent = Math.round(state.volume * 100);
   const [volumeInput, setVolumeInput] = useState(String(volumePercent));
+  const volumeNeedleRotation = `${Math.round(volumePercent * 2.4 - 120)}deg`;
 
   useEffect(() => {
     setVolumeInput(String(volumePercent));
   }, [volumePercent]);
 
   return (
-    <section className="player-controls" aria-label="播放控制">
-      <div className="transport-row">
-        <button type="button" onClick={() => onCommand("previous_track", {})}>
+    <section className="player-controls player-controls--deck" aria-label="播放控制">
+      <div className="transport-row transport-row--deck">
+        <button
+          type="button"
+          className="transport-button transport-button--prev"
+          onClick={() => onCommand("previous_track", {})}
+        >
           上一首
         </button>
-        <button type="button" onClick={() => onCommand("toggle_playback", {})}>
+        <button
+          type="button"
+          className="transport-button transport-button--play"
+          onClick={() => onCommand("toggle_playback", {})}
+        >
           {state.isPlaying ? "暂停" : "播放"}
         </button>
-        <button type="button" onClick={() => onCommand("next_track", {})}>
+        <button
+          type="button"
+          className="transport-button transport-button--next"
+          onClick={() => onCommand("next_track", {})}
+        >
           下一首
         </button>
-        <button type="button" onClick={() => onCommand("set_muted", { value: !state.isMuted })}>
+        <button
+          type="button"
+          className="transport-button transport-button--mute"
+          onClick={() => onCommand("set_muted", { value: !state.isMuted })}
+        >
           {state.isMuted ? "取消静音" : "静音"}
         </button>
       </div>
 
-      <label className="control-field">
-        <span>播放进度</span>
+      <label className="control-field control-field--progress">
+        <span className="control-label">播放进度</span>
         <input
           aria-label="播放进度"
+          className="progress-rail"
           type="range"
           min="0"
           max={Math.max(state.durationMs, 1)}
           value={state.positionMs}
           onChange={(event) => onCommand("seek", { positionMs: Number(event.currentTarget.value) })}
         />
-        <span>
+        <span className="control-readout">
           {formatTime(state.positionMs)} / {formatTime(state.durationMs)}
         </span>
       </label>
 
-      <label className="control-field control-field--compact">
-        <span>音量</span>
+      <label className="control-field control-field--compact control-field--volume">
+        <span className="control-label">音量</span>
+        <span className="volume-well" aria-hidden="true">
+          <span className="volume-well__ring" />
+          <span className="volume-well__tick" style={{ transform: `rotate(${volumeNeedleRotation})` }} />
+        </span>
         <input
           aria-label="音量"
+          className="volume-input"
           type="number"
           min="0"
           max="100"
@@ -72,7 +95,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
 
       <button
         type="button"
-        className="play-mode-button"
+        className="play-mode-button play-mode-button--deck"
         onClick={() => onCommand("set_play_mode", { playMode: nextPlayMode(state.playMode) })}
       >
         播放模式：{playModeLabel(state.playMode)}

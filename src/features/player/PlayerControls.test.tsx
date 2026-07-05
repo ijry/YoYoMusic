@@ -7,7 +7,7 @@ describe("PlayerControls", () => {
   it("calls playback commands from buttons and volume slider", async () => {
     const user = userEvent.setup();
     const onCommand = vi.fn();
-    render(
+    const { container } = render(
       <PlayerControls
         state={{
           trackId: "1",
@@ -23,10 +23,19 @@ describe("PlayerControls", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "播放" }));
+    const playButton = screen.getByRole("button", { name: "播放" });
+    const progress = screen.getByLabelText("播放进度");
+    const volume = screen.getByLabelText("音量");
+
+    expect(playButton).toHaveClass("transport-button", "transport-button--play");
+    expect(progress).toHaveClass("progress-rail");
+    expect(volume).toHaveClass("volume-input");
+    expect(container.querySelector(".volume-well__tick")).toBeInTheDocument();
+
+    await user.click(playButton);
     await user.click(screen.getByRole("button", { name: "下一首" }));
-    await user.clear(screen.getByLabelText("音量"));
-    await user.type(screen.getByLabelText("音量"), "80");
+    await user.clear(volume);
+    await user.type(volume, "80");
 
     expect(onCommand).toHaveBeenCalledWith("toggle_playback", {});
     expect(onCommand).toHaveBeenCalledWith("next_track", {});
