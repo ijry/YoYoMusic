@@ -161,6 +161,7 @@ export default function App() {
   }, [playback.isPlaying]);
 
   const currentTrack = findCurrentTrack(playlist, playback.trackId);
+  const visualizationFrame = createVisualizationFrame(playback.positionMs);
 
   async function addPaths(paths: string[]) {
     if (paths.length === 0) return;
@@ -360,13 +361,24 @@ export default function App() {
             <div className={playback.isPlaying ? "cover-card is-playing" : "cover-card"} aria-hidden="true">
               <div className="disc-ring" />
             </div>
-            <div>
+
+            <div className="now-playing-copy">
               <p className="eyebrow">Now Playing</p>
               <h2>{currentTrack?.title ?? "等待添加本地音乐"}</h2>
               <p className="subtitle">{currentTrack?.artist || currentTrack?.album || "选择文件或文件夹开始播放"}</p>
             </div>
 
-            <div className="feature-tabs" aria-label="功能面板">
+            <div className="workbench-visualization" role="img" aria-label="播放动态可视化">
+              <div className="visualization-preview visualization-preview--hero" aria-hidden="true">
+                {visualizationFrame.values.slice(0, 18).map((value, index) => (
+                  <span key={index} style={{ height: `${Math.max(10, value * 100)}%` }} />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <aside className="feature-sidebar" role="complementary" aria-label="功能面板">
+            <div className="feature-tabs" aria-label="功能面板标签">
               {featurePanels.map((panel) => (
                 <button
                   key={panel.id}
@@ -379,23 +391,25 @@ export default function App() {
               ))}
             </div>
 
-            {renderFeaturePanel({
-              activePanel,
-              currentTrack,
-              lyricsDocument,
-              playback,
-              settings,
-              skins,
-              settingsErrorCode,
-              skinError,
-              onSaveTags: handleSaveTags,
-              onApplySkin: (skinId) => void handleApplySkin(skinId),
-              onImportSkin: () => void handleImportSkin(),
-              onShortcutChange: handleShortcutChange,
-              onVisualizationModeChange: handleVisualizationModeChange,
-              onSettingsChange: updateSettings,
-            })}
-          </section>
+            <div className="feature-content">
+              {renderFeaturePanel({
+                activePanel,
+                currentTrack,
+                lyricsDocument,
+                playback,
+                settings,
+                skins,
+                settingsErrorCode,
+                skinError,
+                onSaveTags: handleSaveTags,
+                onApplySkin: (skinId) => void handleApplySkin(skinId),
+                onImportSkin: () => void handleImportSkin(),
+                onShortcutChange: handleShortcutChange,
+                onVisualizationModeChange: handleVisualizationModeChange,
+                onSettingsChange: updateSettings,
+              })}
+            </div>
+          </aside>
         </div>
 
         <PlayerControls state={playback} onCommand={(command, payload) => void handleCommand(command, payload)} />
