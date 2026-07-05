@@ -126,6 +126,24 @@ describe("layout skin CSS", () => {
     expect(rule(".skin-layout .skin-manager__note::before")).toContain("border-radius: 4px;");
   });
 
+  it("defines skin-specific hardwareized notice layer hooks", () => {
+    expect(rule(".device-shell--classic .empty-state")).toContain("border-radius: 12px;");
+    expect(rule(".device-shell--classic .error-text")).toContain("box-shadow: inset 0 -4px 0 rgba(255, 97, 97, 0.42)");
+    expect(rule(".device-shell--classic .skin-manager__note")).toContain("letter-spacing: 0.08em;");
+    expect(rule(".device-shell--vinyl .empty-state")).toContain("border-radius: 999px;");
+    expect(rule(".device-shell--vinyl .error-text")).toContain("transform: rotate(-1deg);");
+    expect(rule(".device-shell--vinyl .skin-manager__note")).toContain("border-left: 4px solid rgba(113, 245, 196, 0.52);");
+    expect(rule(".device-shell--crystal .empty-state")).toContain("backdrop-filter: blur(16px);");
+    expect(rule(".device-shell--crystal .error-text")).toContain("clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);");
+    expect(rule(".device-shell--crystal .skin-manager__note")).toContain("border-radius: 999px;");
+    expect(rule(".device-shell--rack .empty-state")).toContain("border-radius: 6px;");
+    expect(rule(".device-shell--rack .error-text")).toContain("border-left: 14px solid rgba(248, 113, 113, 0.78);");
+    expect(rule(".device-shell--rack .skin-manager__note")).toContain('font-family: "JetBrains Mono", "Cascadia Code", monospace;');
+    expect(rule(".device-shell--wood .empty-state")).toContain("border-radius: 22px 10px 24px 12px;");
+    expect(rule(".device-shell--wood .error-text")).toContain("border: 1px solid rgba(146, 64, 14, 0.62);");
+    expect(rule(".device-shell--wood .skin-manager__note")).toContain("color: rgba(255, 239, 205, 0.9);");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");
