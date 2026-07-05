@@ -17,6 +17,13 @@ struct AudioBackend {
     sink: Option<Sink>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum PlaybackTick {
+    Idle(PlaybackState),
+    PositionChanged(PlaybackState),
+    Finished(PlaybackState),
+}
+
 impl Default for PlaybackService {
     fn default() -> Self {
         Self::new_best_effort()
@@ -66,6 +73,28 @@ impl PlaybackService {
         state
     }
 
+    pub fn tick(&mut self) -> PlaybackTick {
+        let previous_position = self.state.position_ms;
+
+        if self.state.track_id.is_none() || !self.state.is_playing {
+            return PlaybackTick::Idle(self.current_state());
+        }
+
+        self.sync_position_from_sink();
+
+        if self.current_sink_finished() {
+            let state = self.stop_after_finished();
+            return PlaybackTick::Finished(state);
+        }
+
+        let state = self.current_state();
+        if state.position_ms != previous_position {
+            PlaybackTick::PositionChanged(state)
+        } else {
+            PlaybackTick::Idle(state)
+        }
+    }
+
     pub fn play(&mut self, track: Track) -> Result<PlaybackState, AppError> {
         if !Path::new(&track.file_path).is_file() {
             return Err(AppError::FileMissing(track.file_path));
@@ -90,6 +119,13 @@ impl PlaybackService {
         if let Some(sink) = self.audio.as_ref().and_then(|audio| audio.sink.as_ref()) {
             sink.pause();
         }
+        self.state.is_playing = false;
+        self.current_state()
+    }
+
+    pub fn stop_after_finished(&mut self) -> PlaybackState {
+        self.sync_position_from_sink();
+        self.state.position_ms = self.state.duration_ms;
         self.state.is_playing = false;
         self.current_state()
     }
@@ -157,6 +193,14 @@ impl PlaybackService {
             self.state.volume
         }
     }
+
+    fn current_sink_finished(&self) -> bool {
+        self.audio
+            .as_ref()
+            .and_then(|audio| audio.sink.as_ref())
+            .map(|sink| sink.empty())
+            .unwrap_or(false)
+    }
 }
 
 impl AudioBackend {
@@ -188,8 +232,24 @@ fn duration_to_ms(duration: Duration) -> u64 {
 mod tests {
     use crate::{
         models::{TagStatus, Track, TrackStatus},
-        services::playback::PlaybackService,
+        services::playback::{PlaybackService, PlaybackTick},
     };
+
+    #[cfg(test)]
+    impl PlaybackService {
+        fn set_state_for_test(
+            &mut self,
+            track_id: Option<String>,
+            duration_ms: u64,
+            position_ms: u64,
+            is_playing: bool,
+        ) {
+            self.state.track_id = track_id;
+            self.state.duration_ms = duration_ms;
+            self.state.position_ms = position_ms;
+            self.state.is_playing = is_playing;
+        }
+    }
 
     #[test]
     fn clamps_volume_between_zero_and_one() {
@@ -214,6 +274,28 @@ mod tests {
         let mut service = PlaybackService::new_null();
         let err = service.play(track("missing.mp3")).unwrap_err();
         assert!(err.to_string().contains("missing.mp3"));
+    }
+
+    #[test]
+    fn stop_after_finished_marks_state_stopped_at_duration() {
+        let mut service = PlaybackService::new_null();
+        service.set_state_for_test(Some("track-1".into()), 2500, 1000, true);
+
+        let state = service.stop_after_finished();
+
+        assert_eq!(state.track_id.as_deref(), Some("track-1"));
+        assert_eq!(state.position_ms, 2500);
+        assert!(!state.is_playing);
+    }
+
+    #[test]
+    fn tick_is_idle_when_not_playing() {
+        let mut service = PlaybackService::new_null();
+        service.set_state_for_test(Some("track-1".into()), 2500, 1000, false);
+
+        let tick = service.tick();
+
+        assert!(matches!(tick, PlaybackTick::Idle(state) if !state.is_playing));
     }
 
     fn track(file_path: &str) -> Track {
