@@ -31,16 +31,16 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
     <section className="skin-manager" aria-labelledby="skin-manager-title">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Skins</p>
-          <h2 id="skin-manager-title">皮肤管理</h2>
+          <p className="eyebrow">Skin Library</p>
+          <h2 id="skin-manager-title">皮肤库</h2>
         </div>
         <button type="button" onClick={onImport}>
           导入皮肤包
         </button>
       </div>
 
-      <p className="skin-manager__note">内置机型会改变整体机身布局；导入皮肤包只应用颜色和资源，不改变布局。</p>
-      <p className="skin-manager__status">{builtInCount > 0 ? `${builtInCount} 套可用机型` : `${skins.length} 套可用主题`}</p>
+      <p className="skin-manager__note">内置皮肤会切换整个播放器布局；导入皮肤包只替换颜色和资源。</p>
+      <p className="skin-manager__status">{builtInCount > 0 ? `${builtInCount} 套内置皮肤` : `${skins.length} 套可用主题`}</p>
 
       {error ? (
         <p role="alert" className="error-text">
@@ -49,44 +49,57 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
       ) : null}
 
       <div className="skin-grid">
-        {skins.map((skin, index) => {
+        {skins.map((skin) => {
           const isActive = skin.id === activeSkinId;
           const isPreviewing = skin.id === previewSkinId && !isActive;
           const thumbnailClassName = skin.thumbnailClassName ?? "skin-thumbnail--custom";
 
           return (
-            <article key={skin.id} className={isActive ? "skin-card is-active" : "skin-card"}>
-              <div className="skin-card__frame">
-                <div className={`skin-thumbnail ${thumbnailClassName}`} role="img" aria-label={`${skin.name} 布局缩略图`}>
-                  <span />
-                  <span />
-                  <span />
-                </div>
-                <p className="skin-card__machine-id">
-                  {skin.builtIn ? `MODEL ${String(index + 1).padStart(2, "0")}` : "IMPORT"}
-                </p>
-              </div>
+            <article
+              key={skin.id}
+              className={["skin-card", isActive ? "is-active" : "", isPreviewing ? "is-previewing" : ""]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              <button
+                type="button"
+                className="skin-card__preview-button"
+                aria-label={`预览 ${skin.name}`}
+                aria-pressed={isPreviewing || isActive}
+                onClick={() => setPreviewSkinId(skin.id)}
+              >
+                <span className="skin-card__frame" aria-hidden="true">
+                  <span className={`skin-thumbnail ${thumbnailClassName}`}>
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                </span>
 
-              <div className="skin-card__copy">
-                <p className="skin-card__tone">{skin.tone ?? (skin.builtIn ? "内置布局" : "导入主题")}</p>
-                <h3>{skin.name}</h3>
-                <p className="skin-card__meta">
-                  {skin.builtIn ? "内置机型" : "导入主题"} · {skin.author} · {skin.version}
-                </p>
-                {skin.description ? <p>{skin.description}</p> : null}
-              </div>
+                <span className="skin-card__copy">
+                  <span className="skin-card__tone">{skin.tone ?? (skin.builtIn ? "内置皮肤" : "导入主题")}</span>
+                  <span className="skin-card__name">{skin.name}</span>
+                  <span className="skin-card__meta">
+                    {skin.builtIn ? "内置皮肤" : "导入主题"} · {skin.author} · {skin.version}
+                  </span>
+                  {skin.description ? <span className="skin-card__description">{skin.description}</span> : null}
+                </span>
+              </button>
 
               <div className="skin-card__status">
-                {isActive ? <span>当前皮肤</span> : null}
+                {isActive ? <span>当前使用</span> : null}
                 {isPreviewing ? <span>预览中</span> : null}
               </div>
 
               <div className="skin-card__actions">
-                <button type="button" onClick={() => setPreviewSkinId(skin.id)}>
-                  预览 {skin.name}
-                </button>
-                <button type="button" onClick={() => onApply(skin.id)}>
-                  应用 {skin.name}
+                <button
+                  type="button"
+                  className="skin-card__apply-button"
+                  aria-label={isActive ? `使用中 ${skin.name}` : `应用 ${skin.name}`}
+                  disabled={isActive}
+                  onClick={() => onApply(skin.id)}
+                >
+                  {isActive ? "使用中" : "应用"}
                 </button>
               </div>
             </article>

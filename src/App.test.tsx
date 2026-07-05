@@ -38,7 +38,7 @@ it("switches built-in layout skins in browser mode", async () => {
 
   const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
   await user.click(within(windowActions).getByRole("button", { name: "皮肤" }));
-  expect(screen.getByRole("heading", { name: "皮肤管理" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "皮肤库" })).toBeInTheDocument();
 
   await user.click(screen.getByRole("button", { name: "应用 暗夜黑胶舱" }));
 
