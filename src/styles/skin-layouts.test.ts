@@ -101,6 +101,14 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell--wood .tag-editor__field::before")).toContain("inset: 10px;");
   });
 
+  it("defines skin-specific signal readout hooks", () => {
+    expect(rule(".device-shell--classic .lyric-line::before")).toContain("width: 56px;");
+    expect(rule(".device-shell--vinyl .visualization-preview--panel")).toContain("border-radius: 999px;");
+    expect(rule(".device-shell--crystal .eq-band-card::before")).toContain("backdrop-filter: blur(16px);");
+    expect(rule(".device-shell--rack .equalizer-panel__toggle::before")).toContain("width: 14px;");
+    expect(rule(".device-shell--wood .lyric-line::before")).toContain("inset: 10px;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");
