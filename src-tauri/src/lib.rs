@@ -4,6 +4,7 @@ pub mod state;
 
 pub mod services {
     pub mod artwork;
+    pub mod autoplay;
     pub mod enrichment;
     pub mod lyrics;
     pub mod metadata;
@@ -31,6 +32,7 @@ pub mod commands {
         services::window::{open_mini_player_window, toggle_desktop_lyrics_window},
         state::AppState,
     };
+    use tauri::Manager;
 
     #[tauri::command]
     pub fn get_playlist(
@@ -101,6 +103,20 @@ pub mod commands {
     pub fn get_playback_state(
         state: tauri::State<'_, AppState>,
     ) -> Result<PlaybackState, errors::AppError> {
+        let playback = state
+            .playback
+            .lock()
+            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+        Ok(playback.current_state())
+    }
+
+    #[tauri::command]
+    pub fn run_playback_maintenance(
+        app: tauri::AppHandle,
+    ) -> Result<PlaybackState, errors::AppError> {
+        crate::services::autoplay::run_playback_maintenance(&app)?;
+
+        let state = app.state::<AppState>();
         let playback = state
             .playback
             .lock()
@@ -319,6 +335,7 @@ pub fn run() {
             let state = AppState::new(app_data_dir)?;
             app.manage(state);
             services::tray::setup_tray(app.handle())?;
+            services::autoplay::spawn_playback_monitor(app.handle().clone())?;
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -336,6 +353,7 @@ pub fn run() {
             commands::clear_playlist,
             commands::set_play_mode,
             commands::get_playback_state,
+            commands::run_playback_maintenance,
             commands::play_track,
             commands::toggle_playback,
             commands::pause_playback,
