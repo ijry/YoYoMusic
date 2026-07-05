@@ -38,6 +38,9 @@ describe("PlaylistPanel", () => {
       />,
     );
 
+    expect(screen.getByText("2 首")).toHaveClass("playlist-panel__counter");
+    expect(screen.getByText("01")).toHaveClass("track-index");
+    expect(screen.getByText("02")).toHaveClass("track-index");
     expect(screen.getByText("a")).toBeInTheDocument();
     expect(screen.getByText("文件丢失")).toBeInTheDocument();
     expect(screen.getByText("正在播放")).toBeInTheDocument();

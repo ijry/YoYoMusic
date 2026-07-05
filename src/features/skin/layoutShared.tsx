@@ -126,15 +126,22 @@ export function NowPlayingBlock({
     >
       <section className={`now-playing now-playing--${variant}`} aria-label="当前播放">
         <div className={props.playback.isPlaying ? "cover-card is-playing" : "cover-card"} aria-hidden="true">
+          <div className="cover-card__gloss" />
           <div className="disc-ring" />
+          <div className="cover-card__hub" />
         </div>
 
-        <div className="now-playing-copy">
-          <p className="eyebrow">Now Playing</p>
-          <h2>{props.currentTrack?.title ?? "等待添加本地音乐"}</h2>
-          <p className="subtitle">
-            {props.currentTrack?.artist || props.currentTrack?.album || "选择文件或文件夹开始播放"}
-          </p>
+        <div className="now-playing-copy now-playing-display">
+          <div className="now-playing-display__header">
+            <p className="eyebrow">Now Playing</p>
+            <span className="now-playing-status">{props.playback.isPlaying ? "PLAYING" : "READY"}</span>
+          </div>
+          <div className="now-playing-display__body">
+            <h2>{props.currentTrack?.title ?? "等待添加本地音乐"}</h2>
+            <p className="subtitle">
+              {props.currentTrack?.artist || props.currentTrack?.album || "选择文件或文件夹开始播放"}
+            </p>
+          </div>
         </div>
       </section>
     </DeviceModuleFrame>

@@ -10,6 +10,10 @@ interface PlaylistPanelProps {
   onClear?: () => void;
 }
 
+function formatTrackNumber(index: number) {
+  return String(index + 1).padStart(2, "0");
+}
+
 export function PlaylistPanel({
   tracks,
   currentTrackId,
@@ -26,10 +30,10 @@ export function PlaylistPanel({
           <p className="eyebrow">Playlist</p>
           <h2 id="playlist-title">当前播放列表</h2>
         </div>
-        <span>{tracks.length} 首</span>
+        <span className="playlist-panel__counter">{tracks.length} 首</span>
       </div>
 
-      <div className="playlist-actions" aria-label="播放列表操作">
+      <div className="playlist-actions playlist-actions--drawer" aria-label="播放列表操作">
         <button type="button" onClick={onAddFiles}>
           添加文件
         </button>
@@ -45,10 +49,13 @@ export function PlaylistPanel({
         <p className="empty-state">添加本地音乐文件后开始播放。</p>
       ) : (
         <ol className="track-list">
-          {tracks.map((track) => {
+          {tracks.map((track, index) => {
             const isCurrent = track.id === currentTrackId;
             return (
               <li key={track.id} className={isCurrent ? "track-item is-current" : "track-item"}>
+                <span className="track-index" aria-hidden="true">
+                  {formatTrackNumber(index)}
+                </span>
                 <button type="button" onClick={() => onPlay(track.id)} className="track-main">
                   <strong>{track.title}</strong>
                   <span>{track.artist || "未知歌手"}</span>

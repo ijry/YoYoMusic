@@ -128,6 +128,8 @@ describe("layout skins", () => {
     expect(screen.getByRole("region", { name: "当前播放" })).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
+    expect(container.querySelector(".now-playing-display")).toBeInTheDocument();
+    expect(container.querySelector(".cover-card__hub")).toBeInTheDocument();
 
     const controls = screen.getByRole("region", { name: "播放控制" });
     expect(within(controls).getByRole("button", { name: "播放" })).toBeInTheDocument();

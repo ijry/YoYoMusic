@@ -53,4 +53,11 @@ describe("layout skin CSS", () => {
     expect(css).toContain(".volume-well");
     expect(css).toContain(".play-mode-button--deck");
   });
+
+  it("styles the now-playing display and playlist drawer hooks", () => {
+    expect(css).toContain(".now-playing-display");
+    expect(css).toContain(".cover-card__hub");
+    expect(css).toContain(".track-index");
+    expect(css).toContain(".playlist-panel__counter");
+  });
 });
