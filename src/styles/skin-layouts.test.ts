@@ -6,7 +6,9 @@ const css = readFileSync(join(process.cwd(), "src/styles/skin-layouts.css"), "ut
 
 function rule(selector: string) {
   const match = css.match(new RegExp(`${escapeRegExp(selector)}\\s*\\{([\\s\\S]*?)\\}`));
-  if (!match) throw new Error(`Missing CSS rule for ${selector}`);
+  if (!match) {
+    throw new Error(`Missing CSS rule for ${selector}`);
+  }
   return match[1];
 }
 
@@ -15,22 +17,20 @@ function escapeRegExp(value: string) {
 }
 
 describe("layout skin CSS", () => {
-  it("defines all five built-in layout skin roots", () => {
-    expect(rule(".skin-layout--classic-blue-silver")).toContain("--skin-primary: #6f8fb8;");
-    expect(rule(".skin-layout--dark-vinyl")).toContain("--skin-primary: #d8dde8;");
-    expect(rule(".skin-layout--transparent-crystal")).toContain("--skin-primary: #7dd3fc;");
-    expect(rule(".skin-layout--metal-rack")).toContain("--skin-primary: #facc15;");
-    expect(rule(".skin-layout--warm-wood")).toContain("--skin-primary: #f3b56b;");
+  it("defines base device-shell framing hooks", () => {
+    expect(rule(".device-shell")).toContain("position: relative;");
+    expect(rule(".device-shell")).toContain("isolation: isolate;");
+    expect(rule(".device-module")).toContain("grid-template-rows: auto minmax(0, 1fr);");
+    expect(rule(".device-module__body")).toContain("min-height: 0;");
+    expect(rule(".device-module__label")).toContain("letter-spacing: 0.18em;");
   });
 
-  it("gives the five skins different layout structures", () => {
-    expect(rule(".skin-grid--classic")).toContain(
-      "grid-template-columns: minmax(260px, 0.82fr) minmax(320px, 1.18fr) minmax(280px, 0.9fr);",
-    );
-    expect(rule(".skin-grid--vinyl")).toContain("grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);");
-    expect(rule(".skin-grid--crystal")).toContain("grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.15fr);");
-    expect(rule(".skin-grid--rack")).toContain("grid-template-rows: minmax(0, 1.1fr) minmax(180px, 0.72fr);");
-    expect(rule(".skin-grid--wood")).toContain("grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);");
+  it("defines distinct shell variables for the five built-in skins", () => {
+    expect(rule(".skin-layout--classic-blue-silver")).toContain("--shell-edge: rgba(226, 237, 249, 0.72);");
+    expect(rule(".skin-layout--dark-vinyl")).toContain("--shell-edge: rgba(113, 245, 196, 0.28);");
+    expect(rule(".skin-layout--transparent-crystal")).toContain("--shell-edge: rgba(224, 250, 255, 0.5);");
+    expect(rule(".skin-layout--metal-rack")).toContain("--shell-edge: rgba(250, 204, 21, 0.34);");
+    expect(rule(".skin-layout--warm-wood")).toContain("--shell-edge: rgba(255, 228, 184, 0.34);");
   });
 
   it("preserves fixed shell and internal scroll zones", () => {
@@ -39,5 +39,11 @@ describe("layout skin CSS", () => {
     expect(rule(".skin-grid")).toContain("overflow: hidden;");
     expect(rule(".vinyl-side-rail")).toContain("overflow: hidden;");
     expect(rule(".wood-liner-notes")).toContain("overflow: hidden;");
+  });
+
+  it("keeps the narrow layout stack inside the shell", () => {
+    expect(css).toContain("@media (max-width: 760px)");
+    expect(css).toContain(".skin-grid--classic");
+    expect(css).toContain("grid-template-columns: 1fr;");
   });
 });
