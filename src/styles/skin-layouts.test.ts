@@ -68,4 +68,18 @@ describe("layout skin CSS", () => {
     expect(css).toContain(".settings-panel__status");
     expect(css).toContain(".settings-panel__field");
   });
+
+  it("styles the interior feature-panel hardware hooks", () => {
+    expect(css).toContain(".lyrics-panel__status");
+    expect(css).toContain(".lyric-line__stamp");
+    expect(css).toContain(".visualization-mode-button");
+    expect(css).toContain(".visualization-panel__meter");
+    expect(css).toContain(".equalizer-panel__status");
+    expect(css).toContain(".equalizer-preset");
+    expect(css).toContain(".eq-band-card");
+    expect(css).toContain(".tag-editor__status");
+    expect(css).toContain(".tag-editor__field");
+    expect(css).toContain(".skin-manager__status");
+    expect(css).toContain(".skin-card__machine-id");
+  });
 });

@@ -13,9 +13,19 @@ const presets: Record<string, { label: string; bands: number[] }> = {
 };
 
 export function EqualizerPanel({ settings, onChange }: EqualizerPanelProps) {
+  const presetLabel = presets[settings.preset]?.label ?? settings.preset;
+
   return (
     <section className="equalizer-panel" aria-label="均衡器">
-      <label className="toggle-row">
+      <div className="equalizer-panel__header">
+        <div>
+          <p className="eyebrow">Equalizer Rack</p>
+          <h2>均衡器</h2>
+        </div>
+        <span className="equalizer-panel__status">{settings.enabled ? `已启用 · ${presetLabel}` : "均衡器待机"}</span>
+      </div>
+
+      <label className="toggle-row equalizer-panel__toggle">
         <input
           type="checkbox"
           checked={settings.enabled}
@@ -24,22 +34,30 @@ export function EqualizerPanel({ settings, onChange }: EqualizerPanelProps) {
         启用均衡器
       </label>
 
-      <div className="feature-tabs">
-        {Object.entries(presets).map(([preset, config]) => (
+      <div className="equalizer-presets">
+        {Object.entries(presets).map(([preset, config], index) => (
           <button
             key={preset}
+            className="equalizer-preset"
             type="button"
+            aria-pressed={settings.preset === preset}
             onClick={() => onChange({ enabled: true, preset, bands: config.bands })}
           >
-            {config.label}
+            <span className="equalizer-preset__slot" aria-hidden="true">
+              P{index + 1}
+            </span>
+            <span className="equalizer-preset__label">{config.label}</span>
           </button>
         ))}
       </div>
 
       <div className="eq-bands">
         {settings.bands.map((band, index) => (
-          <label key={index}>
-            频段 {index + 1}
+          <label key={index} className="eq-band-card">
+            <span className="eq-band__meta">
+              <span>频段 {index + 1}</span>
+              <span className="eq-band__readout">{band > 0 ? `+${band}` : band}</span>
+            </span>
             <input
               aria-label={`频段 ${index + 1}`}
               type="range"

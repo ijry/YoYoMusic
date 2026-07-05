@@ -7,7 +7,7 @@ describe("TagEditor", () => {
   it("submits edited title artist and album", async () => {
     const user = userEvent.setup();
     const onSave = vi.fn();
-    render(
+    const { container } = render(
       <TagEditor
         track={{
           id: "1",
@@ -25,6 +25,8 @@ describe("TagEditor", () => {
       />,
     );
 
+    expect(container.querySelector(".tag-editor__status")).toHaveTextContent("当前曲目 Old");
+    expect(container.querySelectorAll(".tag-editor__field")).toHaveLength(3);
     await user.clear(screen.getByLabelText("标题"));
     await user.type(screen.getByLabelText("标题"), "New");
     await user.type(screen.getByLabelText("歌手"), "Singer");

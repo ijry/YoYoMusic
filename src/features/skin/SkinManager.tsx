@@ -21,6 +21,7 @@ interface SkinManagerProps {
 
 export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: SkinManagerProps) {
   const [previewSkinId, setPreviewSkinId] = useState(activeSkinId);
+  const builtInCount = skins.filter((skin) => skin.builtIn).length;
 
   useEffect(() => {
     setPreviewSkinId(activeSkinId);
@@ -39,6 +40,7 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
       </div>
 
       <p className="skin-manager__note">内置机型会改变整体机身布局；导入皮肤包只应用颜色和资源，不改变布局。</p>
+      <p className="skin-manager__status">{builtInCount > 0 ? `${builtInCount} 套可用机型` : `${skins.length} 套可用主题`}</p>
 
       {error ? (
         <p role="alert" className="error-text">
@@ -47,17 +49,22 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
       ) : null}
 
       <div className="skin-grid">
-        {skins.map((skin) => {
+        {skins.map((skin, index) => {
           const isActive = skin.id === activeSkinId;
           const isPreviewing = skin.id === previewSkinId && !isActive;
           const thumbnailClassName = skin.thumbnailClassName ?? "skin-thumbnail--custom";
 
           return (
             <article key={skin.id} className={isActive ? "skin-card is-active" : "skin-card"}>
-              <div className={`skin-thumbnail ${thumbnailClassName}`} role="img" aria-label={`${skin.name} 布局缩略图`}>
-                <span />
-                <span />
-                <span />
+              <div className="skin-card__frame">
+                <div className={`skin-thumbnail ${thumbnailClassName}`} role="img" aria-label={`${skin.name} 布局缩略图`}>
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <p className="skin-card__machine-id">
+                  {skin.builtIn ? `MODEL ${String(index + 1).padStart(2, "0")}` : "IMPORT"}
+                </p>
               </div>
 
               <div className="skin-card__copy">

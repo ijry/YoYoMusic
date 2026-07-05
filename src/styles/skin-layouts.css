@@ -727,6 +727,250 @@
   width: 100%;
 }
 
+.skin-layout .lyrics-panel,
+.skin-layout .visualization-panel,
+.skin-layout .equalizer-panel,
+.skin-layout .tag-editor,
+.skin-layout .skin-manager {
+  gap: 12px;
+  overflow: hidden;
+}
+
+.lyrics-panel__header,
+.visualization-panel__header,
+.equalizer-panel__header,
+.tag-editor__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lyrics-panel__header h2,
+.visualization-panel__header h2,
+.equalizer-panel__header h2,
+.tag-editor__header h2 {
+  font-size: 1.18rem;
+  letter-spacing: -0.03em;
+}
+
+.lyrics-panel__status,
+.visualization-panel__status,
+.equalizer-panel__status,
+.tag-editor__status,
+.skin-manager__status,
+.skin-card__machine-id {
+  padding: 6px 10px;
+  border: 1px solid var(--skin-border);
+  border-radius: 999px;
+  color: var(--skin-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.24);
+}
+
+.lyrics-panel__viewport {
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.skin-layout .lyric-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.2);
+}
+
+.skin-layout .lyric-line.is-active {
+  color: var(--skin-accent);
+  border-color: color-mix(in srgb, var(--skin-primary) 56%, transparent);
+  box-shadow:
+    inset 3px 0 0 var(--skin-primary),
+    0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+.lyric-line__stamp {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--skin-border);
+  border-radius: 12px;
+  color: var(--skin-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
+    rgba(3, 8, 16, 0.26);
+}
+
+.lyric-line__text {
+  min-width: 0;
+}
+
+.visualization-panel__modes,
+.equalizer-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.equalizer-presets {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.visualization-mode-button,
+.equalizer-preset {
+  min-width: 0;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  text-align: left;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.24);
+}
+
+.visualization-mode-button[aria-pressed="true"],
+.equalizer-preset[aria-pressed="true"],
+.equalizer-preset:hover {
+  border-color: color-mix(in srgb, var(--skin-primary) 62%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--skin-primary) 42%, transparent),
+    0 12px 20px rgba(0, 0, 0, 0.16);
+}
+
+.visualization-mode-button__slot,
+.equalizer-preset__slot {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--skin-border);
+  border-radius: 10px;
+  color: var(--skin-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
+    rgba(3, 8, 16, 0.26);
+}
+
+.visualization-mode-button__label,
+.equalizer-preset__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.visualization-panel__meter,
+.equalizer-panel__toggle,
+.tag-editor__field,
+.skin-card__frame,
+.skin-layout .skin-card {
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.visualization-panel__meter {
+  min-height: 0;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.visualization-preview--panel {
+  height: 100%;
+  min-height: 180px;
+}
+
+.equalizer-panel__toggle {
+  padding: 10px 12px;
+}
+
+.eq-bands {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+}
+
+.eq-band-card {
+  padding: 12px 14px;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.eq-band__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.eq-band__readout {
+  color: var(--skin-accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.tag-editor__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.skin-layout .skin-card {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.skin-card__frame {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.skin-card__machine-id {
+  justify-self: start;
+}
+
 .skin-title--classic {
   background: linear-gradient(90deg, rgba(217, 232, 251, 0.16), rgba(111, 143, 184, 0.08));
 }
@@ -787,7 +1031,23 @@
 .device-shell--classic .feature-tab,
 .device-shell--classic .feature-tab__slot,
 .device-shell--classic .settings-panel__status,
-.device-shell--classic .settings-panel__field {
+.device-shell--classic .settings-panel__field,
+.device-shell--classic .lyrics-panel__status,
+.device-shell--classic .lyric-line,
+.device-shell--classic .lyric-line__stamp,
+.device-shell--classic .visualization-mode-button,
+.device-shell--classic .visualization-mode-button__slot,
+.device-shell--classic .visualization-panel__meter,
+.device-shell--classic .equalizer-panel__status,
+.device-shell--classic .equalizer-preset,
+.device-shell--classic .equalizer-preset__slot,
+.device-shell--classic .eq-band-card,
+.device-shell--classic .tag-editor__status,
+.device-shell--classic .tag-editor__field,
+.device-shell--classic .skin-manager__status,
+.device-shell--classic .skin-card__frame,
+.device-shell--classic .skin-card__machine-id,
+.device-shell--classic .skin-card {
   background:
     linear-gradient(180deg, rgba(226, 237, 249, 0.22), rgba(61, 87, 125, 0.04)),
     rgba(12, 22, 38, 0.46);
@@ -827,7 +1087,20 @@
 .device-shell--vinyl .title-action-button,
 .device-shell--vinyl .feature-tab,
 .device-shell--vinyl .settings-panel__status,
-.device-shell--vinyl .settings-panel__field {
+.device-shell--vinyl .settings-panel__field,
+.device-shell--vinyl .lyrics-panel__status,
+.device-shell--vinyl .lyric-line,
+.device-shell--vinyl .visualization-mode-button,
+.device-shell--vinyl .visualization-panel__meter,
+.device-shell--vinyl .equalizer-panel__status,
+.device-shell--vinyl .equalizer-preset,
+.device-shell--vinyl .eq-band-card,
+.device-shell--vinyl .tag-editor__status,
+.device-shell--vinyl .tag-editor__field,
+.device-shell--vinyl .skin-manager__status,
+.device-shell--vinyl .skin-card__frame,
+.device-shell--vinyl .skin-card__machine-id,
+.device-shell--vinyl .skin-card {
   border-radius: 999px;
   background:
     radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.14), transparent 40%),
@@ -835,6 +1108,15 @@
 }
 
 .device-shell--vinyl .feature-tab__slot {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.16), transparent 42%),
+    rgba(6, 8, 11, 0.72);
+}
+
+.device-shell--vinyl .lyric-line__stamp,
+.device-shell--vinyl .visualization-mode-button__slot,
+.device-shell--vinyl .equalizer-preset__slot {
   border-radius: 999px;
   background:
     radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.16), transparent 42%),
@@ -869,7 +1151,23 @@
 .device-shell--crystal .feature-tab,
 .device-shell--crystal .feature-tab__slot,
 .device-shell--crystal .settings-panel__status,
-.device-shell--crystal .settings-panel__field {
+.device-shell--crystal .settings-panel__field,
+.device-shell--crystal .lyrics-panel__status,
+.device-shell--crystal .lyric-line,
+.device-shell--crystal .lyric-line__stamp,
+.device-shell--crystal .visualization-mode-button,
+.device-shell--crystal .visualization-mode-button__slot,
+.device-shell--crystal .visualization-panel__meter,
+.device-shell--crystal .equalizer-panel__status,
+.device-shell--crystal .equalizer-preset,
+.device-shell--crystal .equalizer-preset__slot,
+.device-shell--crystal .eq-band-card,
+.device-shell--crystal .tag-editor__status,
+.device-shell--crystal .tag-editor__field,
+.device-shell--crystal .skin-manager__status,
+.device-shell--crystal .skin-card__frame,
+.device-shell--crystal .skin-card__machine-id,
+.device-shell--crystal .skin-card {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(224, 250, 255, 0.08)),
     rgba(148, 163, 184, 0.08);
@@ -919,7 +1217,23 @@
 .device-shell--rack .feature-tab,
 .device-shell--rack .feature-tab__slot,
 .device-shell--rack .settings-panel__status,
-.device-shell--rack .settings-panel__field {
+.device-shell--rack .settings-panel__field,
+.device-shell--rack .lyrics-panel__status,
+.device-shell--rack .lyric-line,
+.device-shell--rack .lyric-line__stamp,
+.device-shell--rack .visualization-mode-button,
+.device-shell--rack .visualization-mode-button__slot,
+.device-shell--rack .visualization-panel__meter,
+.device-shell--rack .equalizer-panel__status,
+.device-shell--rack .equalizer-preset,
+.device-shell--rack .equalizer-preset__slot,
+.device-shell--rack .eq-band-card,
+.device-shell--rack .tag-editor__status,
+.device-shell--rack .tag-editor__field,
+.device-shell--rack .skin-manager__status,
+.device-shell--rack .skin-card__frame,
+.device-shell--rack .skin-card__machine-id,
+.device-shell--rack .skin-card {
   border-radius: 10px;
   color: #22c55e;
   background:
@@ -979,7 +1293,23 @@
 .device-shell--wood .feature-tab,
 .device-shell--wood .feature-tab__slot,
 .device-shell--wood .settings-panel__status,
-.device-shell--wood .settings-panel__field {
+.device-shell--wood .settings-panel__field,
+.device-shell--wood .lyrics-panel__status,
+.device-shell--wood .lyric-line,
+.device-shell--wood .lyric-line__stamp,
+.device-shell--wood .visualization-mode-button,
+.device-shell--wood .visualization-mode-button__slot,
+.device-shell--wood .visualization-panel__meter,
+.device-shell--wood .equalizer-panel__status,
+.device-shell--wood .equalizer-preset,
+.device-shell--wood .equalizer-preset__slot,
+.device-shell--wood .eq-band-card,
+.device-shell--wood .tag-editor__status,
+.device-shell--wood .tag-editor__field,
+.device-shell--wood .skin-manager__status,
+.device-shell--wood .skin-card__frame,
+.device-shell--wood .skin-card__machine-id,
+.device-shell--wood .skin-card {
   color: #fbe6bf;
   background:
     linear-gradient(180deg, rgba(255, 228, 184, 0.2), rgba(120, 53, 15, 0.06)),
@@ -1114,6 +1444,12 @@
 
   .title-actions__buttons,
   .skin-layout .feature-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .visualization-panel__modes,
+  .equalizer-presets,
+  .eq-bands {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

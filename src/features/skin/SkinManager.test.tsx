@@ -30,7 +30,7 @@ describe("SkinManager", () => {
   it("previews and applies a built-in machine skin", async () => {
     const user = userEvent.setup();
     const onApply = vi.fn();
-    render(
+    const { container } = render(
       <SkinManager
         skins={builtInSkins}
         activeSkinId="classic-blue-silver"
@@ -42,6 +42,9 @@ describe("SkinManager", () => {
     expect(screen.getByText("内置机型会改变整体机身布局；导入皮肤包只应用颜色和资源，不改变布局。")).toBeInTheDocument();
     expect(screen.getByText("旗舰分体机")).toBeInTheDocument();
     expect(screen.getAllByText("内置机型 · YoYoMusic · 1.0.0")).toHaveLength(2);
+    expect(container.querySelector(".skin-manager__status")).toHaveTextContent("2 套可用机型");
+    expect(container.querySelectorAll(".skin-card__machine-id")).toHaveLength(2);
+    expect(container.querySelector(".skin-card__frame")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "预览 暗夜黑胶舱" }));
     expect(screen.getByText("预览中")).toBeInTheDocument();

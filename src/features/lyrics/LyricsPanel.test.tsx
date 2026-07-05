@@ -4,7 +4,7 @@ import { LyricsPanel } from "./LyricsPanel";
 
 describe("LyricsPanel", () => {
   it("highlights the active lyric line", () => {
-    render(
+    const { container } = render(
       <LyricsPanel
         positionMs={3500}
         document={{
@@ -20,11 +20,14 @@ describe("LyricsPanel", () => {
       />,
     );
 
-    expect(screen.getByText("第二句")).toHaveAttribute("aria-current", "true");
+    expect(container.querySelector(".lyrics-panel__status")).toHaveTextContent("已定位 2 行");
+    expect(container.querySelectorAll(".lyric-line__stamp")).toHaveLength(2);
+    expect(screen.getByText("第二句").closest(".lyric-line")).toHaveAttribute("aria-current", "true");
   });
 
   it("renders empty lyrics copy", () => {
-    render(<LyricsPanel positionMs={0} document={null} />);
+    const { container } = render(<LyricsPanel positionMs={0} document={null} />);
+    expect(container.querySelector(".lyrics-panel__status")).toHaveTextContent("未载入");
     expect(screen.getByText("暂无歌词")).toBeInTheDocument();
   });
 });
