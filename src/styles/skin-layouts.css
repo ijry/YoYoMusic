@@ -661,6 +661,34 @@
   padding-right: 0;
 }
 
+.skin-layout .track-list,
+.skin-layout .feature-content,
+.skin-layout .lyrics-panel__viewport {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--skin-primary) 56%, transparent) color-mix(in srgb, var(--skin-border) 28%, transparent);
+}
+
+.skin-layout .track-list::-webkit-scrollbar,
+.skin-layout .feature-content::-webkit-scrollbar,
+.skin-layout .lyrics-panel__viewport::-webkit-scrollbar {
+  width: 10px;
+}
+
+.skin-layout .track-list::-webkit-scrollbar-track,
+.skin-layout .feature-content::-webkit-scrollbar-track,
+.skin-layout .lyrics-panel__viewport::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--skin-border) 24%, transparent);
+}
+
+.skin-layout .track-list::-webkit-scrollbar-thumb,
+.skin-layout .feature-content::-webkit-scrollbar-thumb,
+.skin-layout .lyrics-panel__viewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--skin-accent), var(--skin-primary)) padding-box;
+}
+
 .skin-layout .track-item {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
@@ -745,6 +773,21 @@
 
 .skin-layout .ghost-button:focus-visible {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent), 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.skin-layout .playlist-action-button:disabled,
+.skin-layout .ghost-button:disabled,
+.skin-layout .title-action-button:disabled,
+.skin-layout .feature-tab:disabled,
+.skin-layout .visualization-mode-button:disabled,
+.skin-layout .equalizer-preset:disabled,
+.skin-layout .transport-button:disabled,
+.skin-layout .play-mode-button--deck:disabled,
+.skin-layout .skin-card__actions button:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  border-color: color-mix(in srgb, var(--skin-border) 78%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .cover-card {
@@ -1463,6 +1506,36 @@
   margin: 0;
   padding: 0;
   accent-color: var(--skin-primary);
+}
+
+.equalizer-panel__toggle input[type="checkbox"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1px solid var(--skin-border);
+  border-radius: 8px;
+  cursor: pointer;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(2, 7, 14, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.14);
+}
+
+.equalizer-panel__toggle input[type="checkbox"]:checked {
+  border-color: color-mix(in srgb, var(--skin-primary) 62%, transparent);
+  background:
+    radial-gradient(circle at center, var(--skin-accent) 0 32%, transparent 33%),
+    rgba(2, 7, 14, 0.34);
+}
+
+.equalizer-panel__toggle input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent),
+    0 0 0 4px rgba(255, 255, 255, 0.08);
 }
 
 .visualization-mode-button[aria-pressed="true"],
@@ -2425,6 +2498,19 @@
     rgba(12, 22, 38, 0.42);
 }
 
+.device-shell--classic .equalizer-panel__toggle input[type="checkbox"] {
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(226, 237, 249, 0.18), rgba(61, 87, 125, 0.04)),
+    rgba(12, 22, 38, 0.4);
+}
+
+.device-shell--classic .playlist-action-button:disabled {
+  background:
+    linear-gradient(180deg, rgba(226, 237, 249, 0.12), rgba(61, 87, 125, 0.02)),
+    rgba(12, 22, 38, 0.34);
+}
+
 .device-shell--classic .eq-band-card input[type="range"]::-webkit-slider-runnable-track {
   background:
     linear-gradient(90deg, rgba(111, 143, 184, 0.34), transparent),
@@ -2551,6 +2637,17 @@
   border-radius: 28px;
 }
 
+.device-shell--vinyl .equalizer-panel__toggle input[type="checkbox"] {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.14), transparent 42%),
+    rgba(6, 8, 11, 0.68);
+}
+
+.device-shell--vinyl .track-list {
+  scrollbar-color: rgba(113, 245, 196, 0.52) rgba(255, 255, 255, 0.04);
+}
+
 .device-shell--vinyl .eq-band-card input[type="range"]::-webkit-slider-runnable-track {
   background:
     radial-gradient(circle at 24% 50%, rgba(113, 245, 196, 0.16), transparent 28%),
@@ -2665,6 +2762,13 @@
   backdrop-filter: blur(14px);
 }
 
+.device-shell--crystal .equalizer-panel__toggle input[type="checkbox"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(224, 250, 255, 0.08)),
+    rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(12px);
+}
+
 .device-shell--crystal .eq-band-card::before {
   content: "";
   position: absolute;
@@ -2676,6 +2780,12 @@
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(16px);
   pointer-events: none;
+}
+
+.device-shell--crystal .feature-content::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(224, 250, 255, 0.08)) padding-box;
+  backdrop-filter: blur(10px);
 }
 
 .device-shell--rack {
@@ -2792,6 +2902,13 @@
   padding-left: 34px;
 }
 
+.device-shell--rack .equalizer-panel__toggle input[type="checkbox"] {
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(5, 9, 15, 0.82);
+}
+
 .device-shell--rack .equalizer-panel__toggle::before {
   content: "";
   position: absolute;
@@ -2806,6 +2923,13 @@
     rgba(5, 9, 15, 0.82);
   box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.18);
   pointer-events: none;
+}
+
+.device-shell--rack .playlist-action-button:disabled {
+  border-style: dashed;
+  background:
+    linear-gradient(180deg, rgba(250, 204, 21, 0.08), rgba(255, 255, 255, 0.01)),
+    rgba(9, 13, 20, 0.66);
 }
 
 .device-shell--rack .eq-band-card input[type="range"]::-webkit-slider-runnable-track {
@@ -2949,6 +3073,12 @@
     inset 0 -8px 14px rgba(28, 13, 6, 0.12);
 }
 
+.device-shell--wood .equalizer-panel__toggle input[type="checkbox"] {
+  background:
+    linear-gradient(180deg, rgba(255, 228, 184, 0.24), rgba(120, 53, 15, 0.08)),
+    rgba(54, 28, 14, 0.72);
+}
+
 .device-shell--wood .eq-band-card input[type="range"]::-webkit-slider-runnable-track {
   background:
     linear-gradient(90deg, rgba(243, 181, 107, 0.3), transparent),
@@ -2959,6 +3089,10 @@
   background:
     linear-gradient(90deg, rgba(243, 181, 107, 0.3), transparent),
     rgba(53, 24, 10, 0.56);
+}
+
+.device-shell--wood .lyrics-panel__viewport {
+  scrollbar-color: rgba(210, 150, 82, 0.66) rgba(54, 28, 14, 0.28);
 }
 
 .skin-thumbnail {

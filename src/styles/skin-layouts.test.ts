@@ -109,6 +109,14 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell--wood .lyric-line::before")).toContain("inset: 10px;");
   });
 
+  it("defines skin-specific native control residue hooks", () => {
+    expect(rule('.device-shell--classic .equalizer-panel__toggle input[type="checkbox"]')).toContain("border-radius: 10px;");
+    expect(rule(".device-shell--vinyl .track-list")).toContain("scrollbar-color: rgba(113, 245, 196, 0.52) rgba(255, 255, 255, 0.04);");
+    expect(rule(".device-shell--crystal .feature-content::-webkit-scrollbar-thumb")).toContain("backdrop-filter: blur(10px);");
+    expect(rule(".device-shell--rack .playlist-action-button:disabled")).toContain("border-style: dashed;");
+    expect(rule(".device-shell--wood .lyrics-panel__viewport")).toContain("scrollbar-color: rgba(210, 150, 82, 0.66) rgba(54, 28, 14, 0.28);");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");
