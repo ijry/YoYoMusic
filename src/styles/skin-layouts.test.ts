@@ -52,6 +52,14 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell__brass-plaque")).toContain("justify-content: center;");
   });
 
+  it("defines skin-specific module compartment framing hooks", () => {
+    expect(rule(".device-module--classic-playlist::before")).toContain("width: 16px;");
+    expect(rule(".device-module--vinyl-playlist::before")).toContain("width: 4px;");
+    expect(rule(".device-module--crystal-playlist")).toContain("transform: translateY(10px);");
+    expect(rule(".device-module--rack-playlist::before")).toContain("width: 18px;");
+    expect(rule(".device-module--wood-playlist::before")).toContain("inset: 14px;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");
