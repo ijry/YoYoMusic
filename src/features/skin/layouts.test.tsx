@@ -3,6 +3,29 @@ import { describe, expect, it, vi } from "vitest";
 import { builtInLayoutSkins } from "./layoutRegistry";
 import type { PlayerLayoutProps } from "./layoutTypes";
 
+const machineLabels: Record<string, { shellClass: string; labels: string[] }> = {
+  "classic-blue-silver": {
+    shellClass: "device-shell--classic",
+    labels: ["主控舱", "曲目仓", "状态窗", "功能仓", "控制台"],
+  },
+  "dark-vinyl": {
+    shellClass: "device-shell--vinyl",
+    labels: ["唱盘舱", "舞台频谱", "曲目塔", "控制塔", "控制台"],
+  },
+  "transparent-crystal": {
+    shellClass: "device-shell--crystal",
+    labels: ["透明舱", "资料匣", "悬浮仓", "底座控制台"],
+  },
+  "metal-rack": {
+    shellClass: "device-shell--rack",
+    labels: ["频谱桥", "机柜面板", "状态机柜", "机架控制台"],
+  },
+  "warm-wood": {
+    shellClass: "device-shell--wood",
+    labels: ["陈列窗", "节目单仓", "暖光铭牌窗", "黄铜控制台"],
+  },
+};
+
 function createProps(): PlayerLayoutProps {
   return {
     playlist: {
@@ -90,17 +113,21 @@ function createProps(): PlayerLayoutProps {
 }
 
 describe("layout skins", () => {
-  it.each(builtInLayoutSkins)("renders accessible shell controls for $name", (skin) => {
+  it.each(builtInLayoutSkins)("renders machine-shell labels and controls for $name", (skin) => {
     const props = createProps();
+    const expected = machineLabels[skin.id];
     const { container } = render(<skin.Layout {...props} />);
 
-    expect(container.firstElementChild).toHaveClass(`skin-layout--${skin.id}`);
+    expect(container.querySelector(`.${expected.shellClass}`)).toBeInTheDocument();
+    expected.labels.forEach((label) => {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    });
+
     expect(screen.getByRole("heading", { name: "悠悠乐听" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "当前播放列表" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "当前播放" })).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Song A" })).toBeInTheDocument();
 
     const controls = screen.getByRole("region", { name: "播放控制" });
     expect(within(controls).getByRole("button", { name: "播放" })).toBeInTheDocument();

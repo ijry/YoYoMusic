@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { EqualizerPanel } from "../equalizer/EqualizerPanel";
 import { LyricsPanel } from "../lyrics/LyricsPanel";
 import { PlayerControls } from "../player/PlayerControls";
@@ -17,6 +18,38 @@ export const featurePanels: Array<{ id: FeaturePanel; label: string }> = [
   { id: "skin", label: "皮肤" },
   { id: "settings", label: "设置" },
 ];
+
+interface DeviceModuleFrameProps {
+  moduleLabel: string;
+  eyebrow?: string;
+  className?: string;
+  bodyClassName?: string;
+  children: ReactNode;
+}
+
+interface DeviceBlockProps {
+  moduleLabel: string;
+  eyebrow?: string;
+  moduleClassName?: string;
+}
+
+function DeviceModuleFrame({
+  moduleLabel,
+  eyebrow,
+  className,
+  bodyClassName,
+  children,
+}: DeviceModuleFrameProps) {
+  return (
+    <section className={["device-module", className].filter(Boolean).join(" ")}>
+      <header className="device-module__header">
+        <p className="device-module__label">{moduleLabel}</p>
+        {eyebrow ? <p className="device-module__eyebrow">{eyebrow}</p> : null}
+      </header>
+      <div className={["device-module__body", bodyClassName].filter(Boolean).join(" ")}>{children}</div>
+    </section>
+  );
+}
 
 export function TitleActions(props: PlayerLayoutProps) {
   return (
@@ -50,45 +83,84 @@ export function LayoutErrorBanner({ error }: { error: string | null }) {
   return <AppErrorBanner error={error} />;
 }
 
-export function PlaylistBlock(props: PlayerLayoutProps) {
+export function PlaylistBlock({
+  moduleLabel,
+  eyebrow = "Playlist Drawer",
+  moduleClassName,
+  ...props
+}: PlayerLayoutProps & DeviceBlockProps) {
   return (
-    <PlaylistPanel
-      currentTrackId={props.playback.trackId}
-      tracks={props.playlist.tracks}
-      onPlay={(trackId) => props.onPlayerCommand("play_track", { trackId })}
-      onRemove={(trackId) => props.onPlayerCommand("remove_track", { trackId })}
-      onAddFiles={props.onAddFiles}
-      onAddFolder={props.onAddFolder}
-      onClear={props.onClearPlaylist}
-    />
+    <DeviceModuleFrame
+      moduleLabel={moduleLabel}
+      eyebrow={eyebrow}
+      className={["device-module--playlist", moduleClassName].filter(Boolean).join(" ")}
+    >
+      <PlaylistPanel
+        currentTrackId={props.playback.trackId}
+        tracks={props.playlist.tracks}
+        onPlay={(trackId) => props.onPlayerCommand("play_track", { trackId })}
+        onRemove={(trackId) => props.onPlayerCommand("remove_track", { trackId })}
+        onAddFiles={props.onAddFiles}
+        onAddFolder={props.onAddFolder}
+        onClear={props.onClearPlaylist}
+      />
+    </DeviceModuleFrame>
   );
 }
 
-export function NowPlayingBlock({ variant = "standard", ...props }: PlayerLayoutProps & { variant?: string }) {
+export function NowPlayingBlock({
+  moduleLabel,
+  eyebrow = "Now Playing Display",
+  moduleClassName,
+  variant = "standard",
+  ...props
+}: PlayerLayoutProps &
+  DeviceBlockProps & {
+    variant?: string;
+  }) {
   return (
-    <section className={`now-playing now-playing--${variant}`} aria-label="当前播放">
-      <div className={props.playback.isPlaying ? "cover-card is-playing" : "cover-card"} aria-hidden="true">
-        <div className="disc-ring" />
-      </div>
+    <DeviceModuleFrame
+      moduleLabel={moduleLabel}
+      eyebrow={eyebrow}
+      className={["device-module--now-playing", moduleClassName].filter(Boolean).join(" ")}
+    >
+      <section className={`now-playing now-playing--${variant}`} aria-label="当前播放">
+        <div className={props.playback.isPlaying ? "cover-card is-playing" : "cover-card"} aria-hidden="true">
+          <div className="disc-ring" />
+        </div>
 
-      <div className="now-playing-copy">
-        <p className="eyebrow">Now Playing</p>
-        <h2>{props.currentTrack?.title ?? "等待添加本地音乐"}</h2>
-        <p className="subtitle">{props.currentTrack?.artist || props.currentTrack?.album || "选择文件或文件夹开始播放"}</p>
-      </div>
-    </section>
+        <div className="now-playing-copy">
+          <p className="eyebrow">Now Playing</p>
+          <h2>{props.currentTrack?.title ?? "等待添加本地音乐"}</h2>
+          <p className="subtitle">
+            {props.currentTrack?.artist || props.currentTrack?.album || "选择文件或文件夹开始播放"}
+          </p>
+        </div>
+      </section>
+    </DeviceModuleFrame>
   );
 }
 
-export function HeroVisualization(props: PlayerLayoutProps) {
+export function HeroVisualization({
+  moduleLabel,
+  eyebrow = "Spectrum Bridge",
+  moduleClassName,
+  ...props
+}: PlayerLayoutProps & DeviceBlockProps) {
   return (
-    <div className="workbench-visualization" role="img" aria-label="播放动态可视化">
-      <div className="visualization-preview visualization-preview--hero" aria-hidden="true">
-        {props.visualizationFrame.values.slice(0, 18).map((value, index) => (
-          <span key={index} style={{ height: `${Math.max(10, value * 100)}%` }} />
-        ))}
+    <DeviceModuleFrame
+      moduleLabel={moduleLabel}
+      eyebrow={eyebrow}
+      className={["device-module--visualization", moduleClassName].filter(Boolean).join(" ")}
+    >
+      <div className="workbench-visualization" role="img" aria-label="播放动态可视化">
+        <div className="visualization-preview visualization-preview--hero" aria-hidden="true">
+          {props.visualizationFrame.values.slice(0, 18).map((value, index) => (
+            <span key={index} style={{ height: `${Math.max(10, value * 100)}%` }} />
+          ))}
+        </div>
       </div>
-    </div>
+    </DeviceModuleFrame>
   );
 }
 
@@ -113,17 +185,42 @@ export function FeatureContent(props: PlayerLayoutProps) {
   return <div className="feature-content">{renderFeaturePanel(props)}</div>;
 }
 
-export function FeatureSidebar(props: PlayerLayoutProps) {
+export function FeatureSidebar({
+  moduleLabel,
+  eyebrow = "Expansion Bay",
+  moduleClassName,
+  ...props
+}: PlayerLayoutProps & DeviceBlockProps) {
   return (
-    <aside className="feature-sidebar" role="complementary" aria-label="功能面板">
-      <FeatureTabs {...props} />
-      <FeatureContent {...props} />
-    </aside>
+    <DeviceModuleFrame
+      moduleLabel={moduleLabel}
+      eyebrow={eyebrow}
+      className={["device-module--feature", moduleClassName].filter(Boolean).join(" ")}
+      bodyClassName="device-module__body--feature"
+    >
+      <aside className="feature-sidebar" role="complementary" aria-label="功能面板">
+        <FeatureTabs {...props} />
+        <FeatureContent {...props} />
+      </aside>
+    </DeviceModuleFrame>
   );
 }
 
-export function ControlsBlock(props: PlayerLayoutProps) {
-  return <PlayerControls state={props.playback} onCommand={(command, payload) => props.onPlayerCommand(command, payload)} />;
+export function ControlsBlock({
+  moduleLabel,
+  eyebrow = "Transport Console",
+  moduleClassName,
+  ...props
+}: PlayerLayoutProps & DeviceBlockProps) {
+  return (
+    <DeviceModuleFrame
+      moduleLabel={moduleLabel}
+      eyebrow={eyebrow}
+      className={["device-module--controls", moduleClassName].filter(Boolean).join(" ")}
+    >
+      <PlayerControls state={props.playback} onCommand={(command, payload) => props.onPlayerCommand(command, payload)} />
+    </DeviceModuleFrame>
+  );
 }
 
 function renderFeaturePanel(props: PlayerLayoutProps) {
