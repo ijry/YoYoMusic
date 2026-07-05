@@ -173,6 +173,19 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell--classic .feature-tab__slot")).toContain("display: none;");
   });
 
+  it("defines skin manager library card usability hooks", () => {
+    expect(rule(".skin-layout .skin-card")).toContain("grid-template-rows: minmax(150px, 0.92fr) auto auto;");
+    expect(rule(".skin-card__preview-button")).toContain("cursor: pointer;");
+    expect(rule(".skin-card__preview-button")).toContain("text-align: left;");
+    expect(rule(".skin-card__preview-button:hover")).toContain("border-color:");
+    expect(rule(".skin-card__preview-button:focus-visible")).toContain("outline: none;");
+    expect(rule(".skin-card.is-previewing")).toContain("border-color:");
+    expect(rule(".skin-card__frame")).toContain("min-height: 132px;");
+    expect(rule(".skin-card__name")).toContain("font-size: 1rem;");
+    expect(rule(".skin-card__apply-button")).toContain("min-height: 38px;");
+    expect(rule(".skin-card__apply-button:disabled")).toContain("cursor: default;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");

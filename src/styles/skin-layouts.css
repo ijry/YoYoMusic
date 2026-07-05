@@ -1475,12 +1475,45 @@
 
 .visualization-panel__meter,
 .equalizer-panel__toggle,
-.tag-editor__field,
-.skin-card__frame,
+.tag-editor__field {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.skin-card__frame {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 132px;
+  display: grid;
+  padding: 10px;
+  border: 1px solid var(--skin-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+}
+
 .skin-layout .skin-card {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(150px, 0.92fr) auto auto;
+  gap: 10px;
+  padding: 10px;
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
@@ -1705,40 +1738,79 @@
     rgba(3, 8, 16, 0.18);
 }
 
-.skin-layout .skin-card {
+.skin-card__preview-button {
+  min-width: 0;
   display: grid;
-  gap: 12px;
-  padding: 12px;
+  grid-template-rows: minmax(132px, 1fr) auto;
+  gap: 10px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
 }
 
-.skin-card__frame {
-  display: grid;
-  gap: 8px;
-  padding: 10px;
+.skin-card__preview-button:hover {
+  border-color: color-mix(in srgb, var(--skin-primary) 48%, transparent);
+  background: color-mix(in srgb, var(--skin-primary) 10%, transparent);
 }
 
-.skin-card__copy,
-.skin-card__actions {
+.skin-card__preview-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent),
+    0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.skin-card__frame .skin-thumbnail {
+  min-height: 112px;
+}
+
+.skin-card__copy {
+  display: grid;
+  gap: 6px;
   padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--skin-border) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--skin-border) 78%, transparent);
   border-radius: 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
     rgba(2, 7, 14, 0.14);
 }
 
+.skin-card__name {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.skin-card__description {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
 .skin-card__actions {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
+  display: grid;
 }
 
-.skin-card__actions button {
+.skin-card__apply-button {
+  min-height: 38px;
   width: 100%;
-  min-width: 0;
+  border: 1px solid var(--skin-border);
+  border-radius: 14px;
+  color: var(--color-text);
+  font-weight: 800;
+  cursor: pointer;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-accent) 24%, transparent), transparent),
+    rgba(3, 8, 16, 0.36);
 }
 
-.skin-card__machine-id {
-  justify-self: start;
+.skin-card__apply-button:disabled {
+  cursor: default;
+  opacity: 0.82;
 }
 
 .skin-title--classic {
@@ -3197,8 +3269,13 @@
   border-color: color-mix(in srgb, var(--skin-primary, var(--color-primary)) 52%, transparent);
 }
 
-.skin-card__copy,
-.skin-card__actions,
+.skin-card.is-previewing {
+  border-color: color-mix(in srgb, var(--skin-accent) 56%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 28%, transparent),
+    0 12px 22px rgba(0, 0, 0, 0.16);
+}
+
 .skin-card__status {
   display: grid;
   gap: 8px;
