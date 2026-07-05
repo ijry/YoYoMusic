@@ -703,6 +703,50 @@
   border-color: var(--skin-border);
 }
 
+.skin-layout .playlist-action-button,
+.skin-layout .ghost-button,
+.skin-layout .title-action-button,
+.skin-layout .feature-tab,
+.skin-layout .visualization-mode-button,
+.skin-layout .equalizer-preset,
+.skin-layout .skin-card__actions button {
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+.skin-layout .playlist-action-button:hover,
+.skin-layout .ghost-button:hover,
+.skin-layout .title-action-button:hover,
+.skin-layout .feature-tab:hover,
+.skin-layout .visualization-mode-button:hover,
+.skin-layout .equalizer-preset:hover,
+.skin-layout .skin-card__actions button:hover {
+  border-color: var(--skin-border);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 20px rgba(0, 0, 0, 0.18);
+}
+
+.skin-layout .playlist-action-button:focus-visible,
+.skin-layout .ghost-button:focus-visible,
+.skin-layout .title-action-button:focus-visible,
+.skin-layout .feature-tab:focus-visible,
+.skin-layout .visualization-mode-button:focus-visible,
+.skin-layout .equalizer-preset:focus-visible,
+.skin-layout .skin-card__actions button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent),
+    0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.skin-layout .ghost-button:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent), 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
 .cover-card {
   position: relative;
   overflow: hidden;
@@ -2000,6 +2044,79 @@
   background:
     linear-gradient(180deg, rgba(255, 248, 220, 0.08), rgba(210, 150, 82, 0.03)),
     rgba(63, 31, 16, 0.24);
+}
+
+.device-shell--classic .track-item {
+  border: 1px solid rgba(217, 232, 251, 0.16);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(226, 237, 249, 0.12), rgba(61, 87, 125, 0.03)),
+    rgba(12, 22, 38, 0.34);
+  box-shadow:
+    inset 3px 0 0 rgba(217, 232, 251, 0.18),
+    0 10px 16px rgba(8, 18, 34, 0.1);
+}
+
+.device-shell--classic .playlist-action-button,
+.device-shell--classic .ghost-button {
+  border-radius: 16px;
+}
+
+.device-shell--vinyl .track-item {
+  border: 1px solid rgba(113, 245, 196, 0.14);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 16% 50%, rgba(113, 245, 196, 0.08), transparent 22%),
+    rgba(6, 8, 11, 0.54);
+}
+
+.device-shell--vinyl .playlist-action-button,
+.device-shell--vinyl .ghost-button {
+  border-radius: 999px;
+}
+
+.device-shell--crystal .track-item {
+  border: 1px solid rgba(224, 250, 255, 0.18);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(224, 250, 255, 0.05)),
+    rgba(148, 163, 184, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.device-shell--crystal .playlist-action-button,
+.device-shell--crystal .ghost-button {
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+}
+
+.device-shell--rack .track-item {
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(250, 204, 21, 0.08), rgba(255, 255, 255, 0.01)),
+    rgba(9, 13, 20, 0.62);
+  box-shadow: inset 2px 0 0 rgba(34, 197, 94, 0.3);
+}
+
+.device-shell--rack .playlist-action-button,
+.device-shell--rack .ghost-button {
+  border-radius: 10px;
+  letter-spacing: 0.06em;
+}
+
+.device-shell--wood .track-item {
+  border: 1px solid rgba(255, 228, 184, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 220, 0.08), rgba(210, 150, 82, 0.03)),
+    rgba(63, 31, 16, 0.28);
+  box-shadow: inset 0 0 0 2px rgba(54, 28, 14, 0.14);
+}
+
+.device-shell--wood .playlist-action-button,
+.device-shell--wood .ghost-button {
+  border-radius: 16px;
 }
 
 .device-shell--classic {

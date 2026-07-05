@@ -84,6 +84,15 @@ describe("layout skin CSS", () => {
     expect(rule(".device-module--wood-visualization::before")).toContain("inset: 12px;");
   });
 
+  it("defines skin-specific surface primitive hooks", () => {
+    expect(rule(".device-shell--classic .track-item")).toContain("border-radius: 16px;");
+    expect(rule(".device-shell--vinyl .track-item")).toContain("border-radius: 999px;");
+    expect(rule(".device-shell--crystal .track-item")).toContain("backdrop-filter: blur(14px);");
+    expect(rule(".device-shell--rack .track-item")).toContain("border-radius: 8px;");
+    expect(rule(".device-shell--wood .track-item")).toContain("border-radius: 18px;");
+    expect(rule(".skin-layout .ghost-button:focus-visible")).toContain("box-shadow: 0 0 0 2px");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");
