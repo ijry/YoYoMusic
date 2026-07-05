@@ -9,8 +9,8 @@ const builtInSkins: SkinSummary[] = [
     name: "经典蓝银分体机",
     author: "YoYoMusic",
     version: "1.0.0",
-    description: "蓝银金属主控舱、抽屉式播放列表、机械控制条。",
-    tone: "默认主打",
+    description: "蓝背光主控舱、抽屉曲目仓、机械运输控制台。",
+    tone: "旗舰分体机",
     thumbnailClassName: "skin-thumbnail--classic-blue-silver",
     builtIn: true,
   },
@@ -19,15 +19,15 @@ const builtInSkins: SkinSummary[] = [
     name: "暗夜黑胶舱",
     author: "YoYoMusic",
     version: "1.0.0",
-    description: "黑胶唱片居中，播放列表和歌词收束到右侧窄栏。",
-    tone: "沉浸播放",
+    description: "中心唱盘舱、暗场字幕屏、竖向控制塔。",
+    tone: "沉浸唱盘机",
     thumbnailClassName: "skin-thumbnail--dark-vinyl",
     builtIn: true,
   },
 ];
 
 describe("SkinManager", () => {
-  it("previews and applies a built-in layout skin", async () => {
+  it("previews and applies a built-in machine skin", async () => {
     const user = userEvent.setup();
     const onApply = vi.fn();
     render(
@@ -39,10 +39,9 @@ describe("SkinManager", () => {
       />,
     );
 
-    expect(screen.getByRole("img", { name: "经典蓝银分体机 布局缩略图" })).toBeInTheDocument();
-    expect(screen.getByText("默认主打")).toBeInTheDocument();
-    expect(screen.getByText("蓝银金属主控舱、抽屉式播放列表、机械控制条。")).toBeInTheDocument();
-    expect(screen.getByText("当前皮肤")).toBeInTheDocument();
+    expect(screen.getByText("内置机型会改变整体机身布局；导入皮肤包只应用颜色和资源，不改变布局。")).toBeInTheDocument();
+    expect(screen.getByText("旗舰分体机")).toBeInTheDocument();
+    expect(screen.getAllByText("内置机型 · YoYoMusic · 1.0.0")).toHaveLength(2);
 
     await user.click(screen.getByRole("button", { name: "预览 暗夜黑胶舱" }));
     expect(screen.getByText("预览中")).toBeInTheDocument();
@@ -62,6 +61,6 @@ describe("SkinManager", () => {
     );
 
     expect(screen.getByText("manifest 缺失")).toBeInTheDocument();
-    expect(screen.getByText("导入皮肤包只应用颜色和资源，不改变布局。")).toBeInTheDocument();
+    expect(screen.getByText("内置机型会改变整体机身布局；导入皮肤包只应用颜色和资源，不改变布局。")).toBeInTheDocument();
   });
 });

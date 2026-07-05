@@ -38,7 +38,7 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
         </button>
       </div>
 
-      <p className="skin-manager__note">导入皮肤包只应用颜色和资源，不改变布局。</p>
+      <p className="skin-manager__note">内置机型会改变整体机身布局；导入皮肤包只应用颜色和资源，不改变布局。</p>
 
       {error ? (
         <p role="alert" className="error-text">
@@ -63,8 +63,8 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
               <div className="skin-card__copy">
                 <p className="skin-card__tone">{skin.tone ?? (skin.builtIn ? "内置布局" : "导入主题")}</p>
                 <h3>{skin.name}</h3>
-                <p>
-                  {skin.author} · {skin.version}
+                <p className="skin-card__meta">
+                  {skin.builtIn ? "内置机型" : "导入主题"} · {skin.author} · {skin.version}
                 </p>
                 {skin.description ? <p>{skin.description}</p> : null}
               </div>
