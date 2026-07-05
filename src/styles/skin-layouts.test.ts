@@ -160,6 +160,19 @@ describe("layout skin CSS", () => {
     expect(rule(".skin-layout .skin-manager__note::before")).toContain("pointer-events: none;");
   });
 
+  it("defines compact default classic usability overrides", () => {
+    expect(rule(".device-shell--classic .device-module__trim")).toContain("display: none;");
+    expect(rule(".device-shell--classic .device-module--classic-playlist::before")).toContain("display: none;");
+    expect(rule(".device-shell--classic .device-module--classic-playlist::after")).toContain("display: none;");
+    expect(rule(".device-shell--classic .device-shell__plate")).toContain("background: transparent;");
+    expect(rule(".device-shell--classic .title-action-button")).toContain("min-height: 40px;");
+    expect(rule(".device-shell--classic .title-action-button")).toContain("cursor: pointer;");
+    expect(rule(".device-shell--classic .title-action-button:hover")).toContain("background:");
+    expect(rule(".device-shell--classic .title-action-button:active")).toContain("transform: translateY(0);");
+    expect(rule(".device-shell--classic .feature-tab")).toContain("min-width: 88px;");
+    expect(rule(".device-shell--classic .feature-tab__slot")).toContain("display: none;");
+  });
+
   it("preserves fixed shell and internal scroll zones", () => {
     expect(rule(".skin-chrome")).toContain("height: calc(100vh - 24px);");
     expect(rule(".skin-chrome")).toContain("overflow: hidden;");

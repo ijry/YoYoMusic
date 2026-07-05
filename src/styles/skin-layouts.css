@@ -3618,10 +3618,14 @@
 }
 
 .device-shell--classic {
-  border-radius: 22px;
+  border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(51, 70, 96, 0.9), rgba(15, 25, 40, 0.96)),
+    radial-gradient(circle at 18% 12%, rgba(111, 143, 184, 0.2), transparent 26rem),
+    linear-gradient(180deg, rgba(39, 57, 82, 0.94), rgba(13, 24, 39, 0.98)),
     var(--color-surface);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 42px rgba(2, 7, 14, 0.42);
 }
 
 .device-shell--classic::before {
@@ -3635,50 +3639,123 @@
   opacity: 0.6;
 }
 
-.device-shell--classic .device-shell__handle,
-.device-shell--classic .device-shell__foot,
-.device-shell--classic .device-shell__split-rail,
-.device-shell--classic .device-shell__center-seam {
+.device-shell--classic .skin-title--classic {
+  min-height: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(226, 237, 249, 0.12), rgba(21, 36, 58, 0.48)),
+    rgba(10, 22, 38, 0.58);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.device-shell--classic .skin-title--classic::before {
   display: none;
 }
 
-.device-shell--classic .skin-title--classic::before,
-.device-shell--classic .device-module--classic-playlist::before,
-.device-shell--classic .device-module--classic-playlist::after,
-.device-shell--classic .device-module--classic-feature::before,
-.device-shell--classic .device-module--classic-controls::before,
-.device-shell--classic .device-module--classic-status::before,
-.device-shell--classic .device-module--classic-visualization::before {
-  opacity: 0.18;
+.device-shell--classic .app-title {
+  gap: 4px;
 }
 
-.device-shell--classic .device-module {
-  border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(13, 25, 41, 0.66);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 10px 22px rgba(2, 7, 14, 0.16);
+.device-shell--classic .app-title h1 {
+  font-size: 2rem;
+  letter-spacing: 0;
 }
 
-.device-shell--classic .device-module__trim {
-  min-height: 2px;
-  opacity: 0.34;
+.device-shell--classic .device-shell__plate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
+.device-shell--classic .app-title__model,
+.device-shell--classic .app-title__serial {
+  letter-spacing: 0.04em;
+}
+
+.device-shell--classic .device-shell__handle,
+.device-shell--classic .device-shell__vent-bank,
+.device-shell--classic .device-shell__foot,
+.device-shell--classic .device-shell__split-rail,
+.device-shell--classic .device-shell__center-seam,
 .device-shell--classic .device-module__rivets {
   display: none;
 }
 
-.device-shell--classic .app-title h1 {
-  font-size: 2.2rem;
+.device-shell--classic .device-module {
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  border-color: rgba(226, 237, 249, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015)),
+    rgba(12, 24, 40, 0.64);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 8px 18px rgba(2, 7, 14, 0.14);
+}
+
+.device-shell--classic .device-module__trim {
+  display: none;
+}
+
+.device-shell--classic .device-module__label {
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+.device-shell--classic .device-module__eyebrow {
   letter-spacing: 0;
 }
 
+.device-shell--classic .title-actions {
+  gap: 8px;
+}
+
 .device-shell--classic .title-action-button {
-  min-height: 48px;
-  border-radius: 14px;
+  min-height: 40px;
+  justify-items: center;
+  padding: 8px 12px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  background:
+    linear-gradient(180deg, rgba(217, 232, 251, 0.18), rgba(88, 117, 153, 0.08)),
+    rgba(11, 24, 40, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.device-shell--classic .title-action-button:hover {
+  background:
+    linear-gradient(180deg, rgba(217, 232, 251, 0.28), rgba(111, 143, 184, 0.14)),
+    rgba(16, 35, 58, 0.82);
+}
+
+.device-shell--classic .title-action-button:active {
+  transform: translateY(0);
+}
+
+.device-shell--classic .feature-tab {
+  min-width: 88px;
+  min-height: 36px;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.device-shell--classic .feature-tab__slot {
+  display: none;
+}
+
+.device-shell--classic .feature-tab[aria-pressed="true"] {
+  background:
+    linear-gradient(180deg, rgba(217, 232, 251, 0.24), rgba(111, 143, 184, 0.12)),
+    rgba(16, 35, 58, 0.86);
 }
 
 .device-shell--classic .player-controls {
@@ -3729,6 +3806,30 @@
   box-shadow:
     inset 0 0 0 4px rgba(6, 13, 24, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.device-shell--classic .device-module--classic-playlist::before {
+  display: none;
+}
+
+.device-shell--classic .device-module--classic-playlist::after {
+  display: none;
+}
+
+.device-shell--classic .device-module--classic-feature::before {
+  display: none;
+}
+
+.device-shell--classic .device-module--classic-controls::before {
+  display: none;
+}
+
+.device-shell--classic .device-module--classic-status::before {
+  display: none;
+}
+
+.device-shell--classic .device-module--classic-visualization::before {
+  display: none;
 }
 
 .vinyl-stage {
