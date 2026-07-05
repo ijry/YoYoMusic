@@ -115,6 +115,45 @@
   z-index: 1;
 }
 
+.app-title {
+  display: grid;
+  gap: 8px;
+}
+
+.device-shell__plate {
+  display: inline-grid;
+  justify-self: start;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--skin-border);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
+    rgba(3, 8, 16, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 18px rgba(0, 0, 0, 0.14);
+}
+
+.app-title__model,
+.app-title__serial {
+  display: block;
+}
+
+.app-title__model {
+  color: var(--skin-accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.app-title__serial {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
 .device-module {
   position: relative;
   min-width: 0;
@@ -156,6 +195,43 @@
 .device-module__eyebrow {
   color: var(--color-muted);
   font-size: 0.76rem;
+}
+
+.device-module__trim {
+  min-height: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.device-module__trim-bar {
+  height: 8px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04)),
+    rgba(3, 8, 16, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.16);
+}
+
+.device-module__rivets {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.device-module__rivet {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--skin-border);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.56), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.16));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 2px 4px rgba(0, 0, 0, 0.16);
 }
 
 .device-module__body {
@@ -1088,6 +1164,14 @@
     rgba(12, 22, 38, 0.68);
 }
 
+.device-shell--classic .device-shell__plate,
+.device-shell--classic .device-module__trim-bar,
+.device-shell--classic .device-module__rivet {
+  background:
+    linear-gradient(180deg, rgba(226, 237, 249, 0.24), rgba(61, 87, 125, 0.04)),
+    rgba(12, 22, 38, 0.46);
+}
+
 .device-shell--classic .playlist-panel__counter,
 .device-shell--classic .track-index,
 .device-shell--classic .now-playing-status,
@@ -1146,6 +1230,15 @@
     radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.12), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.08)),
     rgba(6, 8, 11, 0.74);
+}
+
+.device-shell--vinyl .device-shell__plate,
+.device-shell--vinyl .device-module__trim-bar,
+.device-shell--vinyl .device-module__rivet {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.14), transparent 40%),
+    rgba(6, 8, 11, 0.64);
 }
 
 .device-shell--vinyl .playlist-panel__counter,
@@ -1214,6 +1307,15 @@
     rgba(14, 24, 38, 0.2);
 }
 
+.device-shell--crystal .device-shell__plate,
+.device-shell--crystal .device-module__trim-bar,
+.device-shell--crystal .device-module__rivet {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(224, 250, 255, 0.08)),
+    rgba(148, 163, 184, 0.08);
+  backdrop-filter: blur(14px);
+}
+
 .device-shell--crystal .playlist-panel__counter,
 .device-shell--crystal .track-index,
 .device-shell--crystal .now-playing-status,
@@ -1275,6 +1377,16 @@
 .device-shell--rack .transport-button,
 .device-shell--rack .play-mode-button--deck {
   border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(9, 13, 20, 0.82);
+}
+
+.device-shell--rack .device-shell__plate,
+.device-shell--rack .device-module__trim-bar,
+.device-shell--rack .device-module__rivet {
+  border-radius: 10px;
+  color: #22c55e;
   background:
     linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
     rgba(9, 13, 20, 0.82);
@@ -1357,6 +1469,15 @@
   background:
     linear-gradient(180deg, rgba(255, 228, 184, 0.24), rgba(120, 53, 15, 0.08)),
     rgba(54, 28, 14, 0.72);
+}
+
+.device-shell--wood .device-shell__plate,
+.device-shell--wood .device-module__trim-bar,
+.device-shell--wood .device-module__rivet {
+  color: #fbe6bf;
+  background:
+    linear-gradient(180deg, rgba(255, 228, 184, 0.2), rgba(120, 53, 15, 0.06)),
+    rgba(54, 28, 14, 0.5);
 }
 
 .device-shell--wood .volume-well__ring {

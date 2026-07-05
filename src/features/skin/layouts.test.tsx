@@ -128,8 +128,12 @@ describe("layout skins", () => {
     expect(screen.getByRole("region", { name: "当前播放" })).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
+    expect(container.querySelector(".app-title__model")).toBeInTheDocument();
+    expect(container.querySelector(".device-shell__plate")).toBeInTheDocument();
     expect(container.querySelector(".now-playing-display")).toBeInTheDocument();
     expect(container.querySelector(".cover-card__hub")).toBeInTheDocument();
+    expect(container.querySelector(".device-module__trim")).toBeInTheDocument();
+    expect(container.querySelectorAll(".device-module__rivet")).toHaveLength(10);
     expect(container.querySelector(".title-status-cluster")).toBeInTheDocument();
     expect(container.querySelectorAll(".title-action-button")).toHaveLength(4);
     expect(container.querySelector(".feature-tab__slot")).toBeInTheDocument();

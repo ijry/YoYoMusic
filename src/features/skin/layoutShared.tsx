@@ -46,6 +46,13 @@ function DeviceModuleFrame({
         <p className="device-module__label">{moduleLabel}</p>
         {eyebrow ? <p className="device-module__eyebrow">{eyebrow}</p> : null}
       </header>
+      <div className="device-module__trim" aria-hidden="true">
+        <span className="device-module__trim-bar" />
+        <span className="device-module__rivets">
+          <span className="device-module__rivet" />
+          <span className="device-module__rivet" />
+        </span>
+      </div>
       <div className={["device-module__body", bodyClassName].filter(Boolean).join(" ")}>{children}</div>
     </section>
   );
@@ -102,11 +109,23 @@ export function TitleActions(props: PlayerLayoutProps) {
   );
 }
 
-export function AppTitle({ eyebrow = "YoYoMusic Desktop Player" }: { eyebrow?: string }) {
+export function AppTitle({
+  eyebrow = "YoYoMusic Desktop Player",
+  model = "MODEL YY-01",
+  serial = "Desktop Audio Console",
+}: {
+  eyebrow?: string;
+  model?: string;
+  serial?: string;
+}) {
   return (
-    <div>
+    <div className="app-title">
       <p className="eyebrow">{eyebrow}</p>
       <h1 id="app-title">悠悠乐听</h1>
+      <div className="device-shell__plate" aria-label="机型铭牌">
+        <span className="app-title__model">{model}</span>
+        <span className="app-title__serial">{serial}</span>
+      </div>
     </div>
   );
 }

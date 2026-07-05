@@ -20,7 +20,10 @@ describe("layout skin CSS", () => {
   it("defines base device-shell framing hooks", () => {
     expect(rule(".device-shell")).toContain("position: relative;");
     expect(rule(".device-shell")).toContain("isolation: isolate;");
+    expect(rule(".device-shell__plate")).toContain("display: inline-grid;");
     expect(rule(".device-module")).toContain("grid-template-rows: auto minmax(0, 1fr);");
+    expect(rule(".device-module__trim")).toContain("min-height: 8px;");
+    expect(rule(".device-module__rivet")).toContain("border-radius: 999px;");
     expect(rule(".device-module__body")).toContain("min-height: 0;");
     expect(rule(".device-module__label")).toContain("letter-spacing: 0.18em;");
   });
@@ -73,6 +76,7 @@ describe("layout skin CSS", () => {
     expect(css).toContain(".feature-tab__slot");
     expect(css).toContain(".settings-panel__status");
     expect(css).toContain(".settings-panel__field");
+    expect(css).toContain(".app-title__model");
   });
 
   it("styles the interior feature-panel hardware hooks", () => {
