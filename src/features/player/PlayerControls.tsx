@@ -4,6 +4,7 @@ import type { PlaybackState } from "../../shared/types";
 
 interface PlayerControlsProps {
   state: PlaybackState;
+  hasPlayableTrack?: boolean;
   onCommand: (command: CommandName, payload: CommandPayload) => void;
 }
 
@@ -14,11 +15,13 @@ function formatTime(ms: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
+export function PlayerControls({ state, hasPlayableTrack = Boolean(state.trackId), onCommand }: PlayerControlsProps) {
   const volumePercent = Math.round(state.volume * 100);
   const [volumeInput, setVolumeInput] = useState(String(volumePercent));
   const volumeNeedleRotation = `${Math.round(volumePercent * 2.4 - 120)}deg`;
   const currentPlayModeLabel = playModeLabel(state.playMode);
+  const canUseTransport = Boolean(state.trackId) || hasPlayableTrack;
+  const canSeek = Boolean(state.trackId) && state.durationMs > 0;
 
   useEffect(() => {
     setVolumeInput(String(volumePercent));
@@ -36,6 +39,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
         <button
           type="button"
           className="transport-button transport-button--prev"
+          disabled={!canUseTransport}
           onClick={() => onCommand("previous_track", {})}
         >
           上一首
@@ -43,6 +47,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
         <button
           type="button"
           className="transport-button transport-button--play"
+          disabled={!canUseTransport}
           onClick={() => onCommand("toggle_playback", {})}
         >
           {state.isPlaying ? "暂停" : "播放"}
@@ -50,6 +55,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
         <button
           type="button"
           className="transport-button transport-button--next"
+          disabled={!canUseTransport}
           onClick={() => onCommand("next_track", {})}
         >
           下一首
@@ -72,6 +78,7 @@ export function PlayerControls({ state, onCommand }: PlayerControlsProps) {
           min="0"
           max={Math.max(state.durationMs, 1)}
           value={state.positionMs}
+          disabled={!canSeek}
           onChange={(event) => onCommand("seek", { positionMs: Number(event.currentTarget.value) })}
         />
         <span className="control-readout">

@@ -320,13 +320,19 @@ export function ControlsBlock({
   moduleClassName,
   ...props
 }: PlayerLayoutProps & DeviceBlockProps) {
+  const hasPlayableTrack = props.playlist.tracks.some((track) => track.status === "ready");
+
   return (
     <DeviceModuleFrame
       moduleLabel={moduleLabel}
       eyebrow={eyebrow}
       className={["device-module--controls", moduleClassName].filter(Boolean).join(" ")}
     >
-      <PlayerControls state={props.playback} onCommand={(command, payload) => props.onPlayerCommand(command, payload)} />
+      <PlayerControls
+        state={props.playback}
+        hasPlayableTrack={hasPlayableTrack}
+        onCommand={(command, payload) => props.onPlayerCommand(command, payload)}
+      />
     </DeviceModuleFrame>
   );
 }
