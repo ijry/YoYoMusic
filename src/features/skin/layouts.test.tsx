@@ -151,6 +151,8 @@ describe("layout skins", () => {
     expect(screen.getByRole("region", { name: "当前播放" })).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
+    expect(container.querySelector(".workbench-visualization .visualization-preview--spectrum")).toBeInTheDocument();
+    expect(container.querySelector(".workbench-visualization .visualization-preview--hero")).toBeInTheDocument();
     expect(container.querySelector(".app-title__model")).toBeInTheDocument();
     expect(container.querySelector(".device-shell__plate")).toBeInTheDocument();
     expect(container.querySelectorAll(".device-shell__handle")).toHaveLength(2);
@@ -176,5 +178,18 @@ describe("layout skins", () => {
     expect(within(controls).getByRole("button", { name: "播放" })).toBeInTheDocument();
     expect(within(controls).getByRole("slider", { name: "播放进度" })).toBeInTheDocument();
     expect(within(controls).getByRole("spinbutton", { name: "音量" })).toBeInTheDocument();
+  });
+
+  it("renders the selected visualization mode in the feature panel", () => {
+    const props = createProps();
+    props.activePanel = "visualization";
+    props.settings.visualizationMode = "radial";
+    props.playback.isPlaying = true;
+    const ClassicLayout = builtInLayoutSkins[0].Layout;
+    const { container } = render(<ClassicLayout {...props} />);
+
+    expect(container.querySelector(".feature-content .visualization-preview--radial")).toBeInTheDocument();
+    expect(container.querySelector(".feature-content .visualization-radial-ring--outer")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "环形脉冲" })).toHaveAttribute("aria-pressed", "true");
   });
 });

@@ -1,9 +1,12 @@
 import type { VisualizationMode } from "../../shared/types";
+import { VisualizationPreview } from "./VisualizationPreview";
 import type { VisualizationFrame } from "./renderers";
 
 interface VisualizationPanelProps {
   mode: VisualizationMode;
   frame: VisualizationFrame;
+  isPlaying?: boolean;
+  hasTrack?: boolean;
   onModeChange: (mode: VisualizationMode) => void;
 }
 
@@ -13,7 +16,13 @@ const visualizationModes: Array<{ id: VisualizationMode; label: string }> = [
   { id: "radial", label: "环形脉冲" },
 ];
 
-export function VisualizationPanel({ mode, frame, onModeChange }: VisualizationPanelProps) {
+export function VisualizationPanel({
+  mode,
+  frame,
+  isPlaying = false,
+  hasTrack = true,
+  onModeChange,
+}: VisualizationPanelProps) {
   return (
     <section className="visualization-panel" aria-label="音乐可视化">
       <div className="visualization-panel__header">
@@ -40,11 +49,7 @@ export function VisualizationPanel({ mode, frame, onModeChange }: VisualizationP
         ))}
       </div>
       <div className="visualization-panel__meter">
-        <div className="visualization-preview visualization-preview--panel">
-          {frame.values.map((value, index) => (
-            <span key={index} style={{ height: `${Math.max(8, value * 100)}%` }} />
-          ))}
-        </div>
+        <VisualizationPreview mode={mode} frame={frame} variant="panel" isPlaying={isPlaying} hasTrack={hasTrack} />
       </div>
     </section>
   );

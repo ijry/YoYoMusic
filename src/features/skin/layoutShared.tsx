@@ -7,6 +7,7 @@ import { SettingsPanel } from "../settings/SettingsPanel";
 import { AppErrorBanner } from "../shell/AppErrorBanner";
 import { TagEditor } from "../tags/TagEditor";
 import { VisualizationPanel } from "../visualization/VisualizationPanel";
+import { VisualizationPreview } from "../visualization/VisualizationPreview";
 import { SkinManager } from "./SkinManager";
 import type { FeaturePanel, PlayerLayoutProps } from "./layoutTypes";
 
@@ -255,11 +256,13 @@ export function HeroVisualization({
       className={["device-module--visualization", moduleClassName].filter(Boolean).join(" ")}
     >
       <div className="workbench-visualization" role="img" aria-label="播放动态可视化">
-        <div className="visualization-preview visualization-preview--hero" aria-hidden="true">
-          {props.visualizationFrame.values.slice(0, 18).map((value, index) => (
-            <span key={index} style={{ height: `${Math.max(10, value * 100)}%` }} />
-          ))}
-        </div>
+        <VisualizationPreview
+          mode={props.settings.visualizationMode}
+          frame={props.visualizationFrame}
+          variant="hero"
+          isPlaying={props.playback.isPlaying}
+          hasTrack={Boolean(props.currentTrack)}
+        />
       </div>
     </DeviceModuleFrame>
   );
@@ -334,6 +337,8 @@ function renderFeaturePanel(props: PlayerLayoutProps) {
       <VisualizationPanel
         mode={props.settings.visualizationMode}
         frame={props.visualizationFrame}
+        isPlaying={props.playback.isPlaying}
+        hasTrack={Boolean(props.currentTrack)}
         onModeChange={props.onVisualizationModeChange}
       />
     );
