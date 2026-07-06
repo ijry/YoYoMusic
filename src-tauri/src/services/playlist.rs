@@ -116,6 +116,20 @@ impl PlaylistService {
         Ok(self.snapshot())
     }
 
+    pub fn mark_track_status(
+        &mut self,
+        track_id: &str,
+        status: TrackStatus,
+    ) -> Result<PlaylistSnapshot, AppError> {
+        let track = self
+            .tracks
+            .iter_mut()
+            .find(|track| track.id == track_id)
+            .ok_or_else(|| AppError::FileMissing(track_id.to_string()))?;
+        track.status = status;
+        Ok(self.snapshot())
+    }
+
     pub fn current_track(&self) -> Option<Track> {
         let track_id = self.playlist.track_ids.get(self.playlist.current_index)?;
         self.track_by_id(track_id)
@@ -421,6 +435,25 @@ mod tests {
 
         assert!(matches!(decision, AutoAdvanceDecision::Play(track) if track.id == "b"));
         assert_eq!(service.snapshot().playlist.current_index, 3);
+    }
+
+    #[test]
+    fn marks_track_status_by_id() {
+        let mut service = playlist_with_tracks(vec![
+            track("a", TrackStatus::Ready),
+            track("b", TrackStatus::Ready),
+        ]);
+
+        let snapshot = service
+            .mark_track_status("b", TrackStatus::Unplayable)
+            .expect("track should be marked");
+
+        let marked = snapshot
+            .tracks
+            .iter()
+            .find(|track| track.id == "b")
+            .expect("track b should exist");
+        assert_eq!(marked.status, TrackStatus::Unplayable);
     }
 
     fn playlist_with_tracks(tracks: Vec<Track>) -> PlaylistService {

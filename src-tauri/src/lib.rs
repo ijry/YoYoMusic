@@ -25,7 +25,7 @@ pub mod commands {
 
     use crate::{
         errors,
-        models::{AppSettings, PlayMode, PlaybackState, PlaylistSnapshot},
+        models::{AppSettings, PlayMode, PlaybackState, PlaylistSnapshot, Track, TrackStatus},
         services::lyrics::parse_lrc,
         services::metadata::apply_tag_edit,
         services::skin::{validate_skin_package as validate_skin_package_service, SkinManifest},
@@ -33,6 +33,56 @@ pub mod commands {
         state::AppState,
     };
     use tauri::Manager;
+
+    fn play_track_from_command(
+        app: &tauri::AppHandle,
+        state: &tauri::State<'_, AppState>,
+        track: Track,
+    ) -> Result<PlaybackState, errors::AppError> {
+        let track_id = track.id.clone();
+        let result = {
+            let mut playback = state
+                .playback
+                .lock()
+                .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+            playback.play(track)
+        };
+
+        if let Err(err) = &result {
+            mark_track_status_for_error(app, state.inner(), &track_id, err)?;
+        }
+
+        result
+    }
+
+    fn mark_track_status_for_error(
+        app: &tauri::AppHandle,
+        state: &AppState,
+        track_id: &str,
+        err: &errors::AppError,
+    ) -> Result<(), errors::AppError> {
+        let Some(status) = status_for_playback_error(err) else {
+            return Ok(());
+        };
+
+        let snapshot = {
+            let mut playlist = state
+                .playlist
+                .lock()
+                .map_err(|lock_err| errors::AppError::StorageFailed(lock_err.to_string()))?;
+            playlist.mark_track_status(track_id, status)?
+        };
+        AppState::emit_playlist(app, &snapshot);
+        Ok(())
+    }
+
+    fn status_for_playback_error(err: &errors::AppError) -> Option<TrackStatus> {
+        match err {
+            errors::AppError::FileMissing(_) => Some(TrackStatus::Missing),
+            errors::AppError::Unplayable(_) => Some(TrackStatus::Unplayable),
+            _ => None,
+        }
+    }
 
     #[tauri::command]
     pub fn get_playlist(
@@ -127,23 +177,22 @@ pub mod commands {
     #[tauri::command]
     pub fn play_track(
         track_id: String,
+        app: tauri::AppHandle,
         state: tauri::State<'_, AppState>,
     ) -> Result<PlaybackState, errors::AppError> {
-        let track = {
+        let (track, snapshot) = {
             let mut playlist = state
                 .playlist
                 .lock()
                 .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-            playlist
+            let track = playlist
                 .select_track(&track_id)
-                .ok_or_else(|| errors::AppError::FileMissing(track_id.clone()))?
+                .ok_or_else(|| errors::AppError::FileMissing(track_id.clone()))?;
+            (track, playlist.snapshot())
         };
+        AppState::emit_playlist(&app, &snapshot);
 
-        let mut playback = state
-            .playback
-            .lock()
-            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-        playback.play(track)
+        play_track_from_command(&app, &state, track)
     }
 
     #[tauri::command]
@@ -170,48 +219,56 @@ pub mod commands {
 
     #[tauri::command]
     pub fn next_track(
+        app: tauri::AppHandle,
         state: tauri::State<'_, AppState>,
     ) -> Result<PlaybackState, errors::AppError> {
-        let track = {
+        let (track, snapshot) = {
             let mut playlist = state
                 .playlist
                 .lock()
                 .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-            playlist.next_track()
+            let track = playlist.next_track();
+            (track, playlist.snapshot())
         };
+        AppState::emit_playlist(&app, &snapshot);
 
-        let mut playback = state
-            .playback
-            .lock()
-            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-
-        Ok(match track {
-            Some(track) => playback.play(track)?,
-            None => playback.current_state(),
-        })
+        match track {
+            Some(track) => play_track_from_command(&app, &state, track),
+            None => {
+                let playback = state
+                    .playback
+                    .lock()
+                    .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+                Ok(playback.current_state())
+            }
+        }
     }
 
     #[tauri::command]
     pub fn previous_track(
+        app: tauri::AppHandle,
         state: tauri::State<'_, AppState>,
     ) -> Result<PlaybackState, errors::AppError> {
-        let track = {
+        let (track, snapshot) = {
             let mut playlist = state
                 .playlist
                 .lock()
                 .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-            playlist.previous_track()
+            let track = playlist.previous_track();
+            (track, playlist.snapshot())
         };
+        AppState::emit_playlist(&app, &snapshot);
 
-        let mut playback = state
-            .playback
-            .lock()
-            .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
-
-        Ok(match track {
-            Some(track) => playback.play(track)?,
-            None => playback.current_state(),
-        })
+        match track {
+            Some(track) => play_track_from_command(&app, &state, track),
+            None => {
+                let playback = state
+                    .playback
+                    .lock()
+                    .map_err(|err| errors::AppError::StorageFailed(err.to_string()))?;
+                Ok(playback.current_state())
+            }
+        }
     }
 
     #[tauri::command]
