@@ -109,6 +109,23 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell--wood .lyric-line::before")).toContain("inset: 10px;");
   });
 
+  it("defines distinct visualization mode hooks", () => {
+    expect(rule(".visualization-preview--spectrum")).toContain("grid-template-columns:");
+    expect(rule(".visualization-spectrum-bar")).toContain("transform: scaleY(var(--viz-value));");
+    expect(rule(".visualization-spectrum-cap")).toContain("height: 4px;");
+    expect(rule(".visualization-preview--waveform")).toContain("position: relative;");
+    expect(rule(".visualization-waveform-line")).toContain("border-top:");
+    expect(rule(".visualization-waveform-point")).toContain("left: var(--viz-x);");
+    expect(rule(".visualization-preview--radial")).toContain("place-items: center;");
+    expect(rule(".visualization-radial-ring")).toContain("border-radius: 999px;");
+    expect(rule(".visualization-radial-tick")).toContain("transform: rotate(var(--viz-angle))");
+    expect(rule(".visualization-preview.is-standby")).toContain("opacity: 0.72;");
+    expect(rule(".skin-layout .visualization-spectrum-bar")).toContain("background: linear-gradient(180deg, var(--skin-accent), var(--skin-primary));");
+    expect(css).not.toContain(".visualization-preview--panel span");
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(css).toContain(".visualization-preview *");
+  });
+
   it("defines skin-specific native control residue hooks", () => {
     expect(rule('.device-shell--classic .equalizer-panel__toggle input[type="checkbox"]')).toContain("border-radius: 10px;");
     expect(rule(".device-shell--vinyl .track-list")).toContain("scrollbar-color: rgba(113, 245, 196, 0.52) rgba(255, 255, 255, 0.04);");
