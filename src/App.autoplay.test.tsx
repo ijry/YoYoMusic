@@ -21,9 +21,8 @@ const testState = vi.hoisted(() => {
     };
   }
 
-  return {
-    listeners: new Map<string, (payload: unknown) => void>(),
-    playlistSnapshot: {
+  function createPlaylistSnapshot(): PlaylistSnapshot {
+    return {
       playlist: {
         id: "default",
         name: "当前播放列表",
@@ -32,8 +31,11 @@ const testState = vi.hoisted(() => {
         playMode: "sequence",
       },
       tracks: [track("a", "Song A"), track("b", "Song B")],
-    } satisfies PlaylistSnapshot,
-    stoppedPlayback: {
+    };
+  }
+
+  function createStoppedPlayback(): PlaybackState {
+    return {
       trackId: "a",
       positionMs: 0,
       durationMs: 1000,
@@ -42,8 +44,11 @@ const testState = vi.hoisted(() => {
       isMuted: false,
       playMode: "sequence",
       eqEnabled: false,
-    } satisfies PlaybackState,
-    settings: {
+    };
+  }
+
+  function createSettings(): AppSettings {
+    return {
       defaultSkin: "classic-blue-silver",
       shortcuts: {},
       enrichmentEnabled: false,
@@ -56,7 +61,17 @@ const testState = vi.hoisted(() => {
         preset: "flat",
         bands: Array(10).fill(0),
       },
-    } satisfies AppSettings,
+    };
+  }
+
+  return {
+    listeners: new Map<string, (payload: unknown) => void>(),
+    playlistSnapshot: createPlaylistSnapshot(),
+    stoppedPlayback: createStoppedPlayback(),
+    settings: createSettings(),
+    createPlaylistSnapshot,
+    createStoppedPlayback,
+    createSettings,
   };
 });
 
@@ -88,7 +103,21 @@ vi.mock("./shared/fileDialog", () => ({
 describe("App autoplay events", () => {
   beforeEach(() => {
     testState.listeners.clear();
-    vi.mocked(invokeCommand).mockClear();
+    testState.playlistSnapshot = testState.createPlaylistSnapshot();
+    testState.stoppedPlayback = testState.createStoppedPlayback();
+    testState.settings = testState.createSettings();
+    vi.mocked(invokeCommand).mockReset();
+    vi.mocked(invokeCommand).mockImplementation(async (command: string, payload?: Record<string, unknown>) => {
+      if (command === "get_playlist") return testState.playlistSnapshot;
+      if (command === "get_playback_state") return testState.stoppedPlayback;
+      if (command === "load_settings") return testState.settings;
+      if (command === "apply_skin") return payload?.skinId;
+      if (command === "save_settings") {
+        testState.settings = payload?.settings as AppSettings;
+        return testState.settings;
+      }
+      return {};
+    });
   });
 
   it("updates the now playing card from playlist and playback events", async () => {
@@ -123,5 +152,59 @@ describe("App autoplay events", () => {
 
     expect(invokeCommand).toHaveBeenCalledWith("apply_skin", { skinId: "dark-vinyl" });
     expect(container.querySelector(".skin-layout--dark-vinyl")).toBeInTheDocument();
+  });
+
+  it("starts the current playlist track when play is pressed with no active track", async () => {
+    const user = userEvent.setup();
+    testState.stoppedPlayback = {
+      ...testState.stoppedPlayback,
+      trackId: null,
+      positionMs: 0,
+      isPlaying: false,
+    };
+    vi.mocked(invokeCommand).mockImplementation(async (command: string, payload?: Record<string, unknown>) => {
+      if (command === "get_playlist") return testState.playlistSnapshot;
+      if (command === "get_playback_state") return testState.stoppedPlayback;
+      if (command === "load_settings") return testState.settings;
+      if (command === "play_track") {
+        return {
+          ...testState.stoppedPlayback,
+          trackId: payload?.trackId as string,
+          durationMs: 1000,
+          isPlaying: true,
+        } satisfies PlaybackState;
+      }
+      return {};
+    });
+
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: "播放" }));
+
+    expect(invokeCommand).toHaveBeenCalledWith("play_track", { trackId: "a" });
+    expect(await screen.findByRole("button", { name: "暂停" })).toBeInTheDocument();
+  });
+
+  it("shows readable playback errors when a play command fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(invokeCommand).mockImplementation(async (command: string) => {
+      if (command === "get_playlist") return testState.playlistSnapshot;
+      if (command === "get_playback_state") return testState.stoppedPlayback;
+      if (command === "load_settings") return testState.settings;
+      if (command === "play_track") {
+        throw { code: "unplayable", message: "file is unplayable: bad.mp3" };
+      }
+      return {};
+    });
+
+    render(<App />);
+
+    const playlistRegion = await screen.findByRole("region", { name: "当前播放列表" });
+    const trackButton = within(playlistRegion).getByText("Song A").closest("button");
+    expect(trackButton).not.toBeNull();
+
+    await user.click(trackButton as HTMLElement);
+
+    expect(await screen.findByText(/音频文件不可播放/)).toBeInTheDocument();
   });
 });

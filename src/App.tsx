@@ -205,21 +205,25 @@ export default function App() {
       return;
     }
 
+    const resolved = resolvePlaybackCommand(command, payload, playback, playlist);
+
     try {
-      if (isPlaylistCommand(command)) {
-        const snapshot = await invokeCommand<PlaylistSnapshot>(command, payload);
+      if (isPlaylistCommand(resolved.command)) {
+        const snapshot = await invokeCommand<PlaylistSnapshot>(resolved.command, resolved.payload);
         setPlaylist(snapshot);
-      } else if (isPlaybackCommand(command)) {
-        const playbackState = await invokeCommand<PlaybackState>(command, payload);
+      } else if (isPlaybackCommand(resolved.command)) {
+        const playbackState = await invokeCommand<PlaybackState>(resolved.command, resolved.payload);
         setPlayback(playbackState);
-        if (command === "set_play_mode") {
+        if (resolved.command === "set_play_mode") {
           setPlaylist((current) => ({
             ...current,
             playlist: { ...current.playlist, playMode: playbackState.playMode },
           }));
+        } else if (commandCanChangeSelectedTrack(resolved.command)) {
+          setPlaylist((current) => syncPlaylistSelection(current, playbackState.trackId));
         }
       } else {
-        await invokeCommand<unknown>(command, payload);
+        await invokeCommand<unknown>(resolved.command, resolved.payload);
       }
       setError(null);
     } catch (commandError) {
@@ -373,6 +377,41 @@ function isPlaybackCommand(command: CommandName) {
     "set_play_mode",
     "get_playback_state",
   ].includes(command);
+}
+
+function resolvePlaybackCommand(
+  command: CommandName,
+  payload: CommandPayload,
+  playback: PlaybackState,
+  playlist: PlaylistSnapshot,
+): { command: CommandName; payload: CommandPayload } {
+  if (command === "toggle_playback" && !playback.trackId && !playback.isPlaying) {
+    const fallbackTrack = findCurrentTrack(playlist, null);
+    if (fallbackTrack?.status === "ready") {
+      return { command: "play_track", payload: { trackId: fallbackTrack.id } };
+    }
+  }
+
+  return { command, payload };
+}
+
+function syncPlaylistSelection(snapshot: PlaylistSnapshot, trackId: string | null): PlaylistSnapshot {
+  if (!trackId) return snapshot;
+
+  const currentIndex = snapshot.playlist.trackIds.indexOf(trackId);
+  if (currentIndex < 0 || currentIndex === snapshot.playlist.currentIndex) return snapshot;
+
+  return {
+    ...snapshot,
+    playlist: {
+      ...snapshot.playlist,
+      currentIndex,
+    },
+  };
+}
+
+function commandCanChangeSelectedTrack(command: CommandName) {
+  return command === "play_track" || command === "next_track" || command === "previous_track";
 }
 
 function createVisualizationFrame(positionMs: number) {
