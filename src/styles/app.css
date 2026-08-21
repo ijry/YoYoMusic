@@ -9,14 +9,17 @@ body,
   overflow: hidden;
 }
 
+/*
+ * The skin class lives on `.app-shell` (a body descendant), so custom
+ * properties cannot reach `body` from there. `body` therefore only holds a
+ * neutral deep base; the themed canvas is painted by `.app-shell` below, which
+ * fills the viewport anyway.
+ */
 body {
   margin: 0;
   min-width: 320px;
   color: var(--color-text);
-  background:
-    radial-gradient(circle at 18% 18%, rgba(49, 214, 163, 0.24), transparent 30rem),
-    radial-gradient(circle at 82% 24%, rgba(143, 211, 255, 0.2), transparent 28rem),
-    linear-gradient(135deg, #080b12 0%, #101625 52%, #05070c 100%);
+  background: var(--color-bg-deep, #04060a);
 }
 
 button,
@@ -26,12 +29,26 @@ textarea {
   font: inherit;
 }
 
+/*
+ * Themed canvas. `.app-shell` carries the `.skin-layout--*` class, so the
+ * skin's own `--skin-canvas` / `--skin-glow` are readable here. Fallbacks keep
+ * this correct for surfaces rendered without a skin class.
+ */
 .app-shell {
   height: 100%;
   overflow: hidden;
   display: grid;
   place-items: center;
   padding: 12px;
+  background:
+    radial-gradient(circle at 18% 16%, color-mix(in srgb, var(--skin-glow, var(--color-primary)) 18%, transparent), transparent 32rem),
+    radial-gradient(circle at 84% 22%, color-mix(in srgb, var(--skin-accent, var(--color-accent)) 10%, transparent), transparent 30rem),
+    linear-gradient(
+      150deg,
+      var(--skin-canvas, var(--color-bg)) 0%,
+      color-mix(in srgb, var(--skin-canvas, var(--color-bg)) 84%, var(--skin-primary, var(--color-primary))) 54%,
+      var(--skin-canvas-deep, var(--color-bg-deep, #05070c)) 100%
+    );
 }
 
 .chrome {
@@ -44,10 +61,10 @@ textarea {
   gap: 14px;
   overflow: hidden;
   padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 12%, transparent);
   border-radius: var(--radius-panel);
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.025)),
+    linear-gradient(145deg, color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 2.5%, transparent)),
     var(--color-surface);
   box-shadow: var(--shadow-panel);
 }
@@ -121,11 +138,11 @@ h2 {
 .now-playing {
   min-width: 0;
   min-height: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 10%, transparent);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025)),
-    rgba(4, 8, 15, 0.46);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 7.5%, transparent), color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 2.5%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink, var(--color-bg)) 46%, transparent);
 }
 
 .playlist-panel {
@@ -182,21 +199,21 @@ h2 {
   padding: 2px 4px 2px 0;
   margin: 14px 0 0;
   list-style: none;
-  scrollbar-color: rgba(49, 214, 163, 0.48) rgba(255, 255, 255, 0.06);
+  scrollbar-color: color-mix(in srgb, var(--skin-primary, var(--color-primary)) 48%, transparent) color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 6%, transparent);
 }
 
 .track-item {
   align-items: center;
   gap: 10px;
   padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 6%, transparent);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.045);
+  background: color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 4.5%, transparent);
 }
 
 .track-item.is-current {
-  border-color: rgba(49, 214, 163, 0.34);
-  background: linear-gradient(90deg, rgba(49, 214, 163, 0.2), rgba(255, 255, 255, 0.05));
+  border-color: color-mix(in srgb, var(--skin-primary, var(--color-primary)) 34%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--skin-primary, var(--color-primary)) 20%, transparent), color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 5%, transparent));
   box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
@@ -232,14 +249,14 @@ h2 {
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(143, 211, 255, 0.18);
+  border: 1px solid color-mix(in srgb, var(--skin-accent, var(--color-accent)) 18%, transparent);
   border-radius: 34px;
   background:
-    radial-gradient(circle, rgba(49, 214, 163, 0.3), transparent 34%),
-    linear-gradient(135deg, rgba(143, 211, 255, 0.24), rgba(49, 214, 163, 0.08));
+    radial-gradient(circle, color-mix(in srgb, var(--skin-primary, var(--color-primary)) 30%, transparent), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--skin-accent, var(--color-accent)) 24%, transparent), color-mix(in srgb, var(--skin-primary, var(--color-primary)) 8%, transparent));
   box-shadow:
-    inset 0 0 40px rgba(255, 255, 255, 0.05),
-    0 24px 60px rgba(0, 0, 0, 0.32);
+    inset 0 0 40px color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 5%, transparent),
+    0 24px 60px color-mix(in srgb, var(--skin-shade-ink, var(--color-bg-deep)) 32%, transparent);
 }
 
 .cover-card.is-playing .disc-ring {
@@ -249,9 +266,9 @@ h2 {
 .disc-ring {
   width: 68%;
   aspect-ratio: 1;
-  border: clamp(16px, 3vh, 28px) solid rgba(255, 255, 255, 0.14);
+  border: clamp(16px, 3vh, 28px) solid color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 14%, transparent);
   border-radius: 50%;
-  box-shadow: inset 0 0 0 clamp(10px, 2vh, 18px) rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 clamp(10px, 2vh, 18px) color-mix(in srgb, var(--skin-shade-ink, var(--color-bg-deep)) 20%, transparent);
 }
 
 .now-playing-copy {
@@ -272,15 +289,15 @@ h2 {
   display: grid;
   align-items: end;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 8%, transparent);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.035);
+  background: color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 3.5%, transparent);
 }
 
 .feature-content {
   min-height: 0;
   overflow: auto;
-  scrollbar-color: rgba(49, 214, 163, 0.48) rgba(255, 255, 255, 0.06);
+  scrollbar-color: color-mix(in srgb, var(--skin-primary, var(--color-primary)) 48%, transparent) color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 6%, transparent);
 }
 
 .lyrics-panel,
@@ -295,9 +312,9 @@ h2 {
   gap: 14px;
   overflow: visible;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 8%, transparent);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
+  background: color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 4%, transparent);
 }
 
 .lyric-line {
@@ -355,7 +372,7 @@ h2 {
 .skin-card {
   padding: 14px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 6%, transparent);
 }
 
 .skin-card h3,
@@ -372,11 +389,11 @@ h2 {
   gap: 14px;
   overflow: hidden;
   padding: 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 10%, transparent);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(143, 211, 255, 0.1), rgba(49, 214, 163, 0.035)),
-    rgba(2, 6, 12, 0.68);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-accent, var(--color-accent)) 10%, transparent), color-mix(in srgb, var(--skin-primary, var(--color-primary)) 3.5%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink, var(--color-bg)) 68%, transparent);
 }
 
 .control-field {
@@ -399,7 +416,7 @@ input {
 
 button {
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 10%, transparent);
   cursor: pointer;
   padding: 9px 13px;
   transition:
@@ -409,7 +426,7 @@ button {
 }
 
 button:hover {
-  background: rgba(49, 214, 163, 0.22);
+  background: color-mix(in srgb, var(--skin-primary, var(--color-primary)) 22%, transparent);
 }
 
 button:disabled {
@@ -419,7 +436,7 @@ button:disabled {
 
 input {
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--skin-gloss-ink, var(--color-text)) 10%, transparent);
   padding: 8px 12px;
 }
 
@@ -445,7 +462,7 @@ input {
   gap: 16px;
   padding: 18px;
   color: var(--color-text);
-  background: rgba(8, 11, 18, 0.86);
+  background: color-mix(in srgb, var(--skin-well-ink, var(--color-bg)) 86%, transparent);
 }
 
 .mini-cover {
@@ -481,8 +498,8 @@ input {
   font-weight: 800;
   text-align: center;
   text-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.9),
-    0 0 24px rgba(49, 214, 163, 0.7);
+    0 3px 10px color-mix(in srgb, var(--skin-shade-ink, var(--color-bg-deep)) 90%, transparent),
+    0 0 24px color-mix(in srgb, var(--skin-primary, var(--color-primary)) 70%, transparent);
 }
 
 @keyframes disc-spin {

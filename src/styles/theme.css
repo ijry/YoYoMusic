@@ -1,14 +1,56 @@
+/*
+ * Global theme contract.
+ *
+ * Every skin re-declares the `--skin-*` group below, so any value here is only
+ * a fallback for surfaces rendered outside a `.skin-layout` (mini player,
+ * desktop lyrics) and for imported skin packages that set `--color-*`.
+ *
+ * The `--skin-gloss` / `--skin-shade` / `--skin-well` trio is what keeps a skin
+ * from washing out: highlights, shadows and recessed wells are mixed from the
+ * skin's own ink instead of flat white/black, so a warm cabinet stays warm and
+ * a cold rack stays cold.
+ */
 :root {
   color-scheme: dark;
+
+  /* Base canvas — overridden per skin. */
   --color-bg: #080b12;
+  --color-bg-deep: #04060a;
   --color-surface: rgba(18, 24, 38, 0.86);
   --color-surface-strong: #151c2d;
   --color-primary: #31d6a3;
   --color-accent: #8fd3ff;
   --color-text: #f8fafc;
   --color-muted: #9fb0c7;
+
+  /* Skin palette defaults. Each `.skin-layout--*` overrides all of these. */
+  --skin-primary: var(--color-primary);
+  --skin-accent: var(--color-accent);
+  --skin-panel: var(--color-surface);
+  --skin-border: rgba(255, 255, 255, 0.16);
+  --skin-ink: #0a0f18;
+  --skin-glow: var(--skin-primary);
+
+  /* Material lighting, mixed from the skin's own ink rather than pure B/W.
+   * The three `*-ink` values are opaque bases: rules mix them down with
+   * color-mix(), so they must always resolve or the whole declaration is
+   * dropped. These defaults cover any surface rendered without a skin class. */
+  --skin-gloss-ink: #ffffff;
+  --skin-shade-ink: #000000;
+  --skin-well-ink: var(--skin-ink);
+  --skin-gloss: rgba(255, 255, 255, 0.14);
+  --skin-gloss-soft: rgba(255, 255, 255, 0.05);
+  --skin-shade: rgba(4, 7, 12, 0.34);
+  --skin-well: color-mix(in srgb, var(--skin-ink) 78%, var(--skin-primary));
+
+  /* Shell framing. */
+  --shell-edge: rgba(255, 255, 255, 0.4);
+  --shell-gloss: var(--skin-gloss);
+  --shell-shadow: rgba(0, 0, 0, 0.5);
+
   --shadow-panel: 0 24px 70px rgba(0, 0, 0, 0.42);
   --radius-panel: 28px;
+
   font-family:
     "Poppins",
     "Noto Sans SC",

@@ -4,54 +4,144 @@
   color: var(--color-text);
 }
 
+/*
+ * Per-skin palettes.
+ *
+ * Each skin owns its whole canvas, not just an accent: `--skin-canvas` and
+ * `--skin-ink` set the brightness step, and the gloss/shade/well trio sets the
+ * light temperature. The five skins are deliberately spread along a brightness
+ * ladder — vinyl (deepest) → wood → rack → classic → crystal (brightest) — so
+ * they read as different machines rather than one navy body in five accents.
+ */
+
+/* Brushed steel separate under blue backlight: cool, mid-bright, high polish. */
 .skin-layout--classic-blue-silver {
-  --skin-primary: #6f8fb8;
-  --skin-accent: #d9e8fb;
-  --skin-panel: rgba(19, 34, 55, 0.82);
-  --skin-border: rgba(218, 232, 251, 0.34);
+  --skin-gloss-ink: #eaf3ff;
+  --skin-shade-ink: #050b16;
+  --skin-well-ink: #0e1a2e;
+  --skin-primary: #7fa9dc;
+  --skin-accent: #e6f0fb;
+  --skin-ink: #0d1626;
+  --skin-canvas: #131f34;
+  --skin-canvas-deep: #080e19;
+  --skin-panel: rgba(24, 40, 64, 0.84);
+  --skin-border: rgba(214, 230, 250, 0.28);
+  --skin-text: #f2f7fd;
+  --skin-muted: #a9bdd8;
+  --skin-glow: #7fa9dc;
+  --skin-gloss: rgba(233, 243, 255, 0.16);
+  --skin-gloss-soft: rgba(233, 243, 255, 0.05);
+  --skin-shade: rgba(6, 13, 26, 0.42);
+  --skin-well: rgba(11, 20, 35, 0.58);
   --shell-edge: rgba(226, 237, 249, 0.72);
   --shell-gloss: rgba(255, 255, 255, 0.18);
   --shell-shadow: rgba(8, 18, 34, 0.48);
 }
 
+/* Vinyl chamber: deepest canvas, warm-neutral black, jade needle glow. */
 .skin-layout--dark-vinyl {
-  --skin-primary: #d8dde8;
-  --skin-accent: #71f5c4;
-  --skin-panel: rgba(4, 5, 8, 0.88);
-  --skin-border: rgba(216, 221, 232, 0.18);
+  --skin-gloss-ink: #e4fff5;
+  --skin-shade-ink: #000000;
+  --skin-well-ink: #04060a;
+  --skin-primary: #8ef7cd;
+  --skin-accent: #e8ede9;
+  --skin-ink: #05060a;
+  --skin-canvas: #0a0c10;
+  --skin-canvas-deep: #010203;
+  --skin-panel: rgba(9, 11, 15, 0.9);
+  --skin-border: rgba(190, 226, 212, 0.16);
+  --skin-text: #f4f7f5;
+  --skin-muted: #9aa8a3;
+  --skin-glow: #71f5c4;
+  --skin-gloss: rgba(226, 255, 244, 0.09);
+  --skin-gloss-soft: rgba(226, 255, 244, 0.03);
+  --skin-shade: rgba(0, 0, 0, 0.55);
+  --skin-well: rgba(3, 5, 7, 0.72);
   --shell-edge: rgba(113, 245, 196, 0.28);
   --shell-gloss: rgba(255, 255, 255, 0.08);
   --shell-shadow: rgba(0, 0, 0, 0.6);
 }
 
+/* Floating glass: brightest canvas, coldest light, most transparency. */
 .skin-layout--transparent-crystal {
-  --skin-primary: #7dd3fc;
-  --skin-accent: #e0faff;
-  --skin-panel: rgba(186, 230, 253, 0.16);
-  --skin-border: rgba(224, 250, 255, 0.48);
+  --skin-gloss-ink: #f4feff;
+  --skin-shade-ink: #0a1d31;
+  --skin-well-ink: #1a3450;
+  --skin-primary: #8ddcfb;
+  --skin-accent: #ecfdff;
+  --skin-ink: #0e2033;
+  --skin-canvas: #1d3a52;
+  --skin-canvas-deep: #0b1826;
+  --skin-panel: rgba(148, 205, 240, 0.14);
+  --skin-border: rgba(226, 250, 255, 0.42);
+  --skin-text: #f5fdff;
+  --skin-muted: #b3d0e2;
+  --skin-glow: #a5e9ff;
+  --skin-gloss: rgba(240, 253, 255, 0.22);
+  --skin-gloss-soft: rgba(240, 253, 255, 0.07);
+  --skin-shade: rgba(9, 26, 44, 0.3);
+  --skin-well: rgba(21, 48, 74, 0.4);
   --shell-edge: rgba(224, 250, 255, 0.5);
   --shell-gloss: rgba(255, 255, 255, 0.22);
   --shell-shadow: rgba(7, 18, 33, 0.34);
 }
 
+/* Rackmount: desaturated graphite body, hot amber and green lamp readouts. */
 .skin-layout--metal-rack {
-  --skin-primary: #facc15;
-  --skin-accent: #22c55e;
-  --skin-panel: rgba(15, 23, 42, 0.9);
-  --skin-border: rgba(250, 204, 21, 0.22);
+  --skin-gloss-ink: #fff6dc;
+  --skin-shade-ink: #000000;
+  --skin-well-ink: #0c1014;
+  --skin-primary: #fbbf24;
+  --skin-accent: #4ade80;
+  --skin-ink: #0f1216;
+  --skin-canvas: #191d23;
+  --skin-canvas-deep: #0b0d11;
+  --skin-panel: rgba(26, 31, 38, 0.9);
+  --skin-border: rgba(212, 197, 160, 0.2);
+  --skin-text: #f4f4f2;
+  --skin-muted: #a8a99f;
+  --skin-glow: #fbbf24;
+  --skin-gloss: rgba(255, 244, 214, 0.09);
+  --skin-gloss-soft: rgba(255, 244, 214, 0.03);
+  --skin-shade: rgba(0, 0, 0, 0.5);
+  --skin-well: rgba(12, 15, 19, 0.66);
   --shell-edge: rgba(250, 204, 21, 0.34);
   --shell-gloss: rgba(255, 255, 255, 0.08);
   --shell-shadow: rgba(0, 0, 0, 0.58);
 }
 
+/* Walnut cabinet: the only warm canvas, brass hardware, cream lamp light. */
 .skin-layout--warm-wood {
-  --skin-primary: #f3b56b;
-  --skin-accent: #ffe4b8;
-  --skin-panel: rgba(73, 36, 18, 0.84);
-  --skin-border: rgba(255, 228, 184, 0.28);
+  --skin-gloss-ink: #fff3d6;
+  --skin-shade-ink: #160903;
+  --skin-well-ink: #2a140b;
+  --skin-primary: #e8a765;
+  --skin-accent: #ffeccb;
+  --skin-ink: #1d0e06;
+  --skin-canvas: #2e1810;
+  --skin-canvas-deep: #150a04;
+  --skin-panel: rgba(62, 32, 18, 0.86);
+  --skin-border: rgba(255, 226, 184, 0.24);
+  --skin-text: #fdf3e3;
+  --skin-muted: #cbab8c;
+  --skin-glow: #f0b775;
+  --skin-gloss: rgba(255, 240, 210, 0.13);
+  --skin-gloss-soft: rgba(255, 240, 210, 0.04);
+  --skin-shade: rgba(26, 11, 4, 0.48);
+  --skin-well: rgba(40, 20, 11, 0.62);
   --shell-edge: rgba(255, 228, 184, 0.34);
   --shell-gloss: rgba(255, 244, 214, 0.14);
   --shell-shadow: rgba(28, 13, 6, 0.56);
+}
+
+/* Bind the skin palette to the global contract the shared rules consume. */
+.skin-layout {
+  --color-text: var(--skin-text, #f8fafc);
+  --color-muted: var(--skin-muted, #9fb0c7);
+  --color-primary: var(--skin-primary);
+  --color-accent: var(--skin-accent);
+  --color-bg: var(--skin-canvas, #080b12);
+  --color-surface: var(--skin-panel);
 }
 
 .skin-chrome {
@@ -68,7 +158,7 @@
   border-radius: var(--radius-panel);
   background:
     radial-gradient(circle at 12% 14%, color-mix(in srgb, var(--skin-primary) 28%, transparent), transparent 28rem),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.025)),
+    linear-gradient(145deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2.5%, transparent)),
     var(--color-surface);
   box-shadow: var(--shadow-panel);
 }
@@ -88,7 +178,7 @@
   overflow: hidden;
   box-shadow:
     inset 0 1px 0 var(--shell-gloss),
-    inset 0 -18px 28px rgba(0, 0, 0, 0.16),
+    inset 0 -18px 28px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent),
     0 28px 64px var(--shell-shadow);
 }
 
@@ -106,7 +196,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 74px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), transparent);
   pointer-events: none;
 }
 
@@ -130,11 +220,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.26);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 18%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 26%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 12px 18px rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    0 12px 18px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
 }
 
 .device-shell__handle--left {
@@ -158,9 +248,9 @@
   width: 88px;
   border-radius: 999px;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    linear-gradient(90deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 40%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .device-shell__foot {
@@ -171,11 +261,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.06)),
-    rgba(3, 8, 16, 0.32);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), color-mix(in srgb, var(--skin-shade-ink) 6%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 32%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 8px 14px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    0 8px 14px color-mix(in srgb, var(--skin-shade-ink) 20%, transparent);
 }
 
 .device-shell__foot--left {
@@ -194,11 +284,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.18);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 18%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 10px 16px rgba(0, 0, 0, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    0 10px 16px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
 .device-shell__split-rail--left {
@@ -217,11 +307,11 @@
   height: 8px;
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.2);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 8px 12px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    0 8px 12px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
 }
 
 .device-shell__arc-platter {
@@ -233,11 +323,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 50%;
   background:
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 58%),
-    rgba(3, 8, 16, 0.12);
+    radial-gradient(circle at center, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), transparent 58%),
+    color-mix(in srgb, var(--skin-well-ink) 12%, transparent);
   box-shadow:
-    inset 0 0 0 22px rgba(255, 255, 255, 0.03),
-    inset 0 0 0 44px rgba(0, 0, 0, 0.16);
+    inset 0 0 0 22px color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent),
+    inset 0 0 0 44px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .device-shell__arc-rail {
@@ -249,9 +339,9 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px 999px 28px 28px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 68%),
-    rgba(3, 8, 16, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), transparent 68%),
+    color-mix(in srgb, var(--skin-well-ink) 12%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent);
 }
 
 .device-shell__standoff {
@@ -261,11 +351,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04)),
-    rgba(148, 163, 184, 0.08);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 24%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 4%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 10px 18px rgba(7, 18, 33, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    0 10px 18px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
 }
 
 .device-shell__standoff--tl {
@@ -297,8 +387,8 @@
   border: 1px solid var(--skin-border);
   border-radius: 28px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(224, 250, 255, 0.04)),
-    rgba(148, 163, 184, 0.06);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), rgba(224, 250, 255, 0.04)),
+    color-mix(in srgb, var(--skin-well-ink) 12%, transparent);
   backdrop-filter: blur(16px);
 }
 
@@ -310,8 +400,8 @@
   border: 1px solid var(--skin-border);
   border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)),
-    rgba(3, 8, 16, 0.2);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 1%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
 }
 
 .device-shell__rack-ear--left {
@@ -329,9 +419,9 @@
   height: 10px;
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent);
 }
 
 .device-shell__rack-rail--upper {
@@ -397,11 +487,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 10px 18px rgba(0, 0, 0, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent),
+    0 10px 18px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
 .app-title__model,
@@ -434,11 +524,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.18);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 11%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 18%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -10px 20px rgba(0, 0, 0, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -10px 20px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
 .device-module__header {
@@ -478,11 +568,11 @@
   height: 8px;
   border-radius: 999px;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04)),
-    rgba(3, 8, 16, 0.34);
+    linear-gradient(90deg, color-mix(in srgb, var(--skin-gloss-ink) 24%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 4%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 34%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent),
+    inset 0 -2px 4px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .device-module__rivets {
@@ -496,11 +586,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.56), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.16));
+    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 56%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-shade-ink) 16%, transparent));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 2px 4px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent),
+    0 2px 4px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .device-module__body {
@@ -588,7 +678,7 @@
 .skin-layout .player-controls {
   border-color: var(--skin-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8.5%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2.5%, transparent)),
     var(--skin-panel);
 }
 
@@ -610,8 +700,8 @@
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.28);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 28%, transparent);
 }
 
 .playlist-panel__status {
@@ -634,18 +724,18 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
 }
 
 .playlist-action-button {
   border: 1px solid var(--skin-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 10px 18px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    0 10px 18px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
 }
 
 .skin-layout .playlist-actions {
@@ -730,8 +820,8 @@
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
-    rgba(3, 8, 16, 0.2);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
 }
 
 .skin-layout .track-main {
@@ -744,7 +834,7 @@
 
 .skin-layout .ghost-button {
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent);
 }
 
 .skin-layout .ghost-button:hover {
@@ -774,8 +864,8 @@
 .skin-layout .skin-card__actions button:hover {
   border-color: var(--skin-border);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 12px 20px rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    0 12px 20px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
 }
 
 .skin-layout .playlist-action-button:focus-visible,
@@ -788,11 +878,11 @@
   outline: none;
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent),
-    0 0 0 4px rgba(255, 255, 255, 0.08);
+    0 0 0 4px color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .skin-layout .ghost-button:focus-visible {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent), 0 0 0 4px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent), 0 0 0 4px color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .skin-layout .playlist-action-button:disabled,
@@ -807,7 +897,7 @@
   opacity: 0.72;
   cursor: not-allowed;
   border-color: color-mix(in srgb, var(--skin-border) 78%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skin-gloss-ink) 4%, transparent);
 }
 
 .skin-layout button {
@@ -826,7 +916,7 @@
   inset: 12% 18% auto 12%;
   height: 22%;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 32%, transparent), transparent);
   opacity: 0.58;
   transform: rotate(-12deg);
 }
@@ -839,11 +929,11 @@
   margin: auto;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.72), transparent 34%),
+    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 72%, transparent), transparent 34%),
     linear-gradient(180deg, rgba(8, 15, 26, 0.96), rgba(111, 143, 184, 0.28));
   box-shadow:
-    inset 0 0 0 2px rgba(255, 255, 255, 0.08),
-    0 0 0 5px rgba(0, 0, 0, 0.12);
+    inset 0 0 0 2px color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
 }
 
 .now-playing-display {
@@ -854,11 +944,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 22px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(2, 7, 14, 0.22);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 22%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -10px 22px rgba(0, 0, 0, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent),
+    inset 0 -10px 22px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
 .now-playing-display__header {
@@ -881,8 +971,8 @@
   font-weight: 800;
   letter-spacing: 0.14em;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.28);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 28%, transparent);
 }
 
 .device-module .playlist-panel,
@@ -928,15 +1018,15 @@
   min-height: 42px;
   border: 1px solid var(--skin-border);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 10px 20px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    0 10px 20px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .transport-button {
   min-width: 68px;
   padding: 10px 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     color-mix(in srgb, var(--skin-panel) 92%, black);
 }
 
@@ -971,8 +1061,8 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
 }
 
 .control-monitor {
@@ -980,11 +1070,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.22);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 22%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -8px 16px color-mix(in srgb, var(--skin-shade-ink) 10%, transparent);
 }
 
 .control-label {
@@ -1005,9 +1095,9 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(2, 7, 14, 0.48);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 48%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
 }
 
 .progress-rail::-webkit-slider-runnable-track {
@@ -1015,7 +1105,7 @@
   border-radius: 999px;
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--skin-primary) 32%, transparent), transparent),
-    rgba(2, 7, 14, 0.34);
+    color-mix(in srgb, var(--skin-well-ink) 34%, transparent);
 }
 
 .progress-rail::-moz-range-track {
@@ -1023,7 +1113,7 @@
   border-radius: 999px;
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--skin-primary) 32%, transparent), transparent),
-    rgba(2, 7, 14, 0.34);
+    color-mix(in srgb, var(--skin-well-ink) 34%, transparent);
 }
 
 .progress-rail::-webkit-slider-thumb {
@@ -1034,11 +1124,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.7), transparent 34%),
+    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 70%, transparent), transparent 34%),
     linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
   box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.12),
-    0 6px 12px rgba(0, 0, 0, 0.2);
+    0 0 0 2px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent),
+    0 6px 12px color-mix(in srgb, var(--skin-shade-ink) 20%, transparent);
 }
 
 .progress-rail::-moz-range-thumb {
@@ -1047,11 +1137,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.7), transparent 34%),
+    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 70%, transparent), transparent 34%),
     linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
   box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.12),
-    0 6px 12px rgba(0, 0, 0, 0.2);
+    0 0 0 2px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent),
+    0 6px 12px color-mix(in srgb, var(--skin-shade-ink) 20%, transparent);
 }
 
 .control-field--volume {
@@ -1072,11 +1162,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 50%;
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.2), transparent 42%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.12));
+    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 20%, transparent), transparent 42%),
+    linear-gradient(145deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-shade-ink) 12%, transparent));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -8px 14px rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    inset 0 -8px 14px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
 }
 
 .volume-well__tick {
@@ -1099,7 +1189,7 @@
   justify-self: end;
   padding-inline: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(4, 10, 18, 0.34);
 }
 
@@ -1134,11 +1224,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.28);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 28%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 8px 18px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    0 8px 18px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
 }
 
 .title-status-pill--track {
@@ -1164,11 +1254,11 @@
   border-radius: 18px;
   text-align: left;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.34);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 34%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 10px 22px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    0 10px 22px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .title-action-button__code {
@@ -1207,15 +1297,15 @@
   border-radius: 12px;
   text-align: left;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
 }
 
 .feature-tab[aria-pressed="true"] {
   border-color: color-mix(in srgb, var(--skin-primary) 62%, transparent);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--skin-primary) 42%, transparent),
-    0 12px 20px rgba(0, 0, 0, 0.16);
+    0 12px 20px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .feature-tab__slot {
@@ -1231,8 +1321,8 @@
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
-    rgba(3, 8, 16, 0.26);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 26%, transparent);
 }
 
 .feature-tab__label {
@@ -1253,8 +1343,8 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
 }
 
 .settings-panel__field {
@@ -1266,11 +1356,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.2);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -8px 16px color-mix(in srgb, var(--skin-shade-ink) 10%, transparent);
 }
 
 .settings-panel__field input,
@@ -1282,11 +1372,11 @@
   border-radius: 14px;
   color: var(--color-text);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01)),
-    rgba(2, 7, 14, 0.26);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 1%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 26%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -6px 12px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
 }
 
 .settings-panel__field input:focus-visible,
@@ -1295,7 +1385,7 @@
   border-color: color-mix(in srgb, var(--skin-primary) 62%, transparent);
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--skin-accent) 36%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent);
 }
 
 .skin-layout .lyrics-panel,
@@ -1346,8 +1436,8 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
 }
 
 .lyrics-panel__viewport {
@@ -1372,8 +1462,8 @@
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.2);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
 }
 
 .skin-layout .lyric-line.is-active {
@@ -1382,7 +1472,7 @@
   transform: translateX(2px);
   box-shadow:
     inset 3px 0 0 var(--skin-primary),
-    0 12px 24px rgba(0, 0, 0, 0.12);
+    0 12px 24px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
 }
 
 .lyric-line__stamp {
@@ -1400,8 +1490,8 @@
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
-    rgba(3, 8, 16, 0.26);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 26%, transparent);
 }
 
 .lyric-line__text {
@@ -1435,8 +1525,8 @@
   border-radius: 18px;
   text-align: left;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
 }
 
 .visualization-mode-button[aria-pressed="true"],
@@ -1445,7 +1535,7 @@
   border-color: color-mix(in srgb, var(--skin-primary) 62%, transparent);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--skin-primary) 42%, transparent),
-    0 12px 20px rgba(0, 0, 0, 0.16);
+    0 12px 20px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .visualization-mode-button__slot,
@@ -1462,8 +1552,8 @@
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
-    rgba(3, 8, 16, 0.26);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 26%, transparent);
 }
 
 .visualization-mode-button__label,
@@ -1485,11 +1575,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.22);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 22%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -8px 16px color-mix(in srgb, var(--skin-shade-ink) 10%, transparent);
 }
 
 .skin-card__frame {
@@ -1502,11 +1592,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.22);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 22%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -8px 16px color-mix(in srgb, var(--skin-shade-ink) 10%, transparent);
 }
 
 .skin-layout .skin-card {
@@ -1521,11 +1611,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.22);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 22%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -8px 16px color-mix(in srgb, var(--skin-shade-ink) 10%, transparent);
 }
 
 .visualization-panel__meter {
@@ -1543,11 +1633,11 @@
   border: 1px solid color-mix(in srgb, var(--skin-border) 82%, transparent);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(2, 7, 14, 0.18);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 18%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -10px 18px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
 .visualization-preview--panel::before {
@@ -1557,10 +1647,10 @@
   border: 1px solid color-mix(in srgb, var(--skin-border) 68%, transparent);
   border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 4%, transparent), transparent 34%),
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.03) 0 1px,
+      color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent) 0 1px,
       transparent 1px 18px
     );
   pointer-events: none;
@@ -1586,9 +1676,9 @@
   border-radius: 999px 999px 5px 5px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--skin-accent) 78%, transparent), color-mix(in srgb, var(--skin-primary) 46%, transparent)),
-    rgba(2, 7, 14, 0.28);
+    color-mix(in srgb, var(--skin-well-ink) 28%, transparent);
   box-shadow:
-    inset 0 -2px 0 rgba(0, 0, 0, 0.16),
+    inset 0 -2px 0 color-mix(in srgb, var(--skin-shade-ink) 16%, transparent),
     0 0 14px color-mix(in srgb, var(--skin-primary) 24%, transparent);
 }
 
@@ -1599,7 +1689,7 @@
 .visualization-spectrum-fill {
   min-height: 100%;
   border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 40%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 24%, transparent), transparent 40%);
 }
 
 .visualization-spectrum-cap {
@@ -1736,25 +1826,25 @@
   border-radius: 8px;
   cursor: pointer;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(2, 7, 14, 0.3);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 30%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 4px 8px rgba(0, 0, 0, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    0 4px 8px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
 .equalizer-panel__toggle input[type="checkbox"]:checked {
   border-color: color-mix(in srgb, var(--skin-primary) 62%, transparent);
   background:
     radial-gradient(circle at center, var(--skin-accent) 0 32%, transparent 33%),
-    rgba(2, 7, 14, 0.34);
+    color-mix(in srgb, var(--skin-well-ink) 34%, transparent);
 }
 
 .equalizer-panel__toggle input[type="checkbox"]:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent),
-    0 0 0 4px rgba(255, 255, 255, 0.08);
+    0 0 0 4px color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .visualization-mode-button[aria-pressed="true"],
@@ -1781,11 +1871,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.2);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.1);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -8px 16px color-mix(in srgb, var(--skin-shade-ink) 10%, transparent);
 }
 
 .eq-band__meta {
@@ -1822,7 +1912,7 @@
   border-radius: 999px;
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--skin-primary) 28%, transparent), transparent),
-    rgba(2, 7, 14, 0.34);
+    color-mix(in srgb, var(--skin-well-ink) 34%, transparent);
 }
 
 .eq-band-card input[type="range"]::-moz-range-track {
@@ -1831,7 +1921,7 @@
   border-radius: 999px;
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--skin-primary) 28%, transparent), transparent),
-    rgba(2, 7, 14, 0.34);
+    color-mix(in srgb, var(--skin-well-ink) 34%, transparent);
 }
 
 .eq-band-card input[type="range"]::-webkit-slider-thumb {
@@ -1842,11 +1932,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.72), transparent 34%),
+    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 72%, transparent), transparent 34%),
     linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
   box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.12),
-    0 6px 12px rgba(0, 0, 0, 0.18);
+    0 0 0 2px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent),
+    0 6px 12px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
 }
 
 .eq-band-card input[type="range"]::-moz-range-thumb {
@@ -1855,11 +1945,11 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.72), transparent 34%),
+    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 72%, transparent), transparent 34%),
     linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
   box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.12),
-    0 6px 12px rgba(0, 0, 0, 0.18);
+    0 0 0 2px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent),
+    0 6px 12px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
 }
 
 .tag-editor__actions {
@@ -1872,8 +1962,8 @@
   border: 1px solid var(--skin-border);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.18);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 18%, transparent);
 }
 
 .skin-manager .panel-heading {
@@ -1936,7 +2026,7 @@
   outline: none;
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--skin-accent) 44%, transparent),
-    0 0 0 4px rgba(255, 255, 255, 0.08);
+    0 0 0 4px color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .skin-card__frame .skin-thumbnail {
@@ -1950,8 +2040,8 @@
   border: 1px solid color-mix(in srgb, var(--skin-border) 78%, transparent);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(2, 7, 14, 0.14);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 14%, transparent);
 }
 
 .skin-card__name {
@@ -1981,7 +2071,7 @@
   cursor: pointer;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--skin-accent) 24%, transparent), transparent),
-    rgba(3, 8, 16, 0.36);
+    color-mix(in srgb, var(--skin-well-ink) 36%, transparent);
 }
 
 .skin-layout .skin-card__actions .skin-card__apply-button:disabled {
@@ -2129,8 +2219,8 @@
     linear-gradient(180deg, rgba(226, 237, 249, 0.2), rgba(61, 87, 125, 0.04)),
     rgba(12, 22, 38, 0.42);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 8px 14px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
+    0 8px 14px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
   pointer-events: none;
 }
 
@@ -2217,7 +2307,7 @@
   border: 1px solid rgba(224, 250, 255, 0.28);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(224, 250, 255, 0.04)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 18%, transparent), rgba(224, 250, 255, 0.04)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(16px);
   pointer-events: none;
@@ -2228,7 +2318,7 @@
   border: 1px solid rgba(224, 250, 255, 0.22);
   border-radius: 26px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(224, 250, 255, 0.05)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), rgba(224, 250, 255, 0.05)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(14px);
 }
@@ -2271,7 +2361,7 @@
   border: 1px solid rgba(250, 204, 21, 0.18);
   border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.08), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.08), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.6);
 }
 
@@ -2375,7 +2465,7 @@
   height: 18px;
   box-shadow:
     inset 0 0 0 2px rgba(8, 15, 26, 0.22),
-    0 8px 14px rgba(0, 0, 0, 0.12);
+    0 8px 14px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
 }
 
 .device-module--vinyl-controls {
@@ -2395,7 +2485,7 @@
   background:
     radial-gradient(circle at 50% 12%, rgba(113, 245, 196, 0.12), transparent 52%),
     rgba(6, 8, 11, 0.38);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent);
 }
 
 .device-module--vinyl-controls .transport-row--deck {
@@ -2413,15 +2503,15 @@
 .device-module--crystal-controls {
   transform: translateY(6px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent),
     0 18px 30px rgba(7, 18, 33, 0.16);
 }
 
 .device-module--crystal-controls .control-monitor,
 .device-module--crystal-controls .play-mode-button--deck {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(224, 250, 255, 0.08)),
-    rgba(148, 163, 184, 0.1);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 18%, transparent), rgba(224, 250, 255, 0.08)),
+    color-mix(in srgb, var(--skin-well-ink) 14%, transparent);
   backdrop-filter: blur(16px);
 }
 
@@ -2453,7 +2543,7 @@
   border: 1px solid rgba(250, 204, 21, 0.14);
   border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.08), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.08), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.52);
 }
 
@@ -2519,7 +2609,7 @@
   border-color: rgba(217, 232, 251, 0.28);
   box-shadow:
     inset 0 0 0 4px rgba(6, 13, 24, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
     0 10px 18px rgba(8, 18, 34, 0.14);
 }
 
@@ -2565,8 +2655,8 @@
     radial-gradient(circle at center, rgba(113, 245, 196, 0.08), transparent 58%),
     rgba(6, 8, 11, 0.18);
   box-shadow:
-    inset 0 0 0 12px rgba(255, 255, 255, 0.02),
-    inset 0 0 0 24px rgba(0, 0, 0, 0.12);
+    inset 0 0 0 12px color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent),
+    inset 0 0 0 24px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
   pointer-events: none;
 }
 
@@ -2587,7 +2677,7 @@
   border: 1px solid rgba(224, 250, 255, 0.26);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(224, 250, 255, 0.06)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 18%, transparent), rgba(224, 250, 255, 0.06)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(16px);
   pointer-events: none;
@@ -2596,7 +2686,7 @@
 .device-module--crystal-status .now-playing-display {
   backdrop-filter: blur(16px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent),
     0 16px 26px rgba(7, 18, 33, 0.12);
 }
 
@@ -2607,7 +2697,7 @@
   border: 1px solid rgba(224, 250, 255, 0.22);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(224, 250, 255, 0.04)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), rgba(224, 250, 255, 0.04)),
     rgba(148, 163, 184, 0.06);
   backdrop-filter: blur(14px);
   pointer-events: none;
@@ -2639,7 +2729,7 @@
   padding-left: 18px;
   border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.06), rgba(255, 255, 255, 0.01)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.06), color-mix(in srgb, var(--skin-gloss-ink) 1%, transparent)),
     rgba(9, 13, 20, 0.58);
 }
 
@@ -2647,7 +2737,7 @@
   border-radius: 10px;
   border-color: rgba(250, 204, 21, 0.18);
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.08), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.08), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.66);
 }
 
@@ -2716,7 +2806,7 @@
   border: 1px solid rgba(224, 250, 255, 0.18);
   border-radius: 22px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(224, 250, 255, 0.05)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), rgba(224, 250, 255, 0.05)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(14px);
 }
@@ -2731,7 +2821,7 @@
   border: 1px solid rgba(250, 204, 21, 0.18);
   border-radius: 8px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.08), rgba(255, 255, 255, 0.01)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.08), color-mix(in srgb, var(--skin-gloss-ink) 1%, transparent)),
     rgba(9, 13, 20, 0.62);
   box-shadow: inset 2px 0 0 rgba(34, 197, 94, 0.3);
 }
@@ -2758,9 +2848,9 @@
 
 .device-shell--classic {
   background:
-    linear-gradient(180deg, rgba(226, 237, 249, 0.16), rgba(111, 143, 184, 0.04) 18%, transparent 24%),
-    radial-gradient(circle at 14% 12%, rgba(217, 232, 251, 0.18), transparent 22rem),
-    linear-gradient(160deg, rgba(24, 38, 59, 0.92), rgba(8, 15, 26, 0.98));
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), color-mix(in srgb, var(--skin-primary) 5%, transparent) 18%, transparent 24%),
+    radial-gradient(circle at 14% 12%, color-mix(in srgb, var(--skin-accent) 16%, transparent), transparent 22rem),
+    linear-gradient(160deg, color-mix(in srgb, var(--skin-canvas) 94%, transparent), var(--skin-canvas-deep));
 }
 
 .device-shell--classic .device-module--controls {
@@ -2848,7 +2938,7 @@
     linear-gradient(180deg, rgba(226, 237, 249, 0.24), rgba(61, 87, 125, 0.04)),
     rgba(12, 22, 38, 0.52);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
     0 8px 14px rgba(6, 13, 24, 0.14);
   pointer-events: none;
 }
@@ -2900,8 +2990,8 @@
 .device-shell--vinyl {
   border-radius: 34px;
   background:
-    radial-gradient(circle at 32% 34%, rgba(113, 245, 196, 0.08), transparent 18rem),
-    linear-gradient(165deg, rgba(10, 12, 17, 0.98), rgba(2, 4, 8, 1));
+    radial-gradient(circle at 32% 34%, color-mix(in srgb, var(--skin-glow) 9%, transparent), transparent 18rem),
+    linear-gradient(165deg, color-mix(in srgb, var(--skin-canvas) 97%, transparent), var(--skin-canvas-deep));
 }
 
 .device-shell--vinyl .device-module--now-playing .cover-card,
@@ -2914,7 +3004,7 @@
   border-radius: 999px;
   background:
     radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.08)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), color-mix(in srgb, var(--skin-shade-ink) 8%, transparent)),
     rgba(6, 8, 11, 0.74);
 }
 
@@ -2990,7 +3080,7 @@
   padding-inline: 16px;
   box-shadow:
     inset 0 0 0 1px rgba(113, 245, 196, 0.1),
-    0 14px 22px rgba(0, 0, 0, 0.18);
+    0 14px 22px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
 }
 
 .device-shell--vinyl .visualization-preview--panel {
@@ -3025,20 +3115,20 @@
 .device-shell--vinyl .eq-band-card input[type="range"]::-webkit-slider-runnable-track {
   background:
     radial-gradient(circle at 24% 50%, rgba(113, 245, 196, 0.16), transparent 28%),
-    rgba(0, 0, 0, 0.34);
+    color-mix(in srgb, var(--skin-shade-ink) 34%, transparent);
 }
 
 .device-shell--vinyl .eq-band-card input[type="range"]::-moz-range-track {
   background:
     radial-gradient(circle at 24% 50%, rgba(113, 245, 196, 0.16), transparent 28%),
-    rgba(0, 0, 0, 0.34);
+    color-mix(in srgb, var(--skin-shade-ink) 34%, transparent);
 }
 
 .device-shell--vinyl .device-shell__arc-platter {
   box-shadow:
-    inset 0 0 0 18px rgba(255, 255, 255, 0.03),
-    inset 0 0 0 38px rgba(0, 0, 0, 0.24),
-    0 24px 46px rgba(0, 0, 0, 0.3);
+    inset 0 0 0 18px color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent),
+    inset 0 0 0 38px color-mix(in srgb, var(--skin-shade-ink) 24%, transparent),
+    0 24px 46px color-mix(in srgb, var(--skin-shade-ink) 30%, transparent);
 }
 
 .device-shell--vinyl .device-shell__arc-rail {
@@ -3047,14 +3137,14 @@
 
 .device-shell--crystal {
   background:
-    linear-gradient(145deg, rgba(236, 254, 255, 0.18), rgba(125, 211, 252, 0.06)),
-    rgba(9, 18, 31, 0.72);
+    linear-gradient(145deg, color-mix(in srgb, var(--skin-accent) 20%, transparent), color-mix(in srgb, var(--skin-primary) 8%, transparent)),
+    color-mix(in srgb, var(--skin-canvas) 74%, transparent);
 }
 
 .device-shell--crystal .device-module {
   backdrop-filter: blur(18px);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(224, 250, 255, 0.06)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), rgba(224, 250, 255, 0.06)),
     rgba(14, 24, 38, 0.2);
 }
 
@@ -3067,7 +3157,7 @@
 .device-shell--crystal .device-module__trim-bar,
 .device-shell--crystal .device-module__rivet {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(224, 250, 255, 0.08)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 20%, transparent), rgba(224, 250, 255, 0.08)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(14px);
 }
@@ -3081,7 +3171,7 @@
 .device-shell--crystal .transport-status-light,
 .device-shell--crystal .control-monitor {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(224, 250, 255, 0.08)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 20%, transparent), rgba(224, 250, 255, 0.08)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(14px);
 }
@@ -3109,7 +3199,7 @@
 .device-shell--crystal .skin-card__machine-id,
 .device-shell--crystal .skin-card {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(224, 250, 255, 0.08)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 20%, transparent), rgba(224, 250, 255, 0.08)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(14px);
 }
@@ -3122,7 +3212,7 @@
 
 .device-shell--crystal .visualization-preview--panel {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(224, 250, 255, 0.06)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 18%, transparent), rgba(224, 250, 255, 0.06)),
     rgba(148, 163, 184, 0.12);
   backdrop-filter: blur(16px);
 }
@@ -3138,7 +3228,7 @@
 
 .device-shell--crystal .equalizer-panel__toggle input[type="checkbox"] {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(224, 250, 255, 0.08)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 22%, transparent), rgba(224, 250, 255, 0.08)),
     rgba(148, 163, 184, 0.12);
   backdrop-filter: blur(12px);
 }
@@ -3150,7 +3240,7 @@
   border: 1px solid rgba(224, 250, 255, 0.24);
   border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(224, 250, 255, 0.04)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), rgba(224, 250, 255, 0.04)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(16px);
   pointer-events: none;
@@ -3158,15 +3248,15 @@
 
 .device-shell--crystal .feature-content::-webkit-scrollbar-thumb {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(224, 250, 255, 0.08)) padding-box;
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 22%, transparent), rgba(224, 250, 255, 0.08)) padding-box;
   backdrop-filter: blur(10px);
 }
 
 .device-shell--rack {
   border-radius: 20px;
   background:
-    linear-gradient(180deg, rgba(100, 116, 139, 0.14), transparent 12%),
-    linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(5, 9, 15, 1));
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 13%, transparent), transparent 12%),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-canvas) 97%, transparent), var(--skin-canvas-deep));
 }
 
 .device-shell--rack .device-module,
@@ -3182,7 +3272,7 @@
 .device-shell--rack .play-mode-button--deck {
   border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.12), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.82);
 }
 
@@ -3197,7 +3287,7 @@
   border-radius: 10px;
   color: #22c55e;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.12), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.82);
 }
 
@@ -3215,7 +3305,7 @@
   border-radius: 8px;
   color: #22c55e;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.12), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.82);
 }
 
@@ -3244,7 +3334,7 @@
   border-radius: 10px;
   color: #22c55e;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.12), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.82);
 }
 
@@ -3260,7 +3350,7 @@
 .device-shell--rack .visualization-preview--panel {
   border-radius: 10px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.08), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.08), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(5, 9, 15, 0.86);
 }
 
@@ -3268,7 +3358,7 @@
   border-radius: 3px 3px 0 0;
   background: linear-gradient(180deg, #facc15, #22c55e 70%, rgba(9, 13, 20, 0.6));
   box-shadow:
-    inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+    inset 0 -2px 0 color-mix(in srgb, var(--skin-shade-ink) 20%, transparent),
     0 0 10px rgba(34, 197, 94, 0.26);
 }
 
@@ -3279,7 +3369,7 @@
 .device-shell--rack .equalizer-panel__toggle input[type="checkbox"] {
   border-radius: 6px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.12), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(5, 9, 15, 0.82);
 }
 
@@ -3302,7 +3392,7 @@
 .device-shell--rack .playlist-action-button:disabled {
   border-style: dashed;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.08), rgba(255, 255, 255, 0.01)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.08), color-mix(in srgb, var(--skin-gloss-ink) 1%, transparent)),
     rgba(9, 13, 20, 0.66);
 }
 
@@ -3320,8 +3410,8 @@
 
 .device-shell--wood {
   background:
-    linear-gradient(180deg, rgba(255, 228, 184, 0.12), transparent 18%),
-    linear-gradient(135deg, rgba(92, 49, 24, 0.94), rgba(32, 17, 9, 1));
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-accent) 13%, transparent), transparent 18%),
+    linear-gradient(135deg, color-mix(in srgb, var(--skin-canvas) 96%, transparent), var(--skin-canvas-deep));
 }
 
 .device-shell--wood .device-module {
@@ -3333,7 +3423,7 @@
 .device-shell--crystal .transport-button,
 .device-shell--crystal .play-mode-button--deck {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 22%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent)),
     rgba(148, 163, 184, 0.12);
   backdrop-filter: blur(12px);
 }
@@ -3469,6 +3559,12 @@
   scrollbar-color: rgba(210, 150, 82, 0.66) rgba(54, 28, 14, 0.28);
 }
 
+/*
+ * Thumbnails render inside the skin manager of whatever skin is currently
+ * active, so they cannot inherit the previewed skin's tokens. Each therefore
+ * carries its own literal palette, kept in sync with the matching
+ * `.skin-layout--*` block above: canvas, primary and accent in that order.
+ */
 .skin-thumbnail {
   height: 86px;
   display: grid;
@@ -3481,32 +3577,46 @@
 
 .skin-thumbnail span {
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.24);
+  background: color-mix(in srgb, var(--skin-gloss-ink) 24%, transparent);
 }
 
+/* Brushed steel under blue backlight. */
 .skin-thumbnail--classic-blue-silver {
   grid-template-columns: 0.9fr 1.1fr;
-  background: linear-gradient(135deg, #e2edf9, #6985aa 48%, #162033);
+  background:
+    linear-gradient(180deg, rgba(230, 240, 251, 0.22), transparent 42%),
+    linear-gradient(135deg, #e6f0fb 0%, #7fa9dc 46%, #131f34 100%);
 }
 
+/* Near-black platter with a jade needle glow. */
 .skin-thumbnail--dark-vinyl {
   grid-template-columns: 1fr 0.7fr;
-  background: radial-gradient(circle at 30% 50%, #e5e7eb 0 9%, #020617 10% 38%, #111827 39%), #020617;
+  background:
+    radial-gradient(circle at 30% 50%, #8ef7cd 0 6%, #05060a 7% 34%, #12161c 35%),
+    #05060a;
 }
 
+/* Backlit glass: bright, cold, translucent. */
 .skin-thumbnail--transparent-crystal {
   grid-template-columns: 1fr 1fr;
-  background: linear-gradient(135deg, rgba(236, 254, 255, 0.82), rgba(15, 23, 42, 0.62));
+  background:
+    linear-gradient(135deg, rgba(236, 253, 255, 0.9) 0%, rgba(141, 220, 251, 0.62) 44%, rgba(29, 58, 82, 0.9) 100%);
 }
 
+/* Graphite rack with amber lamp readouts. */
 .skin-thumbnail--metal-rack {
   grid-template-rows: 0.4fr 0.6fr 1fr;
-  background: linear-gradient(180deg, #64748b, #111827);
+  background:
+    linear-gradient(180deg, rgba(251, 191, 36, 0.34) 0 14%, transparent 14%),
+    linear-gradient(180deg, #2a2f37 0%, #191d23 52%, #0b0d11 100%);
 }
 
+/* Walnut cabinet lit by a warm brass lamp. */
 .skin-thumbnail--warm-wood {
   grid-template-columns: 0.85fr 1.15fr;
-  background: linear-gradient(90deg, #4a2412, #b8743c, #2f160b);
+  background:
+    linear-gradient(180deg, rgba(255, 236, 203, 0.2), transparent 46%),
+    linear-gradient(90deg, #2e1810 0%, #b8743c 52%, #1d0e06 100%);
 }
 
 .skin-thumbnail--custom {
@@ -3527,7 +3637,7 @@
   border-color: color-mix(in srgb, var(--skin-accent) 56%, transparent);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 28%, transparent),
-    0 12px 22px rgba(0, 0, 0, 0.16);
+    0 12px 22px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .skin-card__status {
@@ -3557,11 +3667,11 @@
   line-height: 1.45;
   letter-spacing: 0.03em;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.24);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 11%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent),
+    inset 0 -10px 18px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
 .skin-layout .error-text {
@@ -3582,7 +3692,7 @@
     linear-gradient(180deg, rgba(255, 118, 118, 0.18), rgba(127, 29, 29, 0.08)),
     rgba(69, 10, 10, 0.3);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
     0 12px 24px rgba(127, 29, 29, 0.16);
 }
 
@@ -3599,9 +3709,9 @@
   font-weight: 700;
   line-height: 1.5;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .skin-layout .empty-state::before {
@@ -3643,7 +3753,7 @@
   border: 1px solid var(--skin-border);
   border-radius: 4px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 22%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 4%, transparent)),
     var(--skin-panel);
   pointer-events: none;
   transform: translateY(-50%);
@@ -3696,7 +3806,7 @@
   border-left: 4px solid rgba(113, 245, 196, 0.52);
   border-radius: 24px 10px 24px 10px;
   background:
-    linear-gradient(90deg, rgba(113, 245, 196, 0.13), rgba(255, 255, 255, 0.03)),
+    linear-gradient(90deg, rgba(113, 245, 196, 0.13), color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent)),
     rgba(2, 6, 23, 0.58);
 }
 
@@ -3720,7 +3830,7 @@
   border-radius: 999px;
   border-color: rgba(224, 250, 255, 0.4);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.26), rgba(103, 232, 249, 0.08)),
+    linear-gradient(90deg, color-mix(in srgb, var(--skin-gloss-ink) 26%, transparent), rgba(103, 232, 249, 0.08)),
     rgba(8, 47, 73, 0.2);
   backdrop-filter: blur(14px);
 }
@@ -3730,7 +3840,7 @@
   border-left: 18px solid rgba(250, 204, 21, 0.46);
   background:
     linear-gradient(90deg, rgba(15, 23, 42, 0.92), rgba(31, 41, 55, 0.72)),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 7px);
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--skin-gloss-ink) 4%, transparent) 0 1px, transparent 1px 7px);
 }
 
 .device-shell--rack .error-text {
@@ -3805,8 +3915,8 @@
   border-radius: 16px;
   box-shadow:
     inset 4px 0 0 rgba(111, 143, 184, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    inset 0 -8px 16px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
 }
 
 .device-shell--vinyl .skin-card {
@@ -3834,12 +3944,12 @@
   border-radius: 999px;
   background:
     radial-gradient(circle at 24% 24%, rgba(113, 245, 196, 0.12), transparent 32%),
-    rgba(0, 0, 0, 0.28);
+    color-mix(in srgb, var(--skin-shade-ink) 28%, transparent);
 }
 
 .device-shell--crystal .skin-card {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
     0 18px 26px rgba(7, 18, 33, 0.16);
 }
 
@@ -3850,7 +3960,7 @@
   border: 1px solid rgba(224, 250, 255, 0.24);
   border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(224, 250, 255, 0.04)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 18%, transparent), rgba(224, 250, 255, 0.04)),
     rgba(148, 163, 184, 0.08);
   backdrop-filter: blur(16px);
   pointer-events: none;
@@ -3867,7 +3977,7 @@
   border-radius: 12px;
   box-shadow:
     inset 0 0 0 1px rgba(250, 204, 21, 0.12),
-    0 14px 22px rgba(0, 0, 0, 0.24);
+    0 14px 22px color-mix(in srgb, var(--skin-shade-ink) 24%, transparent);
 }
 
 .device-shell--rack .skin-card__actions {
@@ -3955,8 +4065,8 @@
     linear-gradient(180deg, rgba(39, 57, 82, 0.94), rgba(13, 24, 39, 0.98)),
     var(--color-surface);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 18px 42px rgba(2, 7, 14, 0.42);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
+    0 18px 42px color-mix(in srgb, var(--skin-well-ink) 42%, transparent);
 }
 
 .device-shell--classic::before {
@@ -3977,7 +4087,7 @@
   background:
     linear-gradient(180deg, rgba(226, 237, 249, 0.12), rgba(21, 36, 58, 0.48)),
     rgba(10, 22, 38, 0.58);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .device-shell--classic .skin-title--classic::before {
@@ -4023,11 +4133,11 @@
   border-radius: 14px;
   border-color: rgba(226, 237, 249, 0.2);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 7%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 1.5%, transparent)),
     rgba(12, 24, 40, 0.64);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 8px 18px rgba(2, 7, 14, 0.14);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 7%, transparent),
+    0 8px 18px color-mix(in srgb, var(--skin-well-ink) 14%, transparent);
 }
 
 .device-shell--classic .device-module__trim {
@@ -4057,7 +4167,7 @@
   background:
     linear-gradient(180deg, rgba(217, 232, 251, 0.18), rgba(88, 117, 153, 0.08)),
     rgba(11, 24, 40, 0.72);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent);
 }
 
 .device-shell--classic .title-action-button:hover {
@@ -4113,9 +4223,9 @@
   border: 1px solid var(--skin-border);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(3, 8, 16, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
+    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .device-module--classic-playlist::before {
@@ -4136,7 +4246,7 @@
     rgba(12, 22, 38, 0.42);
   box-shadow:
     inset 0 0 0 4px rgba(6, 13, 24, 0.26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
 }
 
 .device-shell--classic .device-module--classic-playlist::before {
@@ -4175,7 +4285,7 @@
   border-radius: 50%;
   background:
     radial-gradient(circle at center, rgba(113, 245, 196, 0.08), transparent 58%),
-    rgba(0, 0, 0, 0.08);
+    color-mix(in srgb, var(--skin-shade-ink) 8%, transparent);
   pointer-events: none;
 }
 
@@ -4198,14 +4308,14 @@
   border-radius: 999px;
   background:
     radial-gradient(circle at 22% 28%, rgba(113, 245, 196, 0.08), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.08)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent), color-mix(in srgb, var(--skin-shade-ink) 8%, transparent)),
     rgba(6, 8, 11, 0.72);
 }
 
 .device-module--crystal-playlist {
   transform: translateY(10px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent),
     0 24px 34px rgba(7, 18, 33, 0.16);
 }
 
@@ -4220,18 +4330,18 @@
   border: 1px solid rgba(224, 250, 255, 0.24);
   border-radius: 28px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(224, 250, 255, 0.02)),
-    rgba(148, 163, 184, 0.04);
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), rgba(224, 250, 255, 0.02)),
+    color-mix(in srgb, var(--skin-well-ink) 9%, transparent);
   backdrop-filter: blur(14px);
   pointer-events: none;
 }
 
 .device-module--crystal-feature {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(224, 250, 255, 0.08)),
+    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 20%, transparent), rgba(224, 250, 255, 0.08)),
     rgba(148, 163, 184, 0.1);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent),
     0 18px 28px rgba(7, 18, 33, 0.14);
 }
 
@@ -4268,7 +4378,7 @@
   width: 16px;
   border-radius: 10px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.14), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.14), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.74);
   pointer-events: none;
 }
