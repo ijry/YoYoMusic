@@ -519,8 +519,9 @@
   min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 10px;
-  padding: 10px;
+  gap: 8px;
+  /* Extra bottom padding reserves room for the absolutely positioned trim. */
+  padding: 10px 10px 18px;
   border: 1px solid var(--skin-border);
   border-radius: 24px;
   background:
@@ -556,12 +557,24 @@
   font-size: 0.76rem;
 }
 
+/*
+ * Decorative trim. Absolutely positioned so it never claims a grid row: the
+ * module declares two rows (header + body) while the markup emits three
+ * children, so leaving the trim in flow created an implicit third `auto` row
+ * that ate the body's height. Keeps min-height for the visual bar thickness.
+ */
 .device-module__trim {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 4px;
   min-height: 8px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .device-module__trim-bar {
@@ -607,8 +620,9 @@
   grid-template-columns: minmax(260px, 0.82fr) minmax(320px, 1.18fr) minmax(280px, 0.9fr);
 }
 
+/* Centre stage keeps the platter; the rail needs enough for a real queue. */
 .skin-grid--vinyl {
-  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
 }
 
 .skin-grid--crystal {
@@ -616,12 +630,14 @@
   grid-template-rows: minmax(0, 1fr) minmax(160px, 0.45fr);
 }
 
+/* Lower console holds the queue, so it needs the larger share of the rack. */
 .skin-grid--rack {
-  grid-template-rows: minmax(0, 1.1fr) minmax(180px, 0.72fr);
+  grid-template-rows: minmax(0, 0.82fr) minmax(240px, 1.18fr);
 }
 
+/* Display bay stays generous but yields to the stacked rail on the right. */
 .skin-grid--wood {
-  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(300px, 0.82fr) minmax(360px, 1.18fr);
 }
 
 .classic-center-deck,
@@ -638,19 +654,37 @@
 }
 
 .classic-center-deck,
-.vinyl-stage,
 .crystal-now-panel,
 .wood-album-sleeve {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(100px, 0.42fr);
-  gap: 12px;
+  grid-template-rows: minmax(0, 1fr) minmax(68px, 0.34fr);
+  gap: 10px;
   overflow: hidden;
 }
 
+/*
+ * Vinyl keeps its transport inside the stage rather than the shell's bottom
+ * row, so it needs an explicit third track. Left implicit it resolved to `auto`
+ * and the deck ballooned to ~390px.
+ */
+.vinyl-stage {
+  display: grid;
+  /* Transport gets a hard floor: as `auto` it was the row that lost when the
+   * platter and spectrum claimed space, and the buttons got clipped. */
+  grid-template-rows: minmax(0, 1fr) minmax(68px, 0.3fr) 96px;
+  gap: 10px;
+  overflow: hidden;
+}
+
+/*
+ * Side rails hold playlist + feature panel in ~370px. Fixed floors summing past
+ * that over-committed the track and clipped both panels, so they share it
+ * proportionally with only a small floor each.
+ */
 .vinyl-side-rail,
 .wood-liner-notes {
   display: grid;
-  grid-template-rows: minmax(160px, 0.72fr) minmax(0, 1fr);
+  grid-template-rows: minmax(150px, 1.05fr) minmax(130px, 0.95fr);
   gap: 12px;
   overflow: hidden;
 }
@@ -673,6 +707,83 @@
 
 .skin-layout .playlist-panel,
 .skin-layout .feature-sidebar,
+/*
+ * Now-playing: cover as the focal point, sized from the container rather than
+ * the viewport. The base `.cover-card` uses clamp(148px, 28vh, 260px), which
+ * ignored its parent and overflowed a 34px box in every skin.
+ */
+.skin-layout .now-playing {
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 12px;
+  min-height: 0;
+}
+
+/* Floor for the display bay, or the cover's row resolves to ~26px. */
+.skin-layout .device-module--now-playing .device-module__body {
+  min-height: 190px;
+}
+
+/*
+ * Sized from the shorter of the container's two axes. `height: 100%` collapsed
+ * to 2px here: the parent row is `1fr` with no resolved height, so a percentage
+ * had nothing to resolve against. min() against vh keeps it bounded instead.
+ */
+.skin-layout .cover-card {
+  width: min(100%, 30vh, 260px);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 18px;
+}
+
+.skin-layout .now-playing-display {
+  max-width: 100%;
+  display: grid;
+  gap: 4px;
+}
+
+.skin-layout .now-playing-display__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.skin-layout .now-playing-display .eyebrow {
+  margin: 0;
+}
+
+.skin-layout .now-playing-display h2 {
+  font-size: 1.12rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skin-layout .now-playing-display .subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spectrum needs a floor or the bars have nowhere to draw and read as empty. */
+.skin-layout .workbench-visualization {
+  min-height: 68px;
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.skin-layout .device-module--visualization .device-module__body {
+  min-height: 68px;
+}
+
+.skin-layout .playlist-panel,
+.skin-layout .feature-sidebar,
 .skin-layout .now-playing,
 .skin-layout .workbench-visualization,
 .skin-layout .player-controls {
@@ -687,9 +798,92 @@
   box-shadow: inset 3px 0 0 var(--skin-primary);
 }
 
+/*
+ * The three `auto` header rows (heading, counter, actions) would otherwise
+ * consume the whole panel and leave the list at 0px. A floor on the list row
+ * keeps the queue visible; the header shrinks instead.
+ */
 .skin-layout .playlist-panel {
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(120px, 1fr);
+  gap: 6px;
+}
+
+/*
+ * Explicit row placement. `app.css` declares only three rows for four children,
+ * so auto-placement put the list in row 2 and it rendered underneath the action
+ * buttons.
+ */
+.skin-layout .playlist-panel > .panel-heading {
+  grid-row: 1;
+}
+
+.skin-layout .playlist-panel > .playlist-panel__status {
+  grid-row: 2;
+}
+
+.skin-layout .playlist-panel > .playlist-actions {
+  grid-row: 3;
+}
+
+/*
+ * Compact the playlist header. Eyebrow + heading + status pills + actions ran
+ * ~150px before a single track appeared, which is why narrower bays showed a
+ * header and nothing else.
+ */
+.skin-layout .playlist-panel .panel-heading {
+  align-items: center;
+}
+
+.skin-layout .playlist-panel .eyebrow {
+  display: none;
+}
+
+.skin-layout .playlist-panel .panel-heading h2 {
+  font-size: 0.98rem;
+  line-height: 1.15;
+}
+
+.skin-layout .playlist-panel__counter {
+  padding: 3px 8px;
+  font-size: 0.72rem;
+}
+
+.skin-layout .playlist-status-pill {
+  padding: 3px 7px;
+  font-size: 0.66rem;
+}
+
+/* Keep the 38px click target; the header savings above are enough. */
+
+.skin-layout .playlist-panel > .track-list,
+.skin-layout .playlist-panel > .empty-state {
+  grid-row: 4;
+  margin-top: 0;
+  /* Confine the list to its row. Without an explicit min-height:0 the grid item
+   * sizes to its content (386px of tracks) and paints upward over the header
+   * rows instead of scrolling inside its 162px track. */
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
+}
+
+.skin-layout .track-list {
   gap: 8px;
+  padding-right: 0;
+  min-height: 0;
+}
+
+/* Compact rows so more of the queue is visible in the same space. */
+.skin-layout .track-item {
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.skin-layout .track-index {
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 9px;
+  font-size: 0.68rem;
 }
 
 .playlist-panel__counter {
@@ -746,6 +940,7 @@
 .skin-layout .playlist-action-button {
   min-height: 38px;
   padding: 8px 12px;
+  font-size: 0.8rem;
   white-space: nowrap;
 }
 
@@ -764,11 +959,6 @@
 .playlist-actions--drawer {
   padding-bottom: 4px;
   border-bottom: 1px solid color-mix(in srgb, var(--skin-border) 74%, transparent);
-}
-
-.skin-layout .track-list {
-  gap: 12px;
-  padding-right: 0;
 }
 
 .skin-layout .track-list,
@@ -828,8 +1018,23 @@
   min-width: 0;
 }
 
+/*
+ * Give the title column the space. The badge column's 70px floor plus the
+ * remove button squeezed `minmax(0, 1fr)` down to ~50px, so every track name
+ * rendered as an ellipsis.
+ */
 .skin-layout .track-badges {
-  min-width: 70px;
+  min-width: 0;
+  max-width: 74px;
+  text-align: right;
+}
+
+.skin-layout .track-main strong,
+.skin-layout .track-main span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .skin-layout .ghost-button {
@@ -987,12 +1192,67 @@
   grid-row: auto;
 }
 
+/*
+ * Cap the transport bay. `.device-module .player-controls { height: 100% }`
+ * above makes the deck fill whatever the module is given, so the ceiling has to
+ * live on the module — otherwise a tall bay (vinyl's stage row) stretches the
+ * deck to ~390px.
+ */
+.skin-layout .device-module--controls {
+  align-self: end;
+}
+
+.skin-layout .device-module--controls .device-module__body {
+  min-height: 56px;
+  max-height: 84px;
+}
+
+/* Tabs shrink to share the sidebar width instead of forcing a scroll. */
+.skin-layout .feature-tab {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 34px;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 0;
+  padding: 6px 6px;
+  border-radius: 9px;
+  font-size: 0.78rem;
+}
+
+.skin-layout .feature-tab__slot {
+  display: none;
+}
+
+.skin-layout .feature-tab__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .skin-layout .feature-sidebar {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(90px, 1fr);
   gap: 10px;
   overflow: hidden;
+}
+
+/*
+ * Confine the panel to its row. Same failure as the playlist: the content row
+ * resolved to 0px and the panel painted upward over the tabs instead of
+ * scrolling inside its track.
+ */
+.skin-layout .feature-sidebar > .feature-tabs {
+  grid-row: 1;
+}
+
+.skin-layout .feature-sidebar > .feature-content {
+  grid-row: 2;
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
 }
 
 .skin-layout .feature-content {
@@ -1000,12 +1260,88 @@
   overflow: auto;
 }
 
+/*
+ * Single-row control deck. The status strip used to span `1 / -1`, forcing a
+ * second row and pushing the deck to ~290px — nearly half the window. It now
+ * sits in the flow as one compact column, keeping the deck near 96px.
+ */
 .skin-layout .player-controls {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) minmax(132px, 0.48fr) auto;
+  /* status | transport | progress | volume | mode — five children, five tracks.
+   * With only four the last one wrapped to a second row. */
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto;
   align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
+  gap: 12px;
+  padding: 10px 14px;
+  height: auto;
+}
+
+.skin-layout .transport-status-strip {
+  grid-column: auto;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 3px;
+  max-width: 92px;
+  overflow: hidden;
+}
+
+.skin-layout .transport-status-light {
+  min-height: 0;
+  padding: 2px 7px;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* Progress and volume become inline readouts rather than stacked monitors. */
+.skin-layout .control-field {
+  min-width: 0;
+}
+
+.skin-layout .control-field--progress {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.skin-layout .control-field--progress .control-label {
+  display: none;
+}
+
+.skin-layout .control-field--volume {
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 8px;
+  max-width: none;
+}
+
+.skin-layout .control-field--volume .control-label {
+  display: none;
+}
+
+.skin-layout .control-monitor {
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.skin-layout .volume-well {
+  width: 34px;
+}
+
+.skin-layout .transport-button,
+.skin-layout .play-mode-button--deck {
+  min-height: 36px;
+}
+
+.skin-layout .transport-button {
+  min-width: 58px;
+  padding: 7px 11px;
+}
+
+.skin-layout .play-mode-button--deck {
+  white-space: nowrap;
 }
 
 .transport-row--deck {
@@ -1193,12 +1529,74 @@
     rgba(4, 10, 18, 0.34);
 }
 
+/*
+ * Compact title band. The stacked eyebrow + oversized h1 + nameplate used to
+ * push this to 104-152px; laying them out horizontally keeps the whole band
+ * near 56px and hands the difference to the content grid.
+ */
+.skin-layout .title-bar {
+  min-height: 0;
+  align-items: center;
+  gap: 14px;
+  padding: 0 2px 2px;
+}
+
+.skin-layout .app-title {
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.skin-layout .app-title h1 {
+  font-size: 1.42rem;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.skin-layout .app-title .eyebrow {
+  display: none;
+}
+
+.skin-layout .device-shell__plate {
+  gap: 0;
+  padding: 4px 9px;
+  border-radius: 9px;
+}
+
+.skin-layout .app-title__model {
+  font-size: 0.62rem;
+}
+
+.skin-layout .app-title__serial {
+  display: none;
+}
+
 .skin-layout .title-actions {
-  min-width: min(100%, 44rem);
+  min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+}
+
+.skin-layout .title-status-cluster {
+  min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.skin-layout .title-status-pill {
+  white-space: nowrap;
+}
+
+/* The track-title pill is the first thing worth truncating when space runs out. */
+.skin-layout .title-status-pill--track {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .title-status-cluster {
@@ -1274,12 +1672,17 @@
   font-weight: 700;
 }
 
+/*
+ * Six tabs at 104px min-width need 624px, but the sidebar is ~300px, so a
+ * nowrap flex row scrolled and clipped the labels. A three-column grid fits
+ * them in two visible rows instead.
+ */
 .skin-layout .feature-tabs {
   min-width: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 8px;
-  overflow-x: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  overflow: visible;
   padding: 0 2px 4px;
   scrollbar-width: thin;
 }
@@ -1682,8 +2085,26 @@
     0 0 14px color-mix(in srgb, var(--skin-primary) 24%, transparent);
 }
 
+/*
+ * Bars must fill their grid track so `transform: scaleY(var(--viz-value))` has
+ * real height to scale from. Under `align-items: end` they collapsed to their
+ * 3px content height, which made the whole spectrum read as an empty box.
+ */
+.skin-layout .visualization-preview--spectrum {
+  align-items: stretch;
+  min-height: 0;
+}
+
 .skin-layout .visualization-spectrum-bar {
+  height: 100%;
+  align-self: stretch;
   background: linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
+}
+
+/* The bay caps height, so the 86px hero floor would overflow it. */
+.skin-layout .visualization-preview--hero {
+  min-height: 0;
+  height: 100%;
 }
 
 .visualization-spectrum-fill {
@@ -3262,6 +3683,14 @@
 .device-shell--rack .device-module,
 .device-shell--rack .player-controls {
   border-radius: 16px;
+}
+
+/*
+ * Rack ears sit at left: 18px and overlapped the module labels, clipping them
+ * ("频谱桥" read as "谱桥"). Indent rack headers clear of the hardware.
+ */
+.device-shell--rack .device-module__header {
+  padding-left: 34px;
 }
 
 .device-shell--rack .device-module__label {
