@@ -327,7 +327,8 @@
 
 .skin-grid--crystal {
   grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.15fr);
-  grid-template-rows: minmax(0, 1fr) minmax(160px, 0.45fr);
+  /* Second row carries the feature bay, whose floor is 176px. */
+  grid-template-rows: minmax(0, 1fr) minmax(184px, 0.5fr);
 }
 
 /* Lower console holds the queue, so it needs the larger share of the rack. */
@@ -490,7 +491,11 @@
 .skin-layout [class*="device-module--"]::before,
 .skin-layout [class*="device-module--"]::after,
 .skin-layout [class*="skin-title--"]::before,
-.skin-layout [class*="skin-title--"]::after {
+.skin-layout [class*="skin-title--"]::after,
+.vinyl-stage::before,
+.crystal-playlist-drawer::before,
+.rack-lower-console::before,
+.wood-liner-notes::before {
   display: none;
 }
 
@@ -518,6 +523,19 @@
  */
 .skin-layout .device-module__body--feature {
   min-height: 176px;
+}
+
+/* Wrappers clip; the panels inside them own the scrolling. */
+.crystal-playlist-drawer,
+.crystal-feature-float,
+.crystal-now-panel,
+.classic-center-deck,
+.wood-album-sleeve,
+.rack-lower-console,
+.rack-meter-bridge,
+.vinyl-stage {
+  min-height: 0;
+  overflow: hidden;
 }
 
 /*
@@ -642,10 +660,22 @@
   align-self: stretch;
 }
 
+/*
+ * A partly-visible last row is the scroll affordance, but a hard cut through
+ * the text reads as a rendering fault. The mask fades the final few pixels so
+ * the clip looks deliberate, and only while the list actually overflows.
+ */
 .skin-layout .track-list {
   gap: 8px;
   padding-right: 0;
   min-height: 0;
+  mask-image: linear-gradient(180deg, #000 calc(100% - 18px), transparent);
+}
+
+@supports not (mask-image: linear-gradient(#000, #000)) {
+  .skin-layout .track-list {
+    mask-image: none;
+  }
 }
 
 /* Compact rows so more of the queue is visible in the same space. */
