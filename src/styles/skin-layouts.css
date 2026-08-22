@@ -219,109 +219,6 @@
   pointer-events: none;
 }
 
-.device-shell__handle {
-  position: absolute;
-  top: 92px;
-  width: 18px;
-  height: calc(100% - 196px);
-  max-height: 320px;
-  border: 1px solid var(--skin-border);
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 18%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 26%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
-    0 12px 18px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
-}
-
-.device-shell__handle--left {
-  left: 8px;
-}
-
-.device-shell__handle--right {
-  right: 8px;
-}
-
-.device-shell__vent-bank {
-  position: absolute;
-  top: 18px;
-  right: 26px;
-  display: inline-grid;
-  gap: 5px;
-}
-
-.device-shell__vent {
-  min-height: 4px;
-  width: 88px;
-  border-radius: 999px;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 40%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent);
-}
-
-.device-shell__foot {
-  position: absolute;
-  bottom: 6px;
-  width: 96px;
-  height: 14px;
-  border: 1px solid var(--skin-border);
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), color-mix(in srgb, var(--skin-shade-ink) 6%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 32%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
-    0 8px 14px color-mix(in srgb, var(--skin-shade-ink) 20%, transparent);
-}
-
-.device-shell__foot--left {
-  left: 82px;
-}
-
-.device-shell__foot--right {
-  right: 82px;
-}
-
-.device-shell__split-rail {
-  position: absolute;
-  top: 104px;
-  bottom: 72px;
-  width: 20px;
-  border: 1px solid var(--skin-border);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 18%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
-    0 10px 16px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
-}
-
-.device-shell__split-rail--left {
-  left: 34px;
-}
-
-.device-shell__split-rail--right {
-  right: 34px;
-}
-
-.device-shell__center-seam {
-  position: absolute;
-  left: 156px;
-  right: 156px;
-  bottom: 92px;
-  height: 8px;
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent),
-    0 8px 12px color-mix(in srgb, var(--skin-shade-ink) 12%, transparent);
-}
-
 .device-shell__arc-platter {
   position: absolute;
   top: 98px;
@@ -336,108 +233,6 @@
   box-shadow:
     inset 0 0 0 22px color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent),
     inset 0 0 0 44px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
-}
-
-.device-shell__arc-rail {
-  position: absolute;
-  left: 112px;
-  right: 234px;
-  bottom: 94px;
-  height: 116px;
-  border: 1px solid var(--skin-border);
-  border-radius: 999px 999px 28px 28px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), transparent 68%),
-    color-mix(in srgb, var(--skin-well-ink) 12%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent);
-}
-
-.device-shell__standoff {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border: 1px solid var(--skin-border);
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 24%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 4%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
-    0 10px 18px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
-}
-
-.device-shell__standoff--tl {
-  top: 90px;
-  left: 54px;
-}
-
-.device-shell__standoff--tr {
-  top: 90px;
-  right: 54px;
-}
-
-.device-shell__standoff--bl {
-  bottom: 86px;
-  left: 54px;
-}
-
-.device-shell__standoff--br {
-  bottom: 86px;
-  right: 54px;
-}
-
-.device-shell__glass-bracket {
-  position: absolute;
-  top: 112px;
-  right: 124px;
-  width: 124px;
-  bottom: 110px;
-  border: 1px solid var(--skin-border);
-  border-radius: 28px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), rgba(224, 250, 255, 0.04)),
-    color-mix(in srgb, var(--skin-well-ink) 12%, transparent);
-  backdrop-filter: blur(16px);
-}
-
-.device-shell__rack-ear {
-  position: absolute;
-  top: 102px;
-  bottom: 78px;
-  width: 38px;
-  border: 1px solid var(--skin-border);
-  border-radius: 14px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 1%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 20%, transparent);
-}
-
-.device-shell__rack-ear--left {
-  left: 18px;
-}
-
-.device-shell__rack-ear--right {
-  right: 18px;
-}
-
-.device-shell__rack-rail {
-  position: absolute;
-  left: 74px;
-  right: 74px;
-  height: 10px;
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 8%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 6%, transparent);
-}
-
-.device-shell__rack-rail--upper {
-  top: 92px;
-}
-
-.device-shell__rack-rail--lower {
-  bottom: 84px;
 }
 
 .device-shell__molding {
@@ -463,43 +258,9 @@
   bottom: 82px;
 }
 
-.device-shell__brass-plaque {
-  position: absolute;
-  top: 98px;
-  left: 50%;
-  display: inline-flex;
-  justify-content: center;
-  width: 158px;
-  height: 32px;
-  border: 1px solid rgba(255, 228, 184, 0.42);
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, rgba(255, 248, 220, 0.28), rgba(210, 150, 82, 0.08)),
-    rgba(120, 53, 15, 0.2);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 248, 220, 0.18),
-    0 10px 16px rgba(28, 13, 6, 0.16);
-  transform: translateX(-50%);
-}
-
 .app-title {
   display: grid;
   gap: 8px;
-}
-
-.device-shell__plate {
-  display: inline-grid;
-  justify-self: start;
-  gap: 2px;
-  padding: 8px 12px;
-  border: 1px solid var(--skin-border);
-  border-radius: 14px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent),
-    0 10px 18px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
 .app-title__model,
@@ -513,12 +274,6 @@
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-}
-
-.app-title__serial {
-  color: var(--color-muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
 }
 
 .device-module {
@@ -558,60 +313,6 @@
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-}
-
-.device-module__eyebrow {
-  color: var(--color-muted);
-  font-size: 0.76rem;
-}
-
-/*
- * Decorative trim. Absolutely positioned so it never claims a grid row: the
- * module declares two rows (header + body) while the markup emits three
- * children, so leaving the trim in flow created an implicit third `auto` row
- * that ate the body's height. Keeps min-height for the visual bar thickness.
- */
-.device-module__trim {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 4px;
-  min-height: 8px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.device-module__trim-bar {
-  height: 8px;
-  border-radius: 999px;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--skin-gloss-ink) 24%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 4%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 34%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 10%, transparent),
-    inset 0 -2px 4px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
-}
-
-.device-module__rivets {
-  display: inline-flex;
-  gap: 8px;
-}
-
-.device-module__rivet {
-  width: 10px;
-  height: 10px;
-  border: 1px solid var(--skin-border);
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 56%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-shade-ink) 16%, transparent));
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent),
-    0 2px 4px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
 .device-module__body {
@@ -752,13 +453,6 @@
   gap: 4px;
 }
 
-.skin-layout .now-playing-display__header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
 .skin-layout .now-playing-display .eyebrow {
   margin: 0;
 }
@@ -852,11 +546,6 @@
   font-size: 0.72rem;
 }
 
-.skin-layout .playlist-status-pill {
-  padding: 3px 7px;
-  font-size: 0.66rem;
-}
-
 /* Keep the 38px click target; the header savings above are enough. */
 
 .skin-layout .playlist-panel > .track-list,
@@ -900,12 +589,6 @@
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     color-mix(in srgb, var(--skin-well-ink) 28%, transparent);
-}
-
-.playlist-panel__status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .playlist-status-pill,
@@ -1160,30 +843,6 @@
     inset 0 -10px 22px color-mix(in srgb, var(--skin-shade-ink) 14%, transparent);
 }
 
-.now-playing-display__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.now-playing-display__body {
-  min-width: 0;
-}
-
-.now-playing-status {
-  padding: 5px 10px;
-  border: 1px solid var(--skin-border);
-  border-radius: 999px;
-  color: var(--skin-accent);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 28%, transparent);
-}
-
 .device-module .playlist-panel,
 .device-module .feature-sidebar,
 .device-module .now-playing,
@@ -1222,17 +881,6 @@
   padding: 6px 6px;
   border-radius: 9px;
   font-size: 0.78rem;
-}
-
-.skin-layout .feature-tab__slot {
-  display: none;
-}
-
-.skin-layout .feature-tab__label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .skin-layout .feature-sidebar {
@@ -1369,24 +1017,6 @@
   max-width: 72px;
 }
 
-.skin-layout .transport-status-strip {
-  grid-column: auto;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  gap: 3px;
-  max-width: 92px;
-  overflow: hidden;
-}
-
-.skin-layout .transport-status-light {
-  min-height: 0;
-  padding: 2px 7px;
-  font-size: 0.62rem;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
 /* Progress and volume become inline readouts rather than stacked monitors. */
 .skin-layout .control-field {
   min-width: 0;
@@ -1416,10 +1046,6 @@
 .skin-layout .control-monitor {
   padding: 6px 12px;
   border-radius: 999px;
-}
-
-.skin-layout .volume-well {
-  width: 34px;
 }
 
 .skin-layout .transport-button,
@@ -1467,30 +1093,6 @@
 .control-label,
 .control-readout {
   color: var(--color-muted);
-}
-
-.transport-status-strip {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.transport-status-light {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  padding: 6px 10px;
-  border: 1px solid var(--skin-border);
-  border-radius: 999px;
-  color: var(--skin-accent);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 24%, transparent);
 }
 
 .control-monitor {
@@ -1576,36 +1178,6 @@
   justify-items: center;
 }
 
-.volume-well {
-  width: 58px;
-  aspect-ratio: 1;
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-
-.volume-well__ring {
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--skin-border);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--skin-gloss-ink) 20%, transparent), transparent 42%),
-    linear-gradient(145deg, color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent), color-mix(in srgb, var(--skin-shade-ink) 12%, transparent));
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--skin-gloss-ink) 12%, transparent),
-    inset 0 -8px 14px color-mix(in srgb, var(--skin-shade-ink) 18%, transparent);
-}
-
-.volume-well__tick {
-  width: 2px;
-  height: 18px;
-  border-radius: 999px;
-  background: var(--skin-accent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--skin-accent) 52%, transparent);
-  transform-origin: center 22px;
-}
-
 .volume-input {
   width: 100%;
   text-align: center;
@@ -1649,18 +1221,8 @@
   display: none;
 }
 
-.skin-layout .device-shell__plate {
-  gap: 0;
-  padding: 4px 9px;
-  border-radius: 9px;
-}
-
 .skin-layout .app-title__model {
   font-size: 0.62rem;
-}
-
-.skin-layout .app-title__serial {
-  display: none;
 }
 
 .skin-layout .title-actions {
@@ -1751,19 +1313,6 @@
     0 10px 22px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
 }
 
-.title-action-button__code {
-  color: var(--skin-accent);
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.title-action-button__label {
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
 /*
  * Six tabs at 104px min-width need 624px, but the sidebar is ~300px, so a
  * nowrap flex row scrolled and clipped the labels. A three-column grid fits
@@ -1801,32 +1350,6 @@
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--skin-primary) 42%, transparent),
     0 12px 20px color-mix(in srgb, var(--skin-shade-ink) 16%, transparent);
-}
-
-.feature-tab__slot {
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--skin-border);
-  border-radius: 8px;
-  color: var(--skin-accent);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 14%, transparent), color-mix(in srgb, var(--skin-gloss-ink) 3%, transparent)),
-    color-mix(in srgb, var(--skin-well-ink) 26%, transparent);
-}
-
-.feature-tab__label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.82rem;
-  font-weight: 700;
 }
 
 .settings-panel__status {
@@ -2961,10 +2484,6 @@
   box-shadow: inset 0 0 0 1px rgba(217, 232, 251, 0.12);
 }
 
-.device-module--classic-controls .transport-status-strip {
-  justify-content: center;
-}
-
 .device-module--classic-controls .transport-row--deck {
   padding: 8px 10px;
   border: 1px solid rgba(217, 232, 251, 0.16);
@@ -3084,13 +2603,6 @@
   background:
     linear-gradient(180deg, rgba(255, 248, 220, 0.4), rgba(210, 150, 82, 0.08)),
     rgba(88, 49, 26, 0.48);
-}
-
-.device-module--wood-controls .volume-well__ring {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 248, 220, 0.16),
-    inset 0 -8px 14px rgba(53, 24, 10, 0.24),
-    0 8px 16px rgba(28, 13, 6, 0.12);
 }
 
 .device-module--classic-status,
@@ -3254,11 +2766,6 @@
     rgba(9, 13, 20, 0.66);
 }
 
-.device-module--rack-status .now-playing-status {
-  border-radius: 8px;
-  color: #22c55e;
-}
-
 .device-module--wood-status .now-playing-display {
   box-shadow:
     inset 0 0 0 3px rgba(54, 28, 14, 0.24),
@@ -3377,19 +2884,6 @@
   background:
     linear-gradient(180deg, rgba(226, 237, 249, 0.26), rgba(61, 87, 125, 0.06)),
     rgba(12, 22, 38, 0.68);
-}
-
-.device-shell--classic .device-shell__plate,
-.device-shell--classic .device-shell__handle,
-.device-shell--classic .device-shell__vent,
-.device-shell--classic .device-shell__foot,
-.device-shell--classic .device-shell__split-rail,
-.device-shell--classic .device-shell__center-seam,
-.device-shell--classic .device-module__trim-bar,
-.device-shell--classic .device-module__rivet {
-  background:
-    linear-gradient(180deg, rgba(226, 237, 249, 0.24), rgba(61, 87, 125, 0.04)),
-    rgba(12, 22, 38, 0.46);
 }
 
 .device-shell--classic .playlist-panel__counter,
@@ -3543,14 +3037,7 @@
     rgba(6, 8, 11, 0.74);
 }
 
-.device-shell--vinyl .device-shell__plate,
-.device-shell--vinyl .device-shell__handle,
-.device-shell--vinyl .device-shell__vent,
-.device-shell--vinyl .device-shell__foot,
-.device-shell--vinyl .device-shell__arc-platter,
-.device-shell--vinyl .device-shell__arc-rail,
-.device-shell--vinyl .device-module__trim-bar,
-.device-shell--vinyl .device-module__rivet {
+.device-shell--vinyl .device-shell__arc-platter {
   border-radius: 999px;
   background:
     radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.14), transparent 40%),
@@ -3592,13 +3079,6 @@
   background:
     radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.14), transparent 40%),
     rgba(6, 8, 11, 0.64);
-}
-
-.device-shell--vinyl .feature-tab__slot {
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(113, 245, 196, 0.16), transparent 42%),
-    rgba(6, 8, 11, 0.72);
 }
 
 .device-shell--vinyl .lyric-line__stamp,
@@ -3666,10 +3146,6 @@
     0 24px 46px color-mix(in srgb, var(--skin-shade-ink) 30%, transparent);
 }
 
-.device-shell--vinyl .device-shell__arc-rail {
-  border-color: rgba(113, 245, 196, 0.24);
-}
-
 .device-shell--crystal {
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--skin-accent) 20%, transparent), color-mix(in srgb, var(--skin-primary) 8%, transparent)),
@@ -3681,20 +3157,6 @@
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 16%, transparent), rgba(224, 250, 255, 0.06)),
     rgba(14, 24, 38, 0.2);
-}
-
-.device-shell--crystal .device-shell__plate,
-.device-shell--crystal .device-shell__handle,
-.device-shell--crystal .device-shell__vent,
-.device-shell--crystal .device-shell__foot,
-.device-shell--crystal .device-shell__standoff,
-.device-shell--crystal .device-shell__glass-bracket,
-.device-shell--crystal .device-module__trim-bar,
-.device-shell--crystal .device-module__rivet {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--skin-gloss-ink) 20%, transparent), rgba(224, 250, 255, 0.08)),
-    rgba(148, 163, 184, 0.08);
-  backdrop-filter: blur(14px);
 }
 
 .device-shell--crystal .playlist-panel__counter,
@@ -3819,25 +3281,6 @@
     rgba(9, 13, 20, 0.82);
 }
 
-.device-shell--rack .device-shell__plate,
-.device-shell--rack .device-shell__handle,
-.device-shell--rack .device-shell__vent,
-.device-shell--rack .device-shell__foot,
-.device-shell--rack .device-shell__rack-ear,
-.device-shell--rack .device-shell__rack-rail,
-.device-shell--rack .device-module__trim-bar,
-.device-shell--rack .device-module__rivet {
-  border-radius: 10px;
-  color: #22c55e;
-  background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.12), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
-    rgba(9, 13, 20, 0.82);
-}
-
-.device-shell--rack .volume-well__tick {
-  background: #22c55e;
-}
-
 .device-shell--rack .playlist-panel__counter,
 .device-shell--rack .track-index,
 .device-shell--rack .now-playing-status,
@@ -3879,10 +3322,6 @@
   background:
     linear-gradient(180deg, rgba(250, 204, 21, 0.12), color-mix(in srgb, var(--skin-gloss-ink) 2%, transparent)),
     rgba(9, 13, 20, 0.82);
-}
-
-.device-shell--rack .title-action-button__code {
-  color: #facc15;
 }
 
 .device-shell--rack .lyric-line {
@@ -3979,24 +3418,11 @@
     rgba(54, 28, 14, 0.72);
 }
 
-.device-shell--wood .device-shell__plate,
-.device-shell--wood .device-shell__handle,
-.device-shell--wood .device-shell__vent,
-.device-shell--wood .device-shell__foot,
-.device-shell--wood .device-shell__molding,
-.device-shell--wood .device-shell__brass-plaque,
-.device-shell--wood .device-module__trim-bar,
-.device-shell--wood .device-module__rivet {
+.device-shell--wood .device-shell__molding {
   color: #fbe6bf;
   background:
     linear-gradient(180deg, rgba(255, 228, 184, 0.2), rgba(120, 53, 15, 0.06)),
     rgba(54, 28, 14, 0.5);
-}
-
-.device-shell--wood .volume-well__ring {
-  background:
-    radial-gradient(circle at 35% 35%, rgba(255, 248, 220, 0.18), transparent 42%),
-    linear-gradient(145deg, rgba(210, 150, 82, 0.2), rgba(53, 24, 10, 0.12));
 }
 
 .device-shell--wood .playlist-panel__counter,
@@ -4038,10 +3464,6 @@
   background:
     linear-gradient(180deg, rgba(255, 228, 184, 0.2), rgba(120, 53, 15, 0.06)),
     rgba(54, 28, 14, 0.5);
-}
-
-.device-shell--wood .title-action-button__code {
-  color: #ffd99a;
 }
 
 .device-shell--wood .lyric-line {
@@ -4646,28 +4068,9 @@
   letter-spacing: 0;
 }
 
-.device-shell--classic .device-shell__plate {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
 .device-shell--classic .app-title__model,
 .device-shell--classic .app-title__serial {
   letter-spacing: 0.04em;
-}
-
-.device-shell--classic .device-shell__handle,
-.device-shell--classic .device-shell__vent-bank,
-.device-shell--classic .device-shell__foot,
-.device-shell--classic .device-shell__split-rail,
-.device-shell--classic .device-shell__center-seam,
-.device-shell--classic .device-module__rivets {
-  display: none;
 }
 
 .device-shell--classic .device-module {
@@ -4683,17 +4086,9 @@
     0 8px 18px color-mix(in srgb, var(--skin-well-ink) 14%, transparent);
 }
 
-.device-shell--classic .device-module__trim {
-  display: none;
-}
-
 .device-shell--classic .device-module__label {
   letter-spacing: 0.08em;
   text-transform: none;
-}
-
-.device-shell--classic .device-module__eyebrow {
-  letter-spacing: 0;
 }
 
 .device-shell--classic .title-actions {
@@ -4730,10 +4125,6 @@
   padding: 8px 10px;
   border-radius: 12px;
   cursor: pointer;
-}
-
-.device-shell--classic .feature-tab__slot {
-  display: none;
 }
 
 .device-shell--classic .feature-tab[aria-pressed="true"] {
@@ -5019,50 +4410,9 @@
     flex-direction: column;
   }
 
-  .device-shell__handle,
-  .device-shell__vent-bank,
-  .device-shell__split-rail,
-  .device-shell__center-seam,
   .device-shell__arc-platter,
-  .device-shell__arc-rail,
-  .device-shell__glass-bracket,
-  .device-shell__rack-ear,
-  .device-shell__rack-rail,
   .device-shell__molding {
     display: none;
-  }
-
-  .device-shell__foot--left {
-    left: 24px;
-  }
-
-  .device-shell__foot--right {
-    right: 24px;
-  }
-
-  .device-shell__standoff--tl {
-    top: 86px;
-    left: 24px;
-  }
-
-  .device-shell__standoff--tr {
-    top: 86px;
-    right: 24px;
-  }
-
-  .device-shell__standoff--bl {
-    bottom: 98px;
-    left: 24px;
-  }
-
-  .device-shell__standoff--br {
-    bottom: 98px;
-    right: 24px;
-  }
-
-  .device-shell__brass-plaque {
-    top: 90px;
-    width: 128px;
   }
 
   .device-module--crystal-playlist {

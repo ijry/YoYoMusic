@@ -20,18 +20,11 @@ describe("layout skin CSS", () => {
   it("defines base device-shell framing hooks", () => {
     expect(rule(".device-shell")).toContain("position: relative;");
     expect(rule(".device-shell")).toContain("isolation: isolate;");
-    expect(rule(".device-shell__plate")).toContain("display: inline-grid;");
-    expect(rule(".device-shell__handle")).toContain("position: absolute;");
-    expect(rule(".device-shell__vent")).toContain("min-height: 4px;");
-    expect(rule(".device-shell__foot")).toContain("position: absolute;");
-    expect(rule(".device-shell__split-rail")).toContain("position: absolute;");
+    // Only the two per-skin signature elements are still rendered; the rest of
+    // the faux hardware was removed along with its CSS.
     expect(rule(".device-shell__arc-platter")).toContain("border-radius: 50%;");
-    expect(rule(".device-shell__standoff")).toContain("border-radius: 999px;");
-    expect(rule(".device-shell__rack-ear")).toContain("position: absolute;");
     expect(rule(".device-shell__molding")).toContain("position: absolute;");
     expect(rule(".device-module")).toContain("grid-template-rows: auto minmax(0, 1fr);");
-    expect(rule(".device-module__trim")).toContain("min-height: 8px;");
-    expect(rule(".device-module__rivet")).toContain("border-radius: 999px;");
     expect(rule(".device-module__body")).toContain("min-height: 0;");
     expect(rule(".device-module__label")).toContain("letter-spacing: 0.18em;");
   });
@@ -44,12 +37,10 @@ describe("layout skin CSS", () => {
     expect(rule(".skin-layout--warm-wood")).toContain("--shell-edge: rgba(255, 228, 184, 0.34);");
   });
 
-  it("defines skin-specific silhouette hardware hooks", () => {
-    expect(rule(".device-shell__center-seam")).toContain("height: 8px;");
-    expect(rule(".device-shell__arc-rail")).toContain("border-radius: 999px 999px 28px 28px;");
-    expect(rule(".device-shell__glass-bracket")).toContain("backdrop-filter: blur(16px);");
-    expect(rule(".device-shell__rack-rail")).toContain("height: 10px;");
-    expect(rule(".device-shell__brass-plaque")).toContain("justify-content: center;");
+  it("keeps the decoration layer behind content", () => {
+    expect(rule(".device-shell__hardware")).toContain("z-index: 0;");
+    expect(rule(".device-shell__hardware")).toContain("pointer-events: none;");
+    expect(rule(".skin-grid")).toContain("z-index: 1;");
   });
 
   it("defines skin-specific module compartment framing hooks", () => {
@@ -184,18 +175,14 @@ describe("layout skin CSS", () => {
   });
 
   it("defines compact default classic usability overrides", () => {
-    expect(rule(".device-shell--classic .device-module__trim")).toContain("display: none;");
     expect(rule(".device-shell--classic .device-module--classic-playlist::before")).toContain("display: none;");
     expect(rule(".device-shell--classic .device-module--classic-playlist::after")).toContain("display: none;");
-    expect(rule(".device-shell--classic .device-shell__plate")).toContain("background: transparent;");
-    expect(rule(".device-shell--classic .title-action-button")).toContain("min-height: 40px;");
     expect(rule(".device-shell--classic .title-action-button")).toContain("cursor: pointer;");
     expect(rule(".device-shell--classic .title-action-button:hover")).toContain("background:");
     expect(rule(".device-shell--classic .title-action-button:active")).toContain("transform: translateY(0);");
     // Icon tabs share the sidebar width; the old 88px text floor overflowed the
     // 42px grid tracks.
     expect(rule(".device-shell--classic .feature-tab")).toContain("min-width: 0;");
-    expect(rule(".device-shell--classic .feature-tab__slot")).toContain("display: none;");
   });
 
   it("defines skin manager library card usability hooks", () => {
@@ -231,14 +218,14 @@ describe("layout skin CSS", () => {
     expect(css).toContain("grid-template-columns: 1fr;");
   });
 
-  it("styles the control deck with transport buttons, progress rail, and volume well hooks", () => {
+  it("styles the icon control deck", () => {
     expect(css).toContain(".transport-button");
     expect(css).toContain(".progress-rail");
-    expect(css).toContain(".volume-well");
     expect(css).toContain(".play-mode-button--deck");
-    expect(css).toContain(".transport-status-strip");
-    expect(css).toContain(".transport-status-light");
     expect(css).toContain(".control-monitor");
+    // Icon buttons are square targets around the glyph rather than text-sized.
+    expect(rule(".skin-layout .transport-button--play")).toContain("min-width: 44px;");
+    expect(rule(".skin-layout .lucide")).toContain("display: block;");
   });
 
   it("styles the now-playing display and playlist drawer hooks", () => {
@@ -246,7 +233,6 @@ describe("layout skin CSS", () => {
     expect(css).toContain(".cover-card__hub");
     expect(css).toContain(".track-index");
     expect(css).toContain(".playlist-panel__counter");
-    expect(css).toContain(".playlist-panel__status");
     expect(css).toContain(".playlist-action-button");
     expect(css).toContain(".track-flag");
   });
@@ -254,7 +240,6 @@ describe("layout skin CSS", () => {
   it("styles the title control cabin and feature bay hooks", () => {
     expect(css).toContain(".title-status-cluster");
     expect(css).toContain(".title-action-button");
-    expect(css).toContain(".feature-tab__slot");
     expect(css).toContain(".settings-panel__status");
     expect(css).toContain(".settings-panel__field");
     expect(css).toContain(".app-title__model");
