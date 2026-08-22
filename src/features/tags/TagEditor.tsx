@@ -34,10 +34,7 @@ export function TagEditor({ track, onSave }: TagEditorProps) {
     return (
       <section className="tag-editor" aria-label="标签编辑">
         <div className="tag-editor__header">
-          <div>
-            <p className="eyebrow">Tag Service Deck</p>
-            <h2>标签编辑</h2>
-          </div>
+          <h2>标签编辑</h2>
           <span className="tag-editor__status">未选择曲目</span>
         </div>
         <p className="empty-state">选择一首歌曲后编辑标签。</p>
@@ -55,10 +52,7 @@ export function TagEditor({ track, onSave }: TagEditorProps) {
       }}
     >
       <div className="tag-editor__header">
-        <div>
-          <p className="eyebrow">Tag Service Deck</p>
-          <h2>标签编辑</h2>
-        </div>
+        <h2>标签编辑</h2>
         <span className="tag-editor__status">当前曲目 {track.title}</span>
       </div>
       <label className="tag-editor__field">

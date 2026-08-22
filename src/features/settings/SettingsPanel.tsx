@@ -14,10 +14,7 @@ export function SettingsPanel({
   return (
     <section className="settings-panel" aria-labelledby="settings-title">
       <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Settings</p>
-          <h2 id="settings-title">设置</h2>
-        </div>
+        <h2 id="settings-title">设置</h2>
         <span className="settings-panel__status">{enrichmentEnabled ? "联网补全已开启" : "联网补全已关闭"}</span>
       </div>
 

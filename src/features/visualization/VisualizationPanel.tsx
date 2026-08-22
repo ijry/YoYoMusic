@@ -26,10 +26,7 @@ export function VisualizationPanel({
   return (
     <section className="visualization-panel" aria-label="音乐可视化">
       <div className="visualization-panel__header">
-        <div>
-          <p className="eyebrow">Visualization Bay</p>
-          <h2>音乐可视化</h2>
-        </div>
+        <h2>音乐可视化</h2>
         <span className="visualization-panel__status">峰值 {frame.peak.toFixed(2)}</span>
       </div>
       <div className="visualization-panel__modes">

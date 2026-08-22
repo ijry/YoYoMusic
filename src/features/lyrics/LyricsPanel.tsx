@@ -12,10 +12,6 @@ export function LyricsPanel({ document, positionMs }: LyricsPanelProps) {
     return (
       <section className="lyrics-panel" aria-label="歌词">
         <div className="lyrics-panel__header">
-          <div>
-            <p className="eyebrow">Lyrics Readout</p>
-            <h2>歌词</h2>
-          </div>
           <span className="lyrics-panel__status">未载入</span>
         </div>
         <p className="empty-state">暂无歌词</p>
@@ -28,10 +24,6 @@ export function LyricsPanel({ document, positionMs }: LyricsPanelProps) {
   return (
     <section className="lyrics-panel" aria-label="歌词">
       <div className="lyrics-panel__header">
-        <div>
-          <p className="eyebrow">Lyrics Readout</p>
-          <h2>歌词</h2>
-        </div>
         <span className="lyrics-panel__status">已定位 {lineCount} 行</span>
       </div>
       <div className="lyrics-panel__viewport">

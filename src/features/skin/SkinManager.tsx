@@ -30,10 +30,7 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
   return (
     <section className="skin-manager" aria-labelledby="skin-manager-title">
       <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Skin Library</p>
-          <h2 id="skin-manager-title">皮肤库</h2>
-        </div>
+        <h2 id="skin-manager-title">皮肤库</h2>
         <button type="button" onClick={onImport}>
           导入皮肤包
         </button>

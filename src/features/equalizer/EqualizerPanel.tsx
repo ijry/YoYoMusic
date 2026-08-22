@@ -18,10 +18,7 @@ export function EqualizerPanel({ settings, onChange }: EqualizerPanelProps) {
   return (
     <section className="equalizer-panel" aria-label="均衡器">
       <div className="equalizer-panel__header">
-        <div>
-          <p className="eyebrow">Equalizer Rack</p>
-          <h2>均衡器</h2>
-        </div>
+        <h2>均衡器</h2>
         <span className="equalizer-panel__status">{settings.enabled ? `已启用 · ${presetLabel}` : "均衡器待机"}</span>
       </div>
 
