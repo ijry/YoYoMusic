@@ -325,10 +325,19 @@
   grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
 }
 
+/*
+ * Crystal: display + feature bay stack on the left, the queue takes the full
+ * height of the right column. Previously the drawer sat in row 1 only, leaving
+ * the cell beneath it empty while the list scrolled inside half a column.
+ */
 .skin-grid--crystal {
   grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.15fr);
-  /* Second row carries the feature bay, whose floor is 176px. */
   grid-template-rows: minmax(0, 1fr) minmax(184px, 0.5fr);
+}
+
+.crystal-playlist-drawer {
+  grid-column: 2;
+  grid-row: 1 / span 2;
 }
 
 /* Lower console holds the queue, so it needs the larger share of the rack. */
@@ -523,6 +532,20 @@
  */
 .skin-layout .device-module__body--feature {
   min-height: 176px;
+}
+
+/*
+ * Single-child wrappers must still be grids.
+ *
+ * `.crystal-playlist-drawer` and `.crystal-feature-float` only set
+ * `min-height: 0`, so their child was never constrained to the grid cell: the
+ * playlist module resolved to 540px inside a 214px drawer and the surplus was
+ * silently hidden. A single `minmax(0, 1fr)` track binds the child to the cell.
+ */
+.crystal-playlist-drawer,
+.crystal-feature-float {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
 }
 
 /* Wrappers clip; the panels inside them own the scrolling. */
