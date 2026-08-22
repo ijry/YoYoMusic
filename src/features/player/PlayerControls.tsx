@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Icon } from "../../shared/icons";
 import type { CommandName, CommandPayload } from "../../shared/tauri";
 import type { PlaybackState } from "../../shared/types";
 
@@ -18,54 +19,52 @@ function formatTime(ms: number) {
 export function PlayerControls({ state, hasPlayableTrack = Boolean(state.trackId), onCommand }: PlayerControlsProps) {
   const volumePercent = Math.round(state.volume * 100);
   const [volumeInput, setVolumeInput] = useState(String(volumePercent));
-  const volumeNeedleRotation = `${Math.round(volumePercent * 2.4 - 120)}deg`;
   const currentPlayModeLabel = playModeLabel(state.playMode);
   const canUseTransport = Boolean(state.trackId) || hasPlayableTrack;
   const canSeek = Boolean(state.trackId) && state.durationMs > 0;
+  const PlayModeIcon = playModeIcon(state.playMode);
 
   useEffect(() => {
     setVolumeInput(String(volumePercent));
   }, [volumePercent]);
 
+  /*
+   * Icon-only transport. Labels live on `aria-label` rather than in the button
+   * body, so the control deck stays compact while screen readers (and the
+   * role+name queries in the tests) still see "播放" / "下一首" / etc.
+   */
   return (
     <section className="player-controls player-controls--deck" aria-label="播放控制">
-      <div className="transport-status-strip" aria-label="控制台状态">
-        <span className="transport-status-light">{state.isPlaying ? "播放中" : "待机"}</span>
-        <span className="transport-status-light">{state.isMuted ? "静音" : "输出正常"}</span>
-        <span className="transport-status-light">模式 {currentPlayModeLabel}</span>
-      </div>
-
       <div className="transport-row transport-row--deck">
         <button
           type="button"
           className="transport-button transport-button--prev"
+          aria-label="上一首"
+          title="上一首"
           disabled={!canUseTransport}
           onClick={() => onCommand("previous_track", {})}
         >
-          上一首
+          <Icon.prev />
         </button>
         <button
           type="button"
           className="transport-button transport-button--play"
+          aria-label={state.isPlaying ? "暂停" : "播放"}
+          title={state.isPlaying ? "暂停" : "播放"}
           disabled={!canUseTransport}
           onClick={() => onCommand("toggle_playback", {})}
         >
-          {state.isPlaying ? "暂停" : "播放"}
+          {state.isPlaying ? <Icon.pause /> : <Icon.play />}
         </button>
         <button
           type="button"
           className="transport-button transport-button--next"
+          aria-label="下一首"
+          title="下一首"
           disabled={!canUseTransport}
           onClick={() => onCommand("next_track", {})}
         >
-          下一首
-        </button>
-        <button
-          type="button"
-          className="transport-button transport-button--mute"
-          onClick={() => onCommand("set_muted", { value: !state.isMuted })}
-        >
-          {state.isMuted ? "取消静音" : "静音"}
+          <Icon.next />
         </button>
       </div>
 
@@ -86,34 +85,44 @@ export function PlayerControls({ state, hasPlayableTrack = Boolean(state.trackId
         </span>
       </label>
 
-      <label className="control-field control-field--compact control-field--volume control-monitor">
-        <span className="control-label">音量</span>
-        <span className="volume-well" aria-hidden="true">
-          <span className="volume-well__ring" />
-          <span className="volume-well__tick" style={{ transform: `rotate(${volumeNeedleRotation})` }} />
-        </span>
-        <input
-          aria-label="音量"
-          className="volume-input"
-          type="number"
-          min="0"
-          max="100"
-          value={volumeInput}
-          onChange={(event) => {
-            const nextValue = event.currentTarget.value;
-            setVolumeInput(nextValue);
-            onCommand("set_volume", { value: Number(nextValue || 0) / 100 });
-          }}
-        />
-      </label>
+      <div className="transport-row transport-row--utility">
+        <button
+          type="button"
+          className="transport-button transport-button--mute"
+          aria-label={state.isMuted ? "取消静音" : "静音"}
+          title={state.isMuted ? "取消静音" : "静音"}
+          onClick={() => onCommand("set_muted", { value: !state.isMuted })}
+        >
+          {state.isMuted ? <Icon.muted /> : <Icon.volume />}
+        </button>
 
-      <button
-        type="button"
-        className="play-mode-button play-mode-button--deck"
-        onClick={() => onCommand("set_play_mode", { playMode: nextPlayMode(state.playMode) })}
-      >
-        播放模式：{currentPlayModeLabel}
-      </button>
+        <label className="control-field control-field--compact control-field--volume control-monitor">
+          <span className="control-label">音量</span>
+          <input
+            aria-label="音量"
+            className="volume-input"
+            type="number"
+            min="0"
+            max="100"
+            value={volumeInput}
+            onChange={(event) => {
+              const nextValue = event.currentTarget.value;
+              setVolumeInput(nextValue);
+              onCommand("set_volume", { value: Number(nextValue || 0) / 100 });
+            }}
+          />
+        </label>
+
+        <button
+          type="button"
+          className="play-mode-button play-mode-button--deck"
+          aria-label={`播放模式：${currentPlayModeLabel}`}
+          title={`播放模式：${currentPlayModeLabel}`}
+          onClick={() => onCommand("set_play_mode", { playMode: nextPlayMode(state.playMode) })}
+        >
+          <PlayModeIcon />
+        </button>
+      </div>
     </section>
   );
 }
@@ -123,6 +132,13 @@ function nextPlayMode(mode: PlaybackState["playMode"]): PlaybackState["playMode"
   if (mode === "repeat_all") return "repeat_one";
   if (mode === "repeat_one") return "shuffle";
   return "sequence";
+}
+
+function playModeIcon(mode: PlaybackState["playMode"]) {
+  if (mode === "repeat_all") return Icon.repeatAll;
+  if (mode === "repeat_one") return Icon.repeatOne;
+  if (mode === "shuffle") return Icon.shuffle;
+  return Icon.sequence;
 }
 
 function playModeLabel(mode: PlaybackState["playMode"]) {

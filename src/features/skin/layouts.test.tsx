@@ -3,49 +3,26 @@ import { describe, expect, it, vi } from "vitest";
 import { builtInLayoutSkins } from "./layoutRegistry";
 import type { PlayerLayoutProps } from "./layoutTypes";
 
-const machineLabels: Record<
-  string,
-  { shellClass: string; labels: string[]; hardware: Array<{ selector: string; count: number }> }
-> = {
+const machineLabels: Record<string, { shellClass: string; labels: string[] }> = {
   "classic-blue-silver": {
     shellClass: "device-shell--classic",
     labels: ["频谱可视化", "播放列表", "正在播放", "功能面板", "播放控制"],
-    hardware: [
-      { selector: ".device-shell__split-rail", count: 2 },
-      { selector: ".device-shell__center-seam", count: 1 },
-    ],
   },
   "dark-vinyl": {
     shellClass: "device-shell--vinyl",
     labels: ["唱盘舱", "舞台频谱", "曲目塔", "控制塔", "控制台"],
-    hardware: [
-      { selector: ".device-shell__arc-platter", count: 1 },
-      { selector: ".device-shell__arc-rail", count: 1 },
-    ],
   },
   "transparent-crystal": {
     shellClass: "device-shell--crystal",
     labels: ["透明舱", "资料匣", "悬浮仓", "底座控制台"],
-    hardware: [
-      { selector: ".device-shell__standoff", count: 4 },
-      { selector: ".device-shell__glass-bracket", count: 1 },
-    ],
   },
   "metal-rack": {
     shellClass: "device-shell--rack",
     labels: ["频谱桥", "机柜面板", "状态机柜", "机架控制台"],
-    hardware: [
-      { selector: ".device-shell__rack-ear", count: 2 },
-      { selector: ".device-shell__rack-rail", count: 2 },
-    ],
   },
   "warm-wood": {
     shellClass: "device-shell--wood",
     labels: ["陈列窗", "节目单仓", "暖光铭牌窗", "黄铜控制台"],
-    hardware: [
-      { selector: ".device-shell__molding", count: 2 },
-      { selector: ".device-shell__brass-plaque", count: 1 },
-    ],
   },
 };
 
@@ -154,25 +131,29 @@ describe("layout skins", () => {
     expect(container.querySelector(".workbench-visualization .visualization-preview--spectrum")).toBeInTheDocument();
     expect(container.querySelector(".workbench-visualization .visualization-preview--hero")).toBeInTheDocument();
     expect(container.querySelector(".app-title__model")).toBeInTheDocument();
-    expect(container.querySelector(".device-shell__plate")).toBeInTheDocument();
-    expect(container.querySelectorAll(".device-shell__handle")).toHaveLength(2);
-    expect(container.querySelectorAll(".device-shell__vent")).toHaveLength(4);
-    expect(container.querySelectorAll(".device-shell__foot")).toHaveLength(2);
-    expected.hardware.forEach(({ selector, count }) => {
-      expect(container.querySelectorAll(selector)).toHaveLength(count);
-    });
     expect(container.querySelector(".now-playing-display")).toBeInTheDocument();
     expect(container.querySelector(".cover-card__hub")).toBeInTheDocument();
-    expect(container.querySelector(".device-module__trim")).toBeInTheDocument();
-    expect(container.querySelectorAll(".device-module__rivet")).toHaveLength(10);
+
+    // Faux hardware (handles, vents, feet, rivets, rack ears, nameplate) was
+    // removed: it read as clutter and was what squeezed content out of the
+    // layout. Only a per-skin signature element remains.
+    expect(container.querySelector(".device-shell__handle")).not.toBeInTheDocument();
+    expect(container.querySelector(".device-shell__vent")).not.toBeInTheDocument();
+    expect(container.querySelector(".device-shell__foot")).not.toBeInTheDocument();
+    expect(container.querySelector(".device-module__trim")).not.toBeInTheDocument();
+    expect(container.querySelector(".device-module__rivet")).not.toBeInTheDocument();
+    expect(container.querySelector(".device-shell__plate")).not.toBeInTheDocument();
+    expect(container.querySelector(".device-module__eyebrow")).not.toBeInTheDocument();
+
+    // Icon-only chrome keeps its accessible names. "皮肤"/"设置" appear both in
+    // the title bar and as feature tabs, so scope the query to the title nav.
     expect(container.querySelector(".title-status-cluster")).toBeInTheDocument();
     expect(container.querySelectorAll(".title-action-button")).toHaveLength(4);
-    expect(container.querySelector(".title-action-button__code")).not.toBeInTheDocument();
-    expect(screen.queryByText("SKN")).not.toBeInTheDocument();
-    expect(screen.queryByText("CFG")).not.toBeInTheDocument();
-    expect(screen.queryByText("MINI")).not.toBeInTheDocument();
-    expect(screen.queryByText("LRC")).not.toBeInTheDocument();
-    expect(container.querySelector(".feature-tab__slot")).toBeInTheDocument();
+    const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
+    expect(within(windowActions).getByRole("button", { name: "皮肤" })).toBeInTheDocument();
+    expect(within(windowActions).getByRole("button", { name: "桌面歌词" })).toBeInTheDocument();
+    expect(container.querySelector(".feature-tab .lucide")).toBeInTheDocument();
+    expect(container.querySelector(".feature-tab__slot")).not.toBeInTheDocument();
 
     const controls = screen.getByRole("region", { name: "播放控制" });
     expect(within(controls).getByRole("button", { name: "播放" })).toBeInTheDocument();

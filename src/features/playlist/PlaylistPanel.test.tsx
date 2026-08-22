@@ -39,8 +39,14 @@ describe("PlaylistPanel", () => {
     );
 
     expect(screen.getByText("2 首")).toHaveClass("playlist-panel__counter");
-    expect(container.querySelector(".playlist-panel__status")).toHaveTextContent("当前 b");
+    // The status pills restated the counter and the now-playing title, so they
+    // were removed; actions are icon buttons carrying accessible names.
+    expect(container.querySelector(".playlist-panel__status")).not.toBeInTheDocument();
     expect(container.querySelectorAll(".playlist-action-button")).toHaveLength(3);
+    expect(screen.getByRole("button", { name: "添加文件" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "添加文件夹" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "清空" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "移除 a" })).toBeInTheDocument();
     expect(screen.getByText("01")).toHaveClass("track-index");
     expect(screen.getByText("02")).toHaveClass("track-index");
     expect(screen.getByText("a")).toBeInTheDocument();

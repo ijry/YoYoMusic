@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Icon } from "../../shared/icons";
 import { EqualizerPanel } from "../equalizer/EqualizerPanel";
 import { LyricsPanel } from "../lyrics/LyricsPanel";
 import { PlayerControls } from "../player/PlayerControls";
@@ -11,18 +12,17 @@ import { VisualizationPreview } from "../visualization/VisualizationPreview";
 import { SkinManager } from "./SkinManager";
 import type { FeaturePanel, PlayerLayoutProps } from "./layoutTypes";
 
-export const featurePanels: Array<{ id: FeaturePanel; label: string }> = [
-  { id: "lyrics", label: "歌词" },
-  { id: "visualization", label: "可视化" },
-  { id: "tags", label: "标签" },
-  { id: "equalizer", label: "均衡器" },
-  { id: "skin", label: "皮肤" },
-  { id: "settings", label: "设置" },
+export const featurePanels: Array<{ id: FeaturePanel; label: string; icon: () => ReactNode }> = [
+  { id: "lyrics", label: "歌词", icon: Icon.lyrics },
+  { id: "visualization", label: "可视化", icon: Icon.visualization },
+  { id: "tags", label: "标签", icon: Icon.tags },
+  { id: "equalizer", label: "均衡器", icon: Icon.equalizer },
+  { id: "skin", label: "皮肤", icon: Icon.skin },
+  { id: "settings", label: "设置", icon: Icon.settings },
 ];
 
 interface DeviceModuleFrameProps {
   moduleLabel: string;
-  eyebrow?: string;
   className?: string;
   bodyClassName?: string;
   children: ReactNode;
@@ -30,133 +30,109 @@ interface DeviceModuleFrameProps {
 
 interface DeviceBlockProps {
   moduleLabel: string;
+  /* Accepted for layout compatibility; no longer rendered. */
   eyebrow?: string;
   moduleClassName?: string;
 }
 
 type DeviceShellVariant = "classic" | "vinyl" | "crystal" | "rack" | "wood";
 
-function DeviceModuleFrame({
-  moduleLabel,
-  eyebrow,
-  className,
-  bodyClassName,
-  children,
-}: DeviceModuleFrameProps) {
+/*
+ * Module frame. The decorative trim (bar + rivets) and the English sub-caption
+ * were removed: every module carried both a Chinese and an English label, which
+ * doubled the reading load without adding information.
+ */
+function DeviceModuleFrame({ moduleLabel, className, bodyClassName, children }: DeviceModuleFrameProps) {
   return (
     <section className={["device-module", className].filter(Boolean).join(" ")}>
       <header className="device-module__header">
         <p className="device-module__label">{moduleLabel}</p>
-        {eyebrow ? <p className="device-module__eyebrow">{eyebrow}</p> : null}
       </header>
-      <div className="device-module__trim" aria-hidden="true">
-        <span className="device-module__trim-bar" />
-        <span className="device-module__rivets">
-          <span className="device-module__rivet" />
-          <span className="device-module__rivet" />
-        </span>
-      </div>
       <div className={["device-module__body", bodyClassName].filter(Boolean).join(" ")}>{children}</div>
     </section>
   );
 }
 
+/*
+ * Shell hardware. Handles, vents, feet, rivets and rack ears were removed —
+ * they read as clutter at the real window size and were what pushed content out
+ * of the layout. Each skin keeps a single signature element, expressed through
+ * material and colour in CSS rather than extra DOM.
+ */
 export function DeviceShellHardware({ variant }: { variant: DeviceShellVariant }) {
-  const variantHardware =
-    variant === "classic" ? (
-      <>
-        <span className="device-shell__split-rail device-shell__split-rail--left" />
-        <span className="device-shell__split-rail device-shell__split-rail--right" />
-        <span className="device-shell__center-seam" />
-      </>
-    ) : variant === "vinyl" ? (
-      <>
-        <span className="device-shell__arc-platter" />
-        <span className="device-shell__arc-rail" />
-      </>
-    ) : variant === "crystal" ? (
-      <>
-        <span className="device-shell__standoff device-shell__standoff--tl" />
-        <span className="device-shell__standoff device-shell__standoff--tr" />
-        <span className="device-shell__standoff device-shell__standoff--bl" />
-        <span className="device-shell__standoff device-shell__standoff--br" />
-        <span className="device-shell__glass-bracket" />
-      </>
-    ) : variant === "rack" ? (
-      <>
-        <span className="device-shell__rack-ear device-shell__rack-ear--left" />
-        <span className="device-shell__rack-ear device-shell__rack-ear--right" />
-        <span className="device-shell__rack-rail device-shell__rack-rail--upper" />
-        <span className="device-shell__rack-rail device-shell__rack-rail--lower" />
-      </>
-    ) : (
-      <>
-        <span className="device-shell__molding device-shell__molding--top" />
-        <span className="device-shell__molding device-shell__molding--bottom" />
-        <span className="device-shell__brass-plaque" />
-      </>
-    );
+  const signature =
+    variant === "vinyl" ? (
+      <span className="device-shell__arc-platter" />
+    ) : variant === "wood" ? (
+      <span className="device-shell__molding device-shell__molding--top" />
+    ) : null;
 
   return (
     <div className="device-shell__hardware" aria-hidden="true">
-      <span className="device-shell__handle device-shell__handle--left" />
-      <span className="device-shell__handle device-shell__handle--right" />
-      <div className="device-shell__vent-bank">
-        <span className="device-shell__vent" />
-        <span className="device-shell__vent" />
-        <span className="device-shell__vent" />
-        <span className="device-shell__vent" />
-      </div>
-      <span className="device-shell__foot device-shell__foot--left" />
-      <span className="device-shell__foot device-shell__foot--right" />
-      {variantHardware}
+      {signature}
     </div>
   );
 }
 
 export function TitleActions(props: PlayerLayoutProps) {
-  const panelLabel = featurePanels.find((panel) => panel.id === props.activePanel)?.label ?? "歌词";
   const currentTrackTitle = props.currentTrack?.title ?? "未装载曲目";
 
   return (
     <nav className="title-actions" aria-label="窗口操作">
       <div className="title-status-cluster">
-        <span className="title-status-pill">{props.playback.isPlaying ? "播放中" : "待机"}</span>
         <span className="title-status-pill title-status-pill--track" title={currentTrackTitle}>
           {currentTrackTitle}
         </span>
-        <span className="title-status-pill">面板 {panelLabel}</span>
       </div>
       <div className="title-actions__buttons">
-        <button className="title-action-button" type="button" onClick={() => props.onActivePanelChange("skin")}>
-          <span className="title-action-button__label">皮肤</span>
-        </button>
-        <button className="title-action-button" type="button" onClick={() => props.onActivePanelChange("settings")}>
-          <span className="title-action-button__label">设置</span>
+        <button
+          className="title-action-button"
+          type="button"
+          aria-label="皮肤"
+          title="皮肤"
+          onClick={() => props.onActivePanelChange("skin")}
+        >
+          <Icon.skin />
         </button>
         <button
           className="title-action-button"
           type="button"
+          aria-label="设置"
+          title="设置"
+          onClick={() => props.onActivePanelChange("settings")}
+        >
+          <Icon.settings />
+        </button>
+        <button
+          className="title-action-button"
+          type="button"
+          aria-label="迷你"
+          title="迷你"
           onClick={() => props.onPlayerCommand("open_mini_player", {})}
         >
-          <span className="title-action-button__label">迷你</span>
+          <Icon.mini />
         </button>
         <button
           className="title-action-button"
           type="button"
+          aria-label="桌面歌词"
+          title="桌面歌词"
           onClick={() => props.onPlayerCommand("toggle_desktop_lyrics", {})}
         >
-          <span className="title-action-button__label">桌面歌词</span>
+          <Icon.desktopLyrics />
         </button>
       </div>
     </nav>
   );
 }
 
+/*
+ * Title. The model nameplate and serial line were device-cosplay rather than
+ * information; `model` is kept as a quiet subtitle so each skin still says what
+ * it is, and the props stay compatible with the five layouts.
+ */
 export function AppTitle({
-  eyebrow = "YoYoMusic Desktop Player",
   model = "MODEL YY-01",
-  serial = "Desktop Audio Console",
 }: {
   eyebrow?: string;
   model?: string;
@@ -164,12 +140,8 @@ export function AppTitle({
 }) {
   return (
     <div className="app-title">
-      <p className="eyebrow">{eyebrow}</p>
       <h1 id="app-title">悠悠乐听</h1>
-      <div className="device-shell__plate" aria-label="机型铭牌">
-        <span className="app-title__model">{model}</span>
-        <span className="app-title__serial">{serial}</span>
-      </div>
+      <span className="app-title__model">{model}</span>
     </div>
   );
 }
@@ -180,14 +152,12 @@ export function LayoutErrorBanner({ error }: { error: string | null }) {
 
 export function PlaylistBlock({
   moduleLabel,
-  eyebrow = "Playlist Drawer",
   moduleClassName,
   ...props
 }: PlayerLayoutProps & DeviceBlockProps) {
   return (
     <DeviceModuleFrame
       moduleLabel={moduleLabel}
-      eyebrow={eyebrow}
       className={["device-module--playlist", moduleClassName].filter(Boolean).join(" ")}
     >
       <PlaylistPanel
@@ -205,7 +175,6 @@ export function PlaylistBlock({
 
 export function NowPlayingBlock({
   moduleLabel,
-  eyebrow = "Now Playing Display",
   moduleClassName,
   variant = "standard",
   ...props
@@ -216,7 +185,6 @@ export function NowPlayingBlock({
   return (
     <DeviceModuleFrame
       moduleLabel={moduleLabel}
-      eyebrow={eyebrow}
       className={["device-module--now-playing", moduleClassName].filter(Boolean).join(" ")}
     >
       <section className={`now-playing now-playing--${variant}`} aria-label="当前播放">
@@ -226,17 +194,13 @@ export function NowPlayingBlock({
           <div className="cover-card__hub" />
         </div>
 
+        {/* Title and artist only — the play state is already carried by the
+            transport's play/pause icon and the track row's "正在播放" flag. */}
         <div className="now-playing-copy now-playing-display">
-          <div className="now-playing-display__header">
-            <p className="eyebrow">正在播放</p>
-            <span className="now-playing-status">{props.playback.isPlaying ? "播放中" : "就绪"}</span>
-          </div>
-          <div className="now-playing-display__body">
-            <h2>{props.currentTrack?.title ?? "等待添加本地音乐"}</h2>
-            <p className="subtitle">
-              {props.currentTrack?.artist || props.currentTrack?.album || "选择文件或文件夹开始播放"}
-            </p>
-          </div>
+          <h2>{props.currentTrack?.title ?? "等待添加本地音乐"}</h2>
+          <p className="subtitle">
+            {props.currentTrack?.artist || props.currentTrack?.album || "选择文件或文件夹开始播放"}
+          </p>
         </div>
       </section>
     </DeviceModuleFrame>
@@ -245,14 +209,12 @@ export function NowPlayingBlock({
 
 export function HeroVisualization({
   moduleLabel,
-  eyebrow = "Spectrum Bridge",
   moduleClassName,
   ...props
 }: PlayerLayoutProps & DeviceBlockProps) {
   return (
     <DeviceModuleFrame
       moduleLabel={moduleLabel}
-      eyebrow={eyebrow}
       className={["device-module--visualization", moduleClassName].filter(Boolean).join(" ")}
     >
       <div className="workbench-visualization" role="img" aria-label="播放动态可视化">
@@ -271,20 +233,22 @@ export function HeroVisualization({
 export function FeatureTabs(props: PlayerLayoutProps) {
   return (
     <div className="feature-tabs" aria-label="功能面板标签">
-      {featurePanels.map((panel, index) => (
-        <button
-          key={panel.id}
-          className="feature-tab"
-          type="button"
-          aria-pressed={props.activePanel === panel.id}
-          onClick={() => props.onActivePanelChange(panel.id)}
-        >
-          <span className="feature-tab__slot" aria-hidden="true">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <span className="feature-tab__label">{panel.label}</span>
-        </button>
-      ))}
+      {featurePanels.map((panel) => {
+        const TabIcon = panel.icon;
+        return (
+          <button
+            key={panel.id}
+            className="feature-tab"
+            type="button"
+            aria-pressed={props.activePanel === panel.id}
+            aria-label={panel.label}
+            title={panel.label}
+            onClick={() => props.onActivePanelChange(panel.id)}
+          >
+            <TabIcon />
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -295,14 +259,12 @@ export function FeatureContent(props: PlayerLayoutProps) {
 
 export function FeatureSidebar({
   moduleLabel,
-  eyebrow = "Expansion Bay",
   moduleClassName,
   ...props
 }: PlayerLayoutProps & DeviceBlockProps) {
   return (
     <DeviceModuleFrame
       moduleLabel={moduleLabel}
-      eyebrow={eyebrow}
       className={["device-module--feature", moduleClassName].filter(Boolean).join(" ")}
       bodyClassName="device-module__body--feature"
     >
@@ -316,7 +278,6 @@ export function FeatureSidebar({
 
 export function ControlsBlock({
   moduleLabel,
-  eyebrow = "Transport Console",
   moduleClassName,
   ...props
 }: PlayerLayoutProps & DeviceBlockProps) {
@@ -325,7 +286,6 @@ export function ControlsBlock({
   return (
     <DeviceModuleFrame
       moduleLabel={moduleLabel}
-      eyebrow={eyebrow}
       className={["device-module--controls", moduleClassName].filter(Boolean).join(" ")}
     >
       <PlayerControls

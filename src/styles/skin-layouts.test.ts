@@ -162,9 +162,9 @@ describe("layout skin CSS", () => {
   });
 
   it("keeps feature panels usable and decorative notice markers click-through", () => {
-    // The queue row carries a floor: with only `minmax(0, 1fr)` the three auto
-    // header rows could consume the panel and collapse the list to 0px.
-    expect(rule(".skin-layout .playlist-panel")).toContain("grid-template-rows: auto auto auto minmax(120px, 1fr);");
+    // Heading + actions + queue. The status-pill row was removed, and the queue
+    // row keeps a floor so the auto header rows cannot collapse it to 0px.
+    expect(rule(".skin-layout .playlist-panel")).toContain("grid-template-rows: auto auto minmax(120px, 1fr);");
     expect(rule(".skin-layout .playlist-actions")).toContain("flex-wrap: nowrap;");
     expect(rule(".skin-layout .playlist-action-button")).toContain("min-height: 38px;");
     expect(rule(".skin-layout .playlist-panel .empty-state")).toContain("min-height: 46px;");
@@ -172,10 +172,10 @@ describe("layout skin CSS", () => {
     // sidebar and the panel painted over them instead of scrolling.
     expect(rule(".skin-layout .feature-sidebar")).toContain("grid-template-rows: auto minmax(90px, 1fr);");
     expect(rule(".skin-layout .feature-content")).toContain("overflow: auto;");
-    // Tabs moved from a nowrap flex row to a 3-column grid: six 104px tabs
-    // needed 624px in a ~300px sidebar, so the row scrolled and clipped labels.
+    // Six icon tabs fit one row; as text tabs they needed 624px in a ~300px
+    // sidebar and the row scrolled and clipped labels.
     expect(rule(".skin-layout .feature-tabs")).toContain("display: grid;");
-    expect(rule(".skin-layout .feature-tabs")).toContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+    expect(rule(".skin-layout .feature-tabs")).toContain("grid-template-columns: repeat(6, minmax(0, 1fr));");
     expect(rule(".skin-layout .feature-tab")).toContain("min-width: 0;");
     expect(rule(".skin-layout button")).toContain("cursor: pointer;");
     expect(rule(".skin-layout .empty-state::before")).toContain("pointer-events: none;");
@@ -192,7 +192,9 @@ describe("layout skin CSS", () => {
     expect(rule(".device-shell--classic .title-action-button")).toContain("cursor: pointer;");
     expect(rule(".device-shell--classic .title-action-button:hover")).toContain("background:");
     expect(rule(".device-shell--classic .title-action-button:active")).toContain("transform: translateY(0);");
-    expect(rule(".device-shell--classic .feature-tab")).toContain("min-width: 88px;");
+    // Icon tabs share the sidebar width; the old 88px text floor overflowed the
+    // 42px grid tracks.
+    expect(rule(".device-shell--classic .feature-tab")).toContain("min-width: 0;");
     expect(rule(".device-shell--classic .feature-tab__slot")).toContain("display: none;");
   });
 

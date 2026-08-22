@@ -163,7 +163,10 @@
   box-shadow: var(--shadow-panel);
 }
 
+/* Content sits above the decorative hardware layer. */
 .skin-grid {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   min-height: 0;
   display: grid;
@@ -205,9 +208,14 @@
   z-index: 1;
 }
 
+/*
+ * Signature hardware sits behind content. Without an explicit z-index the vinyl
+ * platter painted over the transport row.
+ */
 .device-shell__hardware {
   position: absolute;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -804,8 +812,8 @@
  * keeps the queue visible; the header shrinks instead.
  */
 .skin-layout .playlist-panel {
-  grid-template-rows: auto auto auto minmax(120px, 1fr);
-  gap: 6px;
+  grid-template-rows: auto auto minmax(120px, 1fr);
+  gap: 8px;
 }
 
 /*
@@ -817,12 +825,8 @@
   grid-row: 1;
 }
 
-.skin-layout .playlist-panel > .playlist-panel__status {
-  grid-row: 2;
-}
-
 .skin-layout .playlist-panel > .playlist-actions {
-  grid-row: 3;
+  grid-row: 2;
 }
 
 /*
@@ -857,7 +861,7 @@
 
 .skin-layout .playlist-panel > .track-list,
 .skin-layout .playlist-panel > .empty-state {
-  grid-row: 4;
+  grid-row: 3;
   margin-top: 0;
   /* Confine the list to its row. Without an explicit min-height:0 the grid item
    * sizes to its content (386px of tracks) and paints upward over the header
@@ -1261,20 +1265,108 @@
 }
 
 /*
+ * Icon buttons.
+ *
+ * Labels moved to `aria-label`, so buttons are sized as square targets around a
+ * 17px glyph instead of being sized by their text. `.lucide` is the class the
+ * icon library puts on every SVG.
+ */
+.skin-layout .transport-button,
+.skin-layout .title-action-button,
+.skin-layout .feature-tab,
+.skin-layout .playlist-action-button,
+.skin-layout .play-mode-button--deck {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 7px;
+  line-height: 0;
+}
+
+/*
+ * Primary action. The glyph is filled as well as stroked so the triangle/bars
+ * stay legible against the accent gradient.
+ */
+.skin-layout .transport-button--play {
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--skin-canvas-deep, #05070c);
+  background: linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
+  border-color: transparent;
+}
+
+.skin-layout .transport-button--play .lucide {
+  fill: currentColor;
+}
+
+.skin-layout .ghost-button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 5px;
+  line-height: 0;
+}
+
+.skin-layout .lucide {
+  display: block;
+}
+
+/* Active tab reads through fill rather than a text weight change. */
+.skin-layout .feature-tab[aria-pressed="true"] {
+  color: var(--skin-canvas-deep, #05070c);
+  background: linear-gradient(180deg, var(--skin-accent), var(--skin-primary));
+  border-color: transparent;
+}
+
+/*
  * Single-row control deck. The status strip used to span `1 / -1`, forcing a
  * second row and pushing the deck to ~290px — nearly half the window. It now
  * sits in the flow as one compact column, keeping the deck near 96px.
  */
 .skin-layout .player-controls {
   display: grid;
-  /* status | transport | progress | volume | mode — five children, five tracks.
-   * With only four the last one wrapped to a second row. */
-  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  /* transport | progress | utility (mute + volume + mode) */
+  grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-rows: auto;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 14px;
+  padding: 8px 14px;
   height: auto;
+}
+
+.skin-layout .transport-row--deck,
+.skin-layout .transport-row--utility {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+/*
+ * Keep the progress rail the element that absorbs the remaining width. In the
+ * narrow vinyl column the fixed transport and utility groups squeezed it to
+ * 32px and the time readout wrapped onto three lines.
+ */
+.skin-layout .control-field--progress {
+  min-width: 0;
+}
+
+.skin-layout .control-readout {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.skin-layout .volume-input {
+  width: 44px;
+  min-width: 0;
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.skin-layout .control-field--volume {
+  max-width: 72px;
 }
 
 .skin-layout .transport-status-strip {
@@ -1680,7 +1772,7 @@
 .skin-layout .feature-tabs {
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
   overflow: visible;
   padding: 0 2px 4px;
@@ -1689,8 +1781,8 @@
 
 .feature-tab {
   flex: 0 0 auto;
-  min-width: 104px;
-  min-height: 44px;
+  min-width: 0;
+  min-height: 36px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -3420,6 +3512,28 @@
   border-radius: 999px;
 }
 
+/*
+ * Vinyl's transport lives in a ~570px column rather than the full shell width,
+ * so it drops the numeric readout and volume box and keeps just the rail.
+ */
+.device-shell--vinyl .control-readout {
+  display: none;
+}
+
+.device-shell--vinyl .control-field--volume {
+  max-width: 44px;
+}
+
+/* Module labels clear the platter's edge. */
+.device-shell--vinyl .device-module__header {
+  padding-left: 6px;
+}
+
+.device-shell--vinyl .device-module__label {
+  position: relative;
+  z-index: 1;
+}
+
 .device-shell--vinyl .transport-button,
 .device-shell--vinyl .play-mode-button--deck {
   border-radius: 999px;
@@ -4610,7 +4724,7 @@
 }
 
 .device-shell--classic .feature-tab {
-  min-width: 88px;
+  min-width: 0;
   min-height: 36px;
   grid-template-columns: minmax(0, 1fr);
   padding: 8px 10px;

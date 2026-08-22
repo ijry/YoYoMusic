@@ -7,11 +7,11 @@ it("renders the default classic layout skin landmarks", () => {
 
   expect(container.querySelector(".skin-layout--classic-blue-silver")).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "悠悠乐听" })).toBeInTheDocument();
-  expect(screen.getByText("本地音乐播放器")).toBeInTheDocument();
+  // The decorative eyebrow, serial line and duplicated play-state labels were
+  // removed; the skin's model name is the one remaining subtitle.
   expect(screen.getByText("经典蓝银分体机")).toBeInTheDocument();
-  expect(screen.getByText("蓝银经典皮肤")).toBeInTheDocument();
-  expect(screen.getAllByText("正在播放").length).toBeGreaterThanOrEqual(1);
-  expect(screen.getByText("就绪")).toBeInTheDocument();
+  expect(screen.queryByText("本地音乐播放器")).not.toBeInTheDocument();
+  expect(screen.queryByText("蓝银经典皮肤")).not.toBeInTheDocument();
   expect(screen.getByRole("region", { name: "当前播放列表" })).toBeInTheDocument();
   expect(screen.getByRole("region", { name: "当前播放" })).toBeInTheDocument();
   expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();

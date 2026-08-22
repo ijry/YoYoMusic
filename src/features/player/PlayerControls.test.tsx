@@ -32,9 +32,10 @@ describe("PlayerControls", () => {
     expect(progress).toHaveClass("progress-rail");
     expect(progress).not.toBeDisabled();
     expect(volume).toHaveClass("volume-input");
-    expect(container.querySelector(".volume-well__tick")).toBeInTheDocument();
-    expect(container.querySelector(".transport-status-strip")).toBeInTheDocument();
-    expect(container.querySelectorAll(".transport-status-light")).toHaveLength(3);
+    // Transport is icon-only now: the play/pause icon carries the state that the
+    // three status pills used to restate, so they are gone.
+    expect(container.querySelector(".transport-status-strip")).not.toBeInTheDocument();
+    expect(container.querySelector(".lucide-play")).toBeInTheDocument();
     expect(container.querySelectorAll(".control-monitor")).toHaveLength(2);
 
     await user.click(playButton);
