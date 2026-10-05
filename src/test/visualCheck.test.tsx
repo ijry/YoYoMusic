@@ -31,22 +31,19 @@ const playback: PlaybackState = {
 };
 
 const settings: AppSettings = {
-  defaultSkin: "classic-blue-silver",
+  defaultSkin: "aurora-glass",
   shortcuts: { toggle_playback: "Ctrl+Alt+P", previous_track: "Ctrl+Alt+Left", next_track: "Ctrl+Alt+Right" },
   enrichmentEnabled: true, cacheRetentionDays: 30, recentPlaylists: [], restoreSession: true,
   visualizationMode: "spectrum",
   equalizer: { enabled: true, preset: "flat", bands: [3, 2, 0, -1, -2, 0, 1, 2, 3, 4] },
 };
 
-const values = Array.from({ length: 24 }, (_, i) => 0.2 + Math.abs(Math.sin(i * 0.7)) * 0.8);
-
 function propsFor(panel: PlayerLayoutProps["activePanel"]): PlayerLayoutProps {
   return {
     playlist, playback, currentTrack: tracks[1], lyricsDocument: null, settings,
-    skins: builtInLayoutSkinSummaries, activePanel: panel,
+    skins: builtInLayoutSkinSummaries, activePanel: panel, libraryOpen: true,
     error: null, skinError: null, settingsErrorCode: null,
-    visualizationFrame: { values, peak: Math.max(...values), positionMs: 78000 },
-    onActivePanelChange: () => {}, onPlayerCommand: () => {}, onAddFiles: () => {},
+    onActivePanelChange: () => {}, onToggleLibrary: () => {}, onPlayerCommand: () => {}, onAddFiles: () => {},
     onAddFolder: () => {}, onClearPlaylist: () => {}, onSaveTags: () => {},
     onApplySkin: () => {}, onImportSkin: () => {}, onShortcutChange: () => {},
     onVisualizationModeChange: () => {}, onSettingsChange: () => {},

@@ -1,278 +1,83 @@
 import {
   AppTitle,
   ControlsBlock,
-  DeviceShellHardware,
   FeatureSidebar,
   HeroVisualization,
   LayoutErrorBanner,
-  NowPlayingBlock,
   PlaylistBlock,
   TitleActions,
 } from "./layoutShared";
 import type { PlayerLayoutProps } from "./layoutTypes";
 
-export function ClassicBlueSilverLayout(props: PlayerLayoutProps) {
+/*
+ * One modern shell, four palettes.
+ *
+ * The old build shipped five completely different "hardware" layouts, which
+ * meant five sets of framing rules and five ways for content to overflow. The
+ * modern player keeps a single, well-tested grid — library / stage / inspector
+ * over a full-width transport — and varies the skin through colour tokens
+ * only. That is how current music players ship themes, and it keeps the
+ * responsive behaviour identical across skins.
+ */
+const skinSubtitles: Record<string, string> = {
+  "aurora-glass": "极光玻璃",
+  "midnight-neon": "午夜霓虹",
+  "sunset-blaze": "落日熔金",
+  "mint-studio": "薄荷录音室",
+};
+
+function ModernPlayerLayout({ skinId, ...props }: PlayerLayoutProps & { skinId: string }) {
+  const inspectorOpen = props.activePanel !== null;
+
   return (
-    <main className="app-shell skin-layout skin-layout--classic-blue-silver">
-      <section className="chrome skin-chrome skin-chrome--classic device-shell device-shell--classic" aria-labelledby="app-title">
-        <DeviceShellHardware variant="classic" />
-        <header className="title-bar skin-title skin-title--classic device-shell__header">
-          <AppTitle
-            eyebrow="本地音乐播放器"
-            model="经典蓝银分体机"
-            serial="蓝银经典皮肤"
-          />
+    <main className={`app-shell skin-layout skin-layout--${skinId}`}>
+      <section className="chrome modern-frame" aria-labelledby="app-title">
+        <div className="modern-aurora" aria-hidden="true">
+          <span className="modern-aurora__blob modern-aurora__blob--one" />
+          <span className="modern-aurora__blob modern-aurora__blob--two" />
+          <span className="modern-aurora__blob modern-aurora__blob--three" />
+        </div>
+
+        <header className="modern-topbar">
+          <AppTitle model={skinSubtitles[skinId] ?? "现代玻璃拟态"} />
           <TitleActions {...props} />
         </header>
+
         <LayoutErrorBanner error={props.error} />
-        <div className="skin-grid skin-grid--classic">
-          <PlaylistBlock
-            {...props}
-            moduleLabel="播放列表"
-            eyebrow="本地曲目"
-            moduleClassName="device-module--classic-playlist"
-          />
-          <div className="classic-center-deck">
-            <NowPlayingBlock
-              {...props}
-              variant="classic"
-              moduleLabel="正在播放"
-              eyebrow="歌曲信息"
-              moduleClassName="device-module--classic-status"
-            />
-            <HeroVisualization
-              {...props}
-              moduleLabel="频谱可视化"
-              eyebrow="音乐动态"
-              moduleClassName="device-module--classic-visualization"
-            />
-          </div>
-          <FeatureSidebar
-            {...props}
-            moduleLabel="功能面板"
-            eyebrow="歌词 / 皮肤 / 设置"
-            moduleClassName="device-module--classic-feature"
-          />
+
+        {/*
+         * The library column is dropped from the DOM when hidden, so the
+         * column template below switches in lockstep with it — otherwise the
+         * remaining panels would shift one column to the left.
+         */}
+        <div
+          className="modern-grid"
+          data-library={props.libraryOpen ? "open" : "closed"}
+          data-inspector={inspectorOpen ? "open" : "closed"}
+        >
+          {props.libraryOpen ? <PlaylistBlock {...props} /> : null}
+          <HeroVisualization {...props} />
+          <FeatureSidebar {...props} />
         </div>
-        <ControlsBlock
-          {...props}
-          moduleLabel="播放控制"
-          eyebrow="播放 / 进度 / 音量"
-          moduleClassName="device-module--classic-controls"
-        />
+
+        <ControlsBlock {...props} />
       </section>
     </main>
   );
 }
 
-export function DarkVinylLayout(props: PlayerLayoutProps) {
-  return (
-    <main className="app-shell skin-layout skin-layout--dark-vinyl">
-      <section className="chrome skin-chrome skin-chrome--vinyl device-shell device-shell--vinyl" aria-labelledby="app-title">
-        <DeviceShellHardware variant="vinyl" />
-        <header className="title-bar skin-title skin-title--vinyl device-shell__header">
-          <AppTitle eyebrow="Night Vinyl Chamber" model="MODEL DV-02" serial="Night Vinyl Performance Deck" />
-          <TitleActions {...props} />
-        </header>
-        <LayoutErrorBanner error={props.error} />
-        <div className="skin-grid skin-grid--vinyl">
-          <div className="vinyl-stage">
-            <NowPlayingBlock
-              {...props}
-              variant="vinyl"
-              moduleLabel="唱盘舱"
-              eyebrow="Center Turntable"
-              moduleClassName="device-module--vinyl-stage"
-            />
-            <HeroVisualization
-              {...props}
-              moduleLabel="舞台频谱"
-              eyebrow="Stage Spectrum"
-              moduleClassName="device-module--vinyl-visualization"
-            />
-            <ControlsBlock
-              {...props}
-              moduleLabel="控制台"
-              eyebrow="Arc Transport"
-              moduleClassName="device-module--vinyl-controls"
-            />
-          </div>
-          <div className="vinyl-side-rail">
-            <PlaylistBlock
-              {...props}
-              moduleLabel="曲目塔"
-              eyebrow="Track Tower"
-              moduleClassName="device-module--vinyl-playlist"
-            />
-            <FeatureSidebar
-              {...props}
-              moduleLabel="控制塔"
-              eyebrow="Side Control Tower"
-              moduleClassName="device-module--vinyl-feature"
-            />
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+export function AuroraGlassLayout(props: PlayerLayoutProps) {
+  return <ModernPlayerLayout skinId="aurora-glass" {...props} />;
 }
 
-export function TransparentCrystalLayout(props: PlayerLayoutProps) {
-  return (
-    <main className="app-shell skin-layout skin-layout--transparent-crystal">
-      <section className="chrome skin-chrome skin-chrome--crystal device-shell device-shell--crystal" aria-labelledby="app-title">
-        <DeviceShellHardware variant="crystal" />
-        <header className="title-bar skin-title skin-title--crystal device-shell__header">
-          <AppTitle
-            eyebrow="Crystal Floating Console"
-            model="MODEL CT-03"
-            serial="Transparent Floating Audio Console"
-          />
-          <TitleActions {...props} />
-        </header>
-        <LayoutErrorBanner error={props.error} />
-        <div className="skin-grid skin-grid--crystal">
-          <div className="crystal-now-panel">
-            <NowPlayingBlock
-              {...props}
-              variant="crystal"
-              moduleLabel="透明舱"
-              eyebrow="HUD Display"
-              moduleClassName="device-module--crystal-status"
-            />
-            <HeroVisualization
-              {...props}
-              moduleLabel="悬浮仓"
-              eyebrow="Glass Spectrum"
-              moduleClassName="device-module--crystal-visualization"
-            />
-          </div>
-          <div className="crystal-playlist-drawer">
-            <PlaylistBlock
-              {...props}
-              moduleLabel="资料匣"
-              eyebrow="Slide Drawer"
-              moduleClassName="device-module--crystal-playlist"
-            />
-          </div>
-          <FeatureSidebar
-            {...props}
-            moduleLabel="功能胶囊"
-            eyebrow="Floating Capsules"
-            moduleClassName="device-module--crystal-feature crystal-feature-float"
-          />
-        </div>
-        <ControlsBlock
-          {...props}
-          moduleLabel="底座控制台"
-          eyebrow="Floating Base"
-          moduleClassName="device-module--crystal-controls"
-        />
-      </section>
-    </main>
-  );
+export function MidnightNeonLayout(props: PlayerLayoutProps) {
+  return <ModernPlayerLayout skinId="midnight-neon" {...props} />;
 }
 
-export function MetalRackLayout(props: PlayerLayoutProps) {
-  return (
-    <main className="app-shell skin-layout skin-layout--metal-rack">
-      <section className="chrome skin-chrome skin-chrome--rack device-shell device-shell--rack" aria-labelledby="app-title">
-        <DeviceShellHardware variant="rack" />
-        <header className="title-bar skin-title skin-title--rack device-shell__header">
-          <AppTitle eyebrow="Metal Rack Equalizer" model="MODEL MR-04" serial="Rackmount Monitoring Array" />
-          <TitleActions {...props} />
-        </header>
-        <LayoutErrorBanner error={props.error} />
-        <div className="skin-grid skin-grid--rack">
-          <div className="rack-meter-bridge">
-            <HeroVisualization
-              {...props}
-              moduleLabel="频谱桥"
-              eyebrow="Dual Meter Bridge"
-              moduleClassName="device-module--rack-visualization"
-            />
-            <FeatureSidebar
-              {...props}
-              moduleLabel="机柜面板"
-              eyebrow="Utility Rack"
-              moduleClassName="device-module--rack-feature"
-            />
-          </div>
-          <div className="rack-lower-console">
-            <PlaylistBlock
-              {...props}
-              moduleLabel="状态机柜"
-              eyebrow="Information Screen"
-              moduleClassName="device-module--rack-playlist"
-            />
-            <NowPlayingBlock
-              {...props}
-              variant="rack"
-              moduleLabel="播放状态窗"
-              eyebrow="Playback Display"
-              moduleClassName="device-module--rack-status"
-            />
-          </div>
-        </div>
-        <ControlsBlock
-          {...props}
-          moduleLabel="机架控制台"
-          eyebrow="Rack Transport"
-          moduleClassName="device-module--rack-controls"
-        />
-      </section>
-    </main>
-  );
+export function SunsetBlazeLayout(props: PlayerLayoutProps) {
+  return <ModernPlayerLayout skinId="sunset-blaze" {...props} />;
 }
 
-export function WarmWoodLayout(props: PlayerLayoutProps) {
-  return (
-    <main className="app-shell skin-layout skin-layout--warm-wood">
-      <section className="chrome skin-chrome skin-chrome--wood device-shell device-shell--wood" aria-labelledby="app-title">
-        <DeviceShellHardware variant="wood" />
-        <header className="title-bar skin-title skin-title--wood device-shell__header">
-          <AppTitle eyebrow="Warm Wood Turntable" model="MODEL WW-05" serial="Warm Wood Listening Cabinet" />
-          <TitleActions {...props} />
-        </header>
-        <LayoutErrorBanner error={props.error} />
-        <div className="skin-grid skin-grid--wood">
-          <div className="wood-album-sleeve">
-            <NowPlayingBlock
-              {...props}
-              variant="wood"
-              moduleLabel="陈列窗"
-              eyebrow="Album Display"
-              moduleClassName="device-module--wood-status"
-            />
-            <HeroVisualization
-              {...props}
-              moduleLabel="暖光铭牌窗"
-              eyebrow="Warm Spectrum"
-              moduleClassName="device-module--wood-visualization"
-            />
-          </div>
-          <div className="wood-liner-notes">
-            <PlaylistBlock
-              {...props}
-              moduleLabel="节目单仓"
-              eyebrow="Liner Notes"
-              moduleClassName="device-module--wood-playlist"
-            />
-            <FeatureSidebar
-              {...props}
-              moduleLabel="黄铜功能匣"
-              eyebrow="Brass Options"
-              moduleClassName="device-module--wood-feature"
-            />
-          </div>
-        </div>
-        <ControlsBlock
-          {...props}
-          moduleLabel="黄铜控制台"
-          eyebrow="Ivory Transport"
-          moduleClassName="device-module--wood-controls"
-        />
-      </section>
-    </main>
-  );
+export function MintStudioLayout(props: PlayerLayoutProps) {
+  return <ModernPlayerLayout skinId="mint-studio" {...props} />;
 }

@@ -13,12 +13,6 @@ import type { SkinSummary } from "./SkinManager";
 
 export type FeaturePanel = "lyrics" | "visualization" | "tags" | "equalizer" | "skin" | "settings";
 
-export interface VisualizationFrame {
-  values: number[];
-  peak: number;
-  positionMs: number;
-}
-
 export interface PlayerLayoutProps {
   playlist: PlaylistSnapshot;
   playback: PlaybackState;
@@ -26,12 +20,15 @@ export interface PlayerLayoutProps {
   lyricsDocument: LyricsDocument | null;
   settings: AppSettings;
   skins: SkinSummary[];
-  activePanel: FeaturePanel;
+  /** `null` means the feature inspector is collapsed to its icon rail. */
+  activePanel: FeaturePanel | null;
+  /** Left playlist column visibility. */
+  libraryOpen: boolean;
   error: string | null;
   skinError: string | null;
   settingsErrorCode: string | null;
-  visualizationFrame: VisualizationFrame;
-  onActivePanelChange: (panel: FeaturePanel) => void;
+  onActivePanelChange: (panel: FeaturePanel | null) => void;
+  onToggleLibrary: () => void;
   onPlayerCommand: (command: CommandName, payload?: CommandPayload) => void;
   onAddFiles: () => void;
   onAddFolder: () => void;

@@ -49,7 +49,7 @@ const testState = vi.hoisted(() => {
 
   function createSettings(): AppSettings {
     return {
-      defaultSkin: "classic-blue-silver",
+      defaultSkin: "aurora-glass",
       shortcuts: {},
       enrichmentEnabled: false,
       cacheRetentionDays: 30,
@@ -122,7 +122,11 @@ describe("App autoplay events", () => {
 
   it("updates the now playing card from playlist and playback events", async () => {
     render(<App />);
-    expect(await screen.findByRole("heading", { name: "Song A" })).toBeInTheDocument();
+
+    // The now-playing display lives in the transport bar, so scope to it —
+    // the same title also appears in the playlist.
+    const controls = await screen.findByRole("region", { name: "播放控制" });
+    expect(await within(controls).findByText("Song A")).toBeInTheDocument();
 
     act(() => {
       testState.listeners.get("playlist_changed")?.({
@@ -136,8 +140,8 @@ describe("App autoplay events", () => {
       });
     });
 
-    expect(screen.getByRole("heading", { name: "Song B" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "暂停" })).toBeInTheDocument();
+    expect(within(controls).getByText("Song B")).toBeInTheDocument();
+    expect(within(controls).getByRole("button", { name: "暂停" })).toBeInTheDocument();
   });
 
   it("opens the skin panel and applies a built-in layout skin in Tauri mode", async () => {
@@ -148,10 +152,10 @@ describe("App autoplay events", () => {
     await user.click(within(windowActions).getByRole("button", { name: "皮肤" }));
     expect(screen.getByRole("heading", { name: "皮肤库" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "应用 暗夜黑胶舱" }));
+    await user.click(screen.getByRole("button", { name: "应用 午夜霓虹" }));
 
-    expect(invokeCommand).toHaveBeenCalledWith("apply_skin", { skinId: "dark-vinyl" });
-    expect(container.querySelector(".skin-layout--dark-vinyl")).toBeInTheDocument();
+    expect(invokeCommand).toHaveBeenCalledWith("apply_skin", { skinId: "midnight-neon" });
+    expect(container.querySelector(".skin-layout--midnight-neon")).toBeInTheDocument();
   });
 
   it("starts the current playlist track when play is pressed with no active track", async () => {

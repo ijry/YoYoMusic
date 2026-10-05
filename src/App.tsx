@@ -81,7 +81,9 @@ export default function App() {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [skins, setSkins] = useState<SkinSummary[]>(builtInLayoutSkinSummaries);
   const [lyricsDocument] = useState<LyricsDocument | null>(null);
-  const [activePanel, setActivePanel] = useState<FeaturePanel>("lyrics");
+  /* `null` = the feature inspector starts collapsed to its icon rail. */
+  const [activePanel, setActivePanel] = useState<FeaturePanel | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settingsErrorCode, setSettingsErrorCode] = useState<string | null>(null);
   const [skinError, setSkinError] = useState<string | null>(null);
@@ -157,7 +159,6 @@ export default function App() {
   }, [playback.isPlaying]);
 
   const currentTrack = findCurrentTrack(playlist, playback.trackId);
-  const visualizationFrame = createVisualizationFrame(playback.positionMs);
   const activeLayoutSkin = resolveLayoutSkin(settings.defaultSkin);
   const ActiveLayout = activeLayoutSkin.Layout;
 
@@ -331,11 +332,12 @@ export default function App() {
       settings={settings}
       skins={skins}
       activePanel={activePanel}
+      libraryOpen={libraryOpen}
       error={error}
       skinError={skinError}
       settingsErrorCode={settingsErrorCode}
-      visualizationFrame={visualizationFrame}
       onActivePanelChange={setActivePanel}
+      onToggleLibrary={() => setLibraryOpen((open) => !open)}
       onPlayerCommand={(command, payload = {}) => void handleCommand(command, payload)}
       onAddFiles={() => void handleAddFiles()}
       onAddFolder={() => void handleAddFolder()}
@@ -412,19 +414,6 @@ function syncPlaylistSelection(snapshot: PlaylistSnapshot, trackId: string | nul
 
 function commandCanChangeSelectedTrack(command: CommandName) {
   return command === "play_track" || command === "next_track" || command === "previous_track";
-}
-
-function createVisualizationFrame(positionMs: number) {
-  const values = Array.from({ length: 24 }, (_, index) => {
-    const wave = Math.sin(positionMs / 300 + index * 0.65);
-    return 0.15 + Math.abs(wave) * 0.85;
-  });
-
-  return {
-    values,
-    peak: Math.max(...values),
-    positionMs,
-  };
 }
 
 function toUserMessage(error: unknown) {

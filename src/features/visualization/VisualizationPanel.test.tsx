@@ -3,43 +3,37 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { VisualizationPanel } from "./VisualizationPanel";
 
-const frame = {
-  values: Array.from({ length: 12 }, (_, index) => 0.2 + index * 0.05),
-  peak: 0.92,
-  positionMs: 12000,
-};
-
 describe("VisualizationPanel", () => {
-  it("renders mode controls and a mode-specific waveform preview", async () => {
+  it("renders every mode control and the panel preview", async () => {
     const user = userEvent.setup();
     const onModeChange = vi.fn();
     const { container } = render(
       <VisualizationPanel
         mode="waveform"
-        frame={frame}
         isPlaying={true}
         hasTrack={true}
+        seed="track-a"
         onModeChange={onModeChange}
       />,
     );
 
-    expect(container.querySelector(".visualization-panel__status")).toHaveTextContent("峰值 0.92");
-    expect(container.querySelectorAll(".visualization-mode-button")).toHaveLength(3);
-    expect(container.querySelector(".visualization-preview--panel")).toHaveClass("visualization-preview--waveform");
-    expect(container.querySelector(".visualization-preview--panel")).toHaveClass("is-playing");
-    expect(container.querySelector(".visualization-waveform-line")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "波形" })).toHaveAttribute("aria-pressed", "true");
+    expect(container.querySelectorAll(".visualization-mode-button")).toHaveLength(6);
+    expect(container.querySelector(".visualization-panel__status")).toHaveTextContent("示波波形");
+    expect(container.querySelector(".visualization-panel__live")).toBeInTheDocument();
+    expect(container.querySelector(".audio-visualizer--panel")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "示波波形" })).toHaveAttribute("aria-pressed", "true");
 
-    await user.click(screen.getByRole("button", { name: "环形脉冲" }));
-    expect(onModeChange).toHaveBeenCalledWith("radial");
+    await user.click(screen.getByRole("button", { name: "镜像瀑布" }));
+    expect(onModeChange).toHaveBeenCalledWith("waterfall");
   });
 
-  it("marks the preview as standby when no track is loaded", () => {
+  it("hides the live badge while no track is loaded", () => {
     const { container } = render(
-      <VisualizationPanel mode="radial" frame={frame} hasTrack={false} onModeChange={() => undefined} />,
+      <VisualizationPanel mode="radial" isPlaying={true} hasTrack={false} onModeChange={() => undefined} />,
     );
 
-    expect(container.querySelector(".visualization-preview--radial")).toHaveClass("is-standby");
-    expect(container.querySelector(".visualization-radial-ring--outer")).toBeInTheDocument();
+    expect(container.querySelector(".visualization-panel__live")).not.toBeInTheDocument();
+    expect(container.querySelector(".audio-visualizer--panel")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "环形律动" })).toHaveAttribute("aria-pressed", "true");
   });
 });

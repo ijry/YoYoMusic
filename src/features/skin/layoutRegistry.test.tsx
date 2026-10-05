@@ -7,60 +7,53 @@ import {
 } from "./layoutRegistry";
 
 describe("layout skin registry", () => {
-  it("registers the five built-in layout skins in the expected order", () => {
+  it("registers the four modern skins in the expected order", () => {
     expect(builtInLayoutSkins.map((skin) => skin.id)).toEqual([
-      "classic-blue-silver",
-      "dark-vinyl",
-      "transparent-crystal",
-      "metal-rack",
-      "warm-wood",
+      "aurora-glass",
+      "midnight-neon",
+      "sunset-blaze",
+      "mint-studio",
     ]);
-    expect(builtInLayoutSkins).toHaveLength(5);
-    expect(builtInLayoutSkins[0].name).toBe("经典蓝银分体机");
+    expect(builtInLayoutSkins).toHaveLength(4);
+    expect(builtInLayoutSkins[0].name).toBe("极光玻璃");
     expect(builtInLayoutSkins.every((skin) => typeof skin.Layout === "function")).toBe(true);
   });
 
-  it("exposes machine-oriented skin summaries for the skin manager", () => {
-    expect(builtInLayoutSkinSummaries).toHaveLength(5);
+  it("exposes palette-oriented skin summaries for the skin manager", () => {
+    expect(builtInLayoutSkinSummaries).toHaveLength(4);
     expect(builtInLayoutSkinSummaries).toEqual([
       expect.objectContaining({
-        id: "classic-blue-silver",
-        name: "经典蓝银分体机",
+        id: "aurora-glass",
+        name: "极光玻璃",
         builtIn: true,
-        thumbnailClassName: "skin-thumbnail--classic-blue-silver",
-        tone: "旗舰分体机",
-        description: "蓝背光主控舱、抽屉曲目仓、机械运输控制台。",
+        thumbnailClassName: "skin-thumbnail--aurora-glass",
+        tone: "极光渐变",
+        description: "紫青极光渐变、深色毛玻璃主舱。",
       }),
       expect.objectContaining({
-        id: "dark-vinyl",
+        id: "midnight-neon",
         builtIn: true,
-        tone: "沉浸唱盘机",
-        description: "中心唱盘舱、暗场字幕屏、竖向控制塔。",
+        tone: "霓虹夜色",
+        description: "品红霓虹灯管、午夜蓝紫玻璃。",
       }),
       expect.objectContaining({
-        id: "transparent-crystal",
+        id: "sunset-blaze",
         builtIn: true,
-        tone: "概念透明机",
-        description: "厚边透明外壳、抽拉资料匣、悬浮控制底座。",
+        tone: "暖色落日",
+        description: "落日橙金渐变、暖调毛玻璃。",
       }),
       expect.objectContaining({
-        id: "metal-rack",
+        id: "mint-studio",
         builtIn: true,
-        tone: "专业机架机",
-        description: "双仪表频谱桥、机柜信息屏、硬朗金属机架。",
-      }),
-      expect.objectContaining({
-        id: "warm-wood",
-        builtIn: true,
-        tone: "家居唱机柜",
-        description: "木质陈列窗、暖光铭牌屏、黄铜拨杆控制台。",
+        tone: "清冷录音室",
+        description: "薄荷青绿、冷调录音室玻璃。",
       }),
     ]);
   });
 
-  it("falls back to the default classic skin for unknown ids", () => {
-    expect(DEFAULT_LAYOUT_SKIN_ID).toBe("classic-blue-silver");
+  it("falls back to the default aurora skin for unknown ids", () => {
+    expect(DEFAULT_LAYOUT_SKIN_ID).toBe("aurora-glass");
     expect(resolveLayoutSkin("unknown-skin").id).toBe(DEFAULT_LAYOUT_SKIN_ID);
-    expect(resolveLayoutSkin("dark-vinyl").id).toBe("dark-vinyl");
+    expect(resolveLayoutSkin("midnight-neon").id).toBe("midnight-neon");
   });
 });

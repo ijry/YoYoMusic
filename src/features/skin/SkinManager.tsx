@@ -77,7 +77,7 @@ export function SkinManager({ skins, activeSkinId, error, onApply, onImport }: S
                   <span className="skin-card__tone">{skin.tone ?? (skin.builtIn ? "内置皮肤" : "导入主题")}</span>
                   <span className="skin-card__name">{skin.name}</span>
                   <span className="skin-card__meta">
-                    {skin.builtIn ? "内置皮肤" : "导入主题"} · {skin.author} · {skin.version}
+                    {skin.author} · {skin.version}
                   </span>
                   {skin.description ? <span className="skin-card__description">{skin.description}</span> : null}
                 </span>

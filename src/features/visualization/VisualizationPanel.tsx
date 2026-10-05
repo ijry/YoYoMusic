@@ -1,52 +1,70 @@
 import type { VisualizationMode } from "../../shared/types";
-import { VisualizationPreview } from "./VisualizationPreview";
-import type { VisualizationFrame } from "./renderers";
+import { AudioVisualizer } from "./AudioVisualizer";
+import { findVisualizationMode, visualizationModes } from "./modes";
 
 interface VisualizationPanelProps {
   mode: VisualizationMode;
-  frame: VisualizationFrame;
   isPlaying?: boolean;
   hasTrack?: boolean;
+  seed?: string;
   onModeChange: (mode: VisualizationMode) => void;
 }
 
-const visualizationModes: Array<{ id: VisualizationMode; label: string }> = [
-  { id: "spectrum", label: "频谱柱" },
-  { id: "waveform", label: "波形" },
-  { id: "radial", label: "环形脉冲" },
-];
-
 export function VisualizationPanel({
   mode,
-  frame,
   isPlaying = false,
   hasTrack = true,
+  seed = "",
   onModeChange,
 }: VisualizationPanelProps) {
+  const active = findVisualizationMode(mode);
+
   return (
     <section className="visualization-panel" aria-label="音乐可视化">
       <div className="visualization-panel__header">
         <h2>音乐可视化</h2>
-        <span className="visualization-panel__status">峰值 {frame.peak.toFixed(2)}</span>
-      </div>
-      <div className="visualization-panel__modes">
-        {visualizationModes.map((visualMode, index) => (
-          <button
-            key={visualMode.id}
-            className="visualization-mode-button"
-            type="button"
-            aria-pressed={mode === visualMode.id}
-            onClick={() => onModeChange(visualMode.id)}
-          >
-            <span className="visualization-mode-button__slot" aria-hidden="true">
-              V{index + 1}
+        <span className="visualization-panel__status">
+          {isPlaying && hasTrack ? (
+            <span className="visualization-panel__live">
+              <span className="visualization-panel__pulse" aria-hidden="true" />
+              实时
             </span>
-            <span className="visualization-mode-button__label">{visualMode.label}</span>
-          </button>
-        ))}
+          ) : null}
+          {active.label}
+        </span>
       </div>
-      <div className="visualization-panel__meter">
-        <VisualizationPreview mode={mode} frame={frame} variant="panel" isPlaying={isPlaying} hasTrack={hasTrack} />
+
+      <div className="visualization-panel__modes" role="group" aria-label="可视化模式">
+        {visualizationModes.map((entry) => {
+          const ModeIcon = entry.icon;
+          const isActive = entry.id === mode;
+          return (
+            <button
+              key={entry.id}
+              className="visualization-mode-button"
+              type="button"
+              aria-pressed={isActive}
+              aria-label={entry.label}
+              title={entry.hint}
+              onClick={() => onModeChange(entry.id)}
+            >
+              <span className="visualization-mode-button__icon" aria-hidden="true">
+                <ModeIcon />
+              </span>
+              <span className="visualization-mode-button__label">{entry.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="visualization-panel__stage">
+        <AudioVisualizer
+          mode={mode}
+          isPlaying={isPlaying}
+          hasTrack={hasTrack}
+          seed={seed}
+          className="audio-visualizer--panel"
+        />
       </div>
     </section>
   );

@@ -1,59 +1,64 @@
 /*
- * Global theme contract.
+ * Global theme contract — modern dark glass.
  *
- * Every skin re-declares the `--skin-*` group below, so any value here is only
- * a fallback for surfaces rendered outside a `.skin-layout` (mini player,
- * desktop lyrics) and for imported skin packages that set `--color-*`.
+ * The player paints a deep, near-black canvas and floats translucent glass
+ * panels over it. Each built-in skin re-declares the `--skin-*` group plus the
+ * `--viz-*` trio, so the visualiser recolours itself with the theme instead of
+ * hard-coding a palette.
  *
- * The `--skin-gloss` / `--skin-shade` / `--skin-well` trio is what keeps a skin
- * from washing out: highlights, shadows and recessed wells are mixed from the
- * skin's own ink instead of flat white/black, so a warm cabinet stays warm and
- * a cold rack stays cold.
+ * Values here are the fallback for surfaces rendered outside a `.skin-layout`
+ * (mini player, desktop lyrics) and for imported skin packages that only set
+ * the `--color-*` group.
  */
 :root {
   color-scheme: dark;
 
   /* Base canvas — overridden per skin. */
-  --color-bg: #080b12;
-  --color-bg-deep: #04060a;
-  --color-surface: rgba(18, 24, 38, 0.86);
-  --color-surface-strong: #151c2d;
-  --color-primary: #31d6a3;
-  --color-accent: #8fd3ff;
-  --color-text: #f8fafc;
-  --color-muted: #9fb0c7;
+  --color-bg: #07070f;
+  --color-bg-deep: #030308;
+  --color-surface: rgba(22, 23, 38, 0.66);
+  --color-surface-strong: #171a2b;
+  --color-primary: #8b5cf6;
+  --color-accent: #22d3ee;
+  --color-text: #f5f6fc;
+  --color-muted: #98a0c2;
 
   /* Skin palette defaults. Each `.skin-layout--*` overrides all of these. */
   --skin-primary: var(--color-primary);
   --skin-accent: var(--color-accent);
-  --skin-panel: var(--color-surface);
-  --skin-border: rgba(255, 255, 255, 0.16);
-  --skin-ink: #0a0f18;
+  --skin-canvas: var(--color-bg);
+  --skin-canvas-deep: var(--color-bg-deep);
+  --skin-ink: #08090f;
   --skin-glow: var(--skin-primary);
 
-  /* Material lighting, mixed from the skin's own ink rather than pure B/W.
-   * The three `*-ink` values are opaque bases: rules mix them down with
-   * color-mix(), so they must always resolve or the whole declaration is
-   * dropped. These defaults cover any surface rendered without a skin class. */
-  --skin-gloss-ink: #ffffff;
-  --skin-shade-ink: #000000;
-  --skin-well-ink: var(--skin-ink);
-  --skin-gloss: rgba(255, 255, 255, 0.14);
-  --skin-gloss-soft: rgba(255, 255, 255, 0.05);
-  --skin-shade: rgba(4, 7, 12, 0.34);
-  --skin-well: color-mix(in srgb, var(--skin-ink) 78%, var(--skin-primary));
+  /* Visualiser palette, derived from the skin accents. */
+  --viz-a: var(--skin-primary);
+  --viz-b: var(--skin-accent);
+  --viz-ink: #ffffff;
 
-  /* Shell framing. */
-  --shell-edge: rgba(255, 255, 255, 0.4);
-  --shell-gloss: var(--skin-gloss);
-  --shell-shadow: rgba(0, 0, 0, 0.5);
+  /* Glass surfaces. */
+  --glass-fill: rgba(255, 255, 255, 0.04);
+  --glass-fill-strong: rgba(255, 255, 255, 0.075);
+  --glass-stroke: rgba(255, 255, 255, 0.08);
+  --glass-stroke-strong: rgba(255, 255, 255, 0.16);
+  --glass-blur: 26px;
 
-  --shadow-panel: 0 24px 70px rgba(0, 0, 0, 0.42);
-  --radius-panel: 28px;
+  /* Shape. */
+  --radius-panel: 30px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+
+  /* Depth. */
+  --shadow-panel: 0 40px 90px rgba(0, 0, 0, 0.6);
+  --shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.38);
+  --shadow-glow: 0 0 42px color-mix(in srgb, var(--skin-primary) 34%, transparent);
 
   font-family:
+    "Inter",
     "Poppins",
     "Noto Sans SC",
     "Microsoft YaHei",
+    system-ui,
     sans-serif;
 }

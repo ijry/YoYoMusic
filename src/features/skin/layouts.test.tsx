@@ -1,30 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { builtInLayoutSkins } from "./layoutRegistry";
 import type { PlayerLayoutProps } from "./layoutTypes";
-
-const machineLabels: Record<string, { shellClass: string; labels: string[] }> = {
-  "classic-blue-silver": {
-    shellClass: "device-shell--classic",
-    labels: ["频谱可视化", "播放列表", "正在播放", "功能面板", "播放控制"],
-  },
-  "dark-vinyl": {
-    shellClass: "device-shell--vinyl",
-    labels: ["唱盘舱", "舞台频谱", "曲目塔", "控制塔", "控制台"],
-  },
-  "transparent-crystal": {
-    shellClass: "device-shell--crystal",
-    labels: ["透明舱", "资料匣", "悬浮仓", "底座控制台"],
-  },
-  "metal-rack": {
-    shellClass: "device-shell--rack",
-    labels: ["频谱桥", "机柜面板", "状态机柜", "机架控制台"],
-  },
-  "warm-wood": {
-    shellClass: "device-shell--wood",
-    labels: ["陈列窗", "节目单仓", "暖光铭牌窗", "黄铜控制台"],
-  },
-};
 
 function createProps(): PlayerLayoutProps {
   return {
@@ -75,7 +53,7 @@ function createProps(): PlayerLayoutProps {
     },
     lyricsDocument: null,
     settings: {
-      defaultSkin: "classic-blue-silver",
+      defaultSkin: "aurora-glass",
       shortcuts: {},
       enrichmentEnabled: false,
       cacheRetentionDays: 30,
@@ -90,15 +68,12 @@ function createProps(): PlayerLayoutProps {
     },
     skins: [],
     activePanel: "lyrics",
+    libraryOpen: true,
     error: null,
     skinError: null,
     settingsErrorCode: null,
-    visualizationFrame: {
-      values: Array.from({ length: 24 }, (_, index) => 0.2 + index / 32),
-      peak: 0.9,
-      positionMs: 12000,
-    },
     onActivePanelChange: vi.fn(),
+    onToggleLibrary: vi.fn(),
     onPlayerCommand: vi.fn(),
     onAddFiles: vi.fn(),
     onAddFolder: vi.fn(),
@@ -113,52 +88,65 @@ function createProps(): PlayerLayoutProps {
 }
 
 describe("layout skins", () => {
-  it.each(builtInLayoutSkins)("renders machine-shell labels and controls for $name", (skin) => {
+  it.each(builtInLayoutSkins)("renders the modern shell for $name", (skin) => {
     const props = createProps();
-    const expected = machineLabels[skin.id];
     const { container } = render(<skin.Layout {...props} />);
 
-    expect(container.querySelector(`.${expected.shellClass}`)).toBeInTheDocument();
-    expected.labels.forEach((label) => {
-      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
-    });
+    expect(container.querySelector(`.skin-layout--${skin.id}`)).toBeInTheDocument();
+    expect(container.querySelector(".modern-frame")).toBeInTheDocument();
+    expect(container.querySelector(".modern-grid")).toBeInTheDocument();
 
     expect(screen.getByRole("heading", { name: "悠悠乐听" })).toBeInTheDocument();
+    expect(container.querySelector(".app-title__model")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "当前播放列表" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "当前播放" })).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
-    expect(container.querySelector(".workbench-visualization .visualization-preview--spectrum")).toBeInTheDocument();
-    expect(container.querySelector(".workbench-visualization .visualization-preview--hero")).toBeInTheDocument();
-    expect(container.querySelector(".app-title__model")).toBeInTheDocument();
-    expect(container.querySelector(".now-playing-display")).toBeInTheDocument();
-    expect(container.querySelector(".cover-card__hub")).toBeInTheDocument();
 
-    // Faux hardware (handles, vents, feet, rivets, rack ears, nameplate) was
-    // removed: it read as clutter and was what squeezed content out of the
-    // layout. Only a per-skin signature element remains.
-    expect(container.querySelector(".device-shell__handle")).not.toBeInTheDocument();
-    expect(container.querySelector(".device-shell__vent")).not.toBeInTheDocument();
-    expect(container.querySelector(".device-shell__foot")).not.toBeInTheDocument();
-    expect(container.querySelector(".device-module__trim")).not.toBeInTheDocument();
-    expect(container.querySelector(".device-module__rivet")).not.toBeInTheDocument();
-    expect(container.querySelector(".device-shell__plate")).not.toBeInTheDocument();
-    expect(container.querySelector(".device-module__eyebrow")).not.toBeInTheDocument();
+    // Six visualiser modes are reachable straight from the stage.
+    expect(container.querySelectorAll(".viz-switcher__chip")).toHaveLength(6);
+    expect(container.querySelector(".audio-visualizer--hero")).toBeInTheDocument();
 
-    // Icon-only chrome keeps its accessible names. "皮肤"/"设置" appear both in
-    // the title bar and as feature tabs, so scope the query to the title nav.
-    expect(container.querySelector(".title-status-cluster")).toBeInTheDocument();
-    expect(container.querySelectorAll(".title-action-button")).toHaveLength(4);
-    const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
-    expect(within(windowActions).getByRole("button", { name: "皮肤" })).toBeInTheDocument();
-    expect(within(windowActions).getByRole("button", { name: "桌面歌词" })).toBeInTheDocument();
-    expect(container.querySelector(".feature-tab .lucide")).toBeInTheDocument();
-    expect(container.querySelector(".feature-tab__slot")).not.toBeInTheDocument();
-
+    // The now-playing display lives in the transport bar, cover included.
     const controls = screen.getByRole("region", { name: "播放控制" });
+    expect(container.querySelector(".player-controls .cover-art")).toBeInTheDocument();
+    expect(container.querySelector(".player-controls__copy strong")).toHaveTextContent("Song A");
     expect(within(controls).getByRole("button", { name: "播放" })).toBeInTheDocument();
     expect(within(controls).getByRole("slider", { name: "播放进度" })).toBeInTheDocument();
     expect(within(controls).getByRole("spinbutton", { name: "音量" })).toBeInTheDocument();
+
+    // Feature icons always visible; the drawer only when a panel is selected.
+    expect(container.querySelectorAll(".feature-rail .feature-tab")).toHaveLength(6);
+    expect(container.querySelector(".feature-drawer")).toBeInTheDocument();
+
+    expect(container.querySelectorAll(".title-action-button")).toHaveLength(5);
+    const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
+    expect(within(windowActions).getByRole("button", { name: "播放列表" })).toBeInTheDocument();
+    expect(within(windowActions).getByRole("button", { name: "皮肤" })).toBeInTheDocument();
+    expect(within(windowActions).getByRole("button", { name: "桌面歌词" })).toBeInTheDocument();
+    expect(container.querySelector(".feature-tab .lucide")).toBeInTheDocument();
+  });
+
+  it("collapses the inspector to its icon rail when no panel is selected", () => {
+    const props = createProps();
+    props.activePanel = null;
+    const AuroraLayout = builtInLayoutSkins[0].Layout;
+    const { container } = render(<AuroraLayout {...props} />);
+
+    expect(container.querySelector(".feature-rail")).toBeInTheDocument();
+    expect(container.querySelector(".feature-drawer")).not.toBeInTheDocument();
+    expect(container.querySelector(".modern-grid")).toHaveAttribute("data-inspector", "closed");
+    expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
+  });
+
+  it("drops the library column when the playlist is hidden", () => {
+    const props = createProps();
+    props.libraryOpen = false;
+    const AuroraLayout = builtInLayoutSkins[0].Layout;
+    const { container } = render(<AuroraLayout {...props} />);
+
+    expect(screen.queryByRole("region", { name: "当前播放列表" })).not.toBeInTheDocument();
+    expect(container.querySelector(".modern-grid")).toHaveAttribute("data-library", "closed");
+    expect(container.querySelector(".modern-panel--viz")).toBeInTheDocument();
   });
 
   it("renders the selected visualization mode in the feature panel", () => {
@@ -166,11 +154,22 @@ describe("layout skins", () => {
     props.activePanel = "visualization";
     props.settings.visualizationMode = "radial";
     props.playback.isPlaying = true;
-    const ClassicLayout = builtInLayoutSkins[0].Layout;
-    const { container } = render(<ClassicLayout {...props} />);
+    const AuroraLayout = builtInLayoutSkins[0].Layout;
+    const { container } = render(<AuroraLayout {...props} />);
 
-    expect(container.querySelector(".feature-content .visualization-preview--radial")).toBeInTheDocument();
-    expect(container.querySelector(".feature-content .visualization-radial-ring--outer")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "环形脉冲" })).toHaveAttribute("aria-pressed", "true");
+    expect(container.querySelector(".feature-content .audio-visualizer--panel")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "环形律动" })).toHaveAttribute("aria-pressed", "true");
+    expect(container.querySelectorAll(".visualization-mode-button")).toHaveLength(6);
+  });
+
+  it("toggles a panel off when its rail icon is clicked again", async () => {
+    const user = userEvent.setup();
+    const props = createProps();
+    props.activePanel = "lyrics";
+    const AuroraLayout = builtInLayoutSkins[0].Layout;
+    render(<AuroraLayout {...props} />);
+
+    await user.click(screen.getByRole("button", { name: "歌词" }));
+    expect(props.onActivePanelChange).toHaveBeenCalledWith(null);
   });
 });

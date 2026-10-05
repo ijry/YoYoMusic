@@ -1,7 +1,13 @@
 export type PlayMode = "sequence" | "repeat_all" | "repeat_one" | "shuffle";
 export type TrackStatus = "ready" | "missing" | "unplayable";
 export type TagStatus = "clean" | "dirty" | "saving" | "failed";
-export type VisualizationMode = "spectrum" | "waveform" | "radial";
+export type VisualizationMode =
+  | "spectrum"
+  | "waveform"
+  | "radial"
+  | "particles"
+  | "aurora"
+  | "waterfall";
 
 export interface Track {
   id: string;
