@@ -67,8 +67,21 @@ describe("modern player layout CSS", () => {
   it("styles the transport deck and its progress rail", () => {
     expect(rule(".transport-button--play")).toContain("width: 52px;");
     expect(rule(".progress-rail")).toContain("var(--progress, 0%)");
-    expect(rule(".volume-input")).toContain("text-align: center;");
     expect(rule(".control-label")).toContain("clip-path: inset(50%);");
+  });
+
+  it("floats the volume popover so it escapes the panel's overflow clip", () => {
+    // Every `.modern-panel` sets `overflow: hidden` so its content cannot spill
+    // past the rounded corners. The popover is portalled to <body> and
+    // fixed-positioned, so neither the clip nor the deck's height can affect it.
+    expect(rule(".volume-popover")).toContain("position: fixed;");
+    const volumeControl = readFileSync(
+      join(process.cwd(), "src/features/player/VolumeControl.tsx"),
+      "utf8",
+    ).replace(/\r\n/g, "\n");
+    expect(volumeControl).toContain("createPortal(");
+    // Shares the progress rail's fill language.
+    expect(rule(".volume-slider")).toContain("var(--progress, 0%)");
   });
 
   it("styles the modern playlist rows and generated cover art", () => {

@@ -838,13 +838,14 @@ input:focus-visible {
   background: linear-gradient(135deg, var(--skin-primary), var(--skin-accent));
 }
 
-.transport-button--mute {
+.transport-button--volume {
   width: 36px;
   height: 36px;
   color: var(--color-muted);
 }
 
-.transport-button--mute:hover {
+.transport-button--volume:hover,
+.volume-control[data-open="true"] .transport-button--volume {
   color: var(--color-text);
 }
 
@@ -858,10 +859,6 @@ input:focus-visible {
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 10px;
   width: 100%;
-}
-
-.control-field--volume {
-  width: 76px;
 }
 
 .control-label {
@@ -931,15 +928,117 @@ input:focus-visible {
   cursor: not-allowed;
 }
 
-.volume-input {
-  width: 100%;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
+/*
+ * Volume popover.
+ *
+ * Fixed-positioned and portalled to <body> (see `VolumeControl.tsx`): every
+ * `.modern-panel` clips its overflow, so a popover rendered inside the transport
+ * panel would be cut off — and its mute button made unclickable — with no visual
+ * warning. Position comes from the trigger's measured rect, set inline.
+ */
+.volume-control {
+  display: flex;
+  align-items: center;
+}
+
+.volume-popover {
+  position: fixed;
+  z-index: 40;
+  display: grid;
+  gap: 9px;
+  width: 208px;
+  padding: 12px 14px;
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  box-shadow: var(--shadow-panel);
+}
+
+.volume-popover__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.volume-popover__icon {
+  display: grid;
+  place-items: center;
+  color: var(--color-muted);
+}
+
+.volume-popover__value {
   color: var(--color-text);
-  text-align: center;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
-  background: var(--glass-fill);
+}
+
+.volume-popover__mute {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  color: var(--color-muted);
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.volume-popover__mute:hover {
+  color: var(--color-text);
+  background: var(--glass-fill-strong);
+}
+
+.volume-popover__mute[aria-pressed="true"] {
+  color: var(--color-text);
+  background: linear-gradient(135deg, var(--skin-primary), var(--skin-accent));
+}
+
+/* Same fill language as the progress rail, so the deck reads as one family. */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: linear-gradient(
+    90deg,
+    var(--skin-primary) 0 var(--progress, 0%),
+    var(--skin-accent) var(--progress, 0%) calc(var(--progress, 0%) + 8%),
+    rgba(255, 255, 255, 0.14) var(--progress, 0%) 100%
+  );
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--skin-primary) 38%, transparent);
+  transition: transform 140ms ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--skin-primary) 38%, transparent);
+}
+
+.volume-slider:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--skin-primary) 70%, transparent);
+  outline-offset: 4px;
 }
 
 .play-mode-button {

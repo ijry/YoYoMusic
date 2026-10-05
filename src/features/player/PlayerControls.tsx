@@ -1,8 +1,9 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { CoverArt } from "../../shared/coverArt";
 import { Icon } from "../../shared/icons";
 import type { CommandName, CommandPayload } from "../../shared/tauri";
 import type { PlaybackState, Track } from "../../shared/types";
+import { VolumeControl } from "./VolumeControl";
 
 interface PlayerControlsProps {
   state: PlaybackState;
@@ -24,17 +25,11 @@ export function PlayerControls({
   track = null,
   onCommand,
 }: PlayerControlsProps) {
-  const volumePercent = Math.round(state.volume * 100);
-  const [volumeInput, setVolumeInput] = useState(String(volumePercent));
   const currentPlayModeLabel = playModeLabel(state.playMode);
   const canUseTransport = Boolean(state.trackId) || hasPlayableTrack;
   const canSeek = Boolean(state.trackId) && state.durationMs > 0;
   const PlayModeIcon = playModeIcon(state.playMode);
   const progressPercent = state.durationMs > 0 ? Math.min(100, (state.positionMs / state.durationMs) * 100) : 0;
-
-  useEffect(() => {
-    setVolumeInput(String(volumePercent));
-  }, [volumePercent]);
 
   /*
    * Icon-only transport. Labels live on `aria-label` rather than in the button
@@ -113,32 +108,17 @@ export function PlayerControls({
       </div>
 
       <div className="transport-row transport-row--utility">
-        <button
-          type="button"
-          className="transport-button transport-button--mute"
-          aria-label={state.isMuted ? "取消静音" : "静音"}
-          title={state.isMuted ? "取消静音" : "静音"}
-          onClick={() => onCommand("set_muted", { value: !state.isMuted })}
-        >
-          {state.isMuted ? <Icon.muted size={18} /> : <Icon.volume size={18} />}
-        </button>
-
-        <label className="control-field control-field--compact control-field--volume control-monitor">
-          <span className="control-label">音量</span>
-          <input
-            aria-label="音量"
-            className="volume-input"
-            type="number"
-            min="0"
-            max="100"
-            value={volumeInput}
-            onChange={(event) => {
-              const nextValue = event.currentTarget.value;
-              setVolumeInput(nextValue);
-              onCommand("set_volume", { value: Number(nextValue || 0) / 100 });
-            }}
-          />
-        </label>
+        {/*
+         * Volume and mute share one control: the speaker opens a popover with
+         * the slider and a mute toggle inside. Two separate affordances for one
+         * setting was the redundancy.
+         */}
+        <VolumeControl
+          volume={state.volume}
+          isMuted={state.isMuted}
+          onVolumeChange={(value) => onCommand("set_volume", { value })}
+          onToggleMuted={() => onCommand("set_muted", { value: !state.isMuted })}
+        />
 
         <button
           type="button"

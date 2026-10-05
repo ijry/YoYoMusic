@@ -112,7 +112,10 @@ describe("layout skins", () => {
     expect(container.querySelector(".player-controls__copy strong")).toHaveTextContent("Song A");
     expect(within(controls).getByRole("button", { name: "播放" })).toBeInTheDocument();
     expect(within(controls).getByRole("slider", { name: "播放进度" })).toBeInTheDocument();
-    expect(within(controls).getByRole("spinbutton", { name: "音量" })).toBeInTheDocument();
+    // Volume is behind the speaker button; the slider is not in the deck until
+    // it is opened.
+    expect(within(controls).getByRole("button", { name: "音量" })).toBeInTheDocument();
+    expect(within(controls).queryByRole("slider", { name: "音量大小" })).not.toBeInTheDocument();
 
     // Feature icons always visible; the drawer only when a panel is selected.
     expect(container.querySelectorAll(".feature-rail .feature-tab")).toHaveLength(6);
