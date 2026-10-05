@@ -188,14 +188,32 @@ jobs:
         with:
           path: release-assets
 
+      - name: Normalise installer filenames
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Tauri names bundles after `productName`, which is Chinese here, and
+          # the release uploader strips non-ASCII characters — every asset would
+          # otherwise be published as `_0.0.1_x64-setup.exe`. Prefix the ASCII
+          # product name before uploading.
+          while IFS= read -r -d '' file; do
+            mv "$file" "$(dirname "$file")/YoYoMusic$(basename "$file")"
+          done < <(find release-assets -type f -name '_*' -print0)
+          find release-assets -type f | sort
+
       # The annotated tag message is the changelog, which keeps the release
-      # notes reviewable in the same commit that ships them.
+      # notes reviewable in the same object that names the release. Note that
+      # `git log -1 $GITHUB_SHA` would return the *commit* message instead,
+      # which is the last fix commit rather than the changelog.
       - name: Collect release notes from the tag
         run: |
           set -euo pipefail
-          git log -1 --format=%B "$GITHUB_SHA" > release-body.md
+          git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents)' > release-body.md
           if [[ ! -s release-body.md ]]; then
-            echo "::error::Tag commit ${GITHUB_SHA} has an empty message; the release would have no notes."
+            git log -1 --format=%B "$GITHUB_SHA" > release-body.md
+          fi
+          if [[ ! -s release-body.md ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} carries no message; the release would have no notes."
             exit 1
           fi
           cat .github/release-footer.md >> release-body.md
