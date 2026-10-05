@@ -28,7 +28,7 @@ src/
     tags/                     标签编辑
     settings/                 设置
     mini/                     迷你播放器
-    shell/                    错误横幅
+    shell/                    错误横幅、自绘窗口边框（拖动区 + 窗口按钮）
   styles/                     theme.css / app.css / skin-layouts.css
 src-tauri/
   src/                        Rust 侧命令与播放服务
@@ -76,6 +76,38 @@ docs-site/                    VitePress 文档站（本页所在站点）
 
 1. **条件渲染的元素不要独占 grid 行或列。** 它返回 `null` 时后面的元素会整体前移。主区的列模板随 `data-library` / `data-inspector` 属性成组切换，正是为了让「隐藏左栏」与「少一列」同步发生。错误横幅则改为绝对定位浮层。
 2. **网格里的列表行必须渲染相同数量的子元素**，否则某一行的元素会换行。需要条件显示时用「始终渲染 + 切换 class」。
+
+## 窗口边框
+
+三个窗口（主窗口 / 迷你 / 桌面歌词）全部 `decorations: false`，
+**自绘 chrome 组件在 `features/shell/WindowChrome.tsx`**：
+
+- `DragRegion` —— 拖动区。内部按钮通过 `closest("button, input, select, a")` 排除，
+  所以按钮可以留在拖动区里而仍然可点；`disabled` 时不启动拖动（桌面歌词的锁定用）。
+- `WindowButtons` —— 最小化 / 最大化 / 关闭，迷你窗口只保留关闭。
+
+窗口操作统一走 `shared/windowControl.ts`，内部用 `isTauriWindowRuntime()` 短路，
+这样组件在 jsdom（没有 Tauri 运行时）里也能渲染与测试。
+
+::: warning 透明窗口要看四层背景
+桌面歌词的 `transparent: true)` 只作用于 webview 层。
+`body` 上的背景色仍会让整个窗口变成一块不透明矩形，
+所以路由要给 `document.body.dataset.window` 打标记，CSS 据此把
+`body` 与 `#root` 一起覆盖为 `transparent`。
+改这块样式时，务必用 `getComputedStyle` 确认
+**html / body / #root / 外壳**四层都是透明。
+:::
+
+## 设置的读写
+
+`AppSettings` 新增字段时，Rust 侧的 `#[serde(...)]` **必须带 `default`**，
+否则旧的 `settings.json` 缺字段会直接反序列化失败。
+
+桌面歌词的偏好由 `shared/useDesktopLyricsSettings.ts` 持有，
+分两层：UI 状态**自带默认值**（保证加载前点击就生效），
+整份 settings 文档只放 `useRef` 里当写入目标，
+**加载完成前不落盘**（否则会用默认值覆盖用户真实设置）。
+歌词面板与桌面歌词浮窗写的是同一份数据，通过持久化文件同步，不做跨窗口消息。
 
 ## 测试与校验
 

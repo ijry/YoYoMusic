@@ -148,8 +148,8 @@ describe("App autoplay events", () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
 
-    const windowActions = await screen.findByRole("navigation", { name: "窗口操作" });
-    await user.click(within(windowActions).getByRole("button", { name: "皮肤" }));
+    const featureRail = await screen.findByRole("group", { name: "功能面板标签" });
+    await user.click(within(featureRail).getByRole("button", { name: "皮肤" }));
     expect(screen.getByRole("heading", { name: "皮肤库" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "应用 午夜霓虹" }));

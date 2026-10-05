@@ -93,6 +93,17 @@ export interface EqualizerSettings {
   bands: number[];
 }
 
+export interface DesktopLyricsSettings {
+  /** Preset id from `desktopLyricsTheme.ts`. */
+  theme: string;
+  /** Multiplier applied to the lyric font size. */
+  fontScale: number;
+  /** Position pinned — the strip stops following the pointer. */
+  pinned: boolean;
+  /** Mouse clicks pass through to whatever is behind the window. */
+  clickThrough: boolean;
+}
+
 export interface AppSettings {
   defaultSkin: string;
   shortcuts: Record<string, string>;
@@ -102,4 +113,5 @@ export interface AppSettings {
   restoreSession: boolean;
   visualizationMode: VisualizationMode;
   equalizer: EqualizerSettings;
+  desktopLyrics: DesktopLyricsSettings;
 }

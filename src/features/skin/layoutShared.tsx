@@ -6,6 +6,7 @@ import { PlayerControls } from "../player/PlayerControls";
 import { PlaylistPanel } from "../playlist/PlaylistPanel";
 import { SettingsPanel } from "../settings/SettingsPanel";
 import { AppErrorBanner } from "../shell/AppErrorBanner";
+import { WindowButtons } from "../shell/WindowChrome";
 import { TagEditor } from "../tags/TagEditor";
 import { AudioVisualizer } from "../visualization/AudioVisualizer";
 import { visualizationModes } from "../visualization/modes";
@@ -22,17 +23,23 @@ export const featurePanels: Array<{ id: FeaturePanel; label: string; icon: () =>
   { id: "settings", label: "设置", icon: Icon.settings },
 ];
 
+/*
+ * Top bar.
+ *
+ * Button placement follows one rule: a control lives in exactly one place.
+ *
+ * - The right-hand feature rail owns the six *panels* (lyrics, visualiser,
+ *   tags, equaliser, skin, settings). Skin and settings used to be duplicated
+ *   here as well, which is what made the corner feel crowded.
+ * - This bar therefore only carries *window-level* actions: layout toggle, the
+ *   two secondary windows, and the window buttons that replace the OS title
+ *   bar (see `decorations: false` in tauri.conf.json).
+ * - The current track is not repeated here either — the transport bar already
+ *   shows cover, title and artist.
+ */
 export function TitleActions(props: PlayerLayoutProps) {
-  const currentTrackTitle = props.currentTrack?.title ?? "未装载曲目";
-
   return (
     <nav className="title-actions" aria-label="窗口操作">
-      <div className="title-status-cluster">
-        <span className="title-status-pill title-status-pill--track" title={currentTrackTitle}>
-          <span className="title-status-pill__dot" aria-hidden="true" />
-          {currentTrackTitle}
-        </span>
-      </div>
       <div className="title-actions__buttons">
         <button
           className="title-action-button"
@@ -47,26 +54,8 @@ export function TitleActions(props: PlayerLayoutProps) {
         <button
           className="title-action-button"
           type="button"
-          aria-label="皮肤"
-          title="皮肤"
-          onClick={() => props.onActivePanelChange("skin")}
-        >
-          <Icon.skin />
-        </button>
-        <button
-          className="title-action-button"
-          type="button"
-          aria-label="设置"
-          title="设置"
-          onClick={() => props.onActivePanelChange("settings")}
-        >
-          <Icon.settings />
-        </button>
-        <button
-          className="title-action-button"
-          type="button"
-          aria-label="迷你"
-          title="迷你"
+          aria-label="迷你模式"
+          title="迷你模式"
           onClick={() => props.onPlayerCommand("open_mini_player", {})}
         >
           <Icon.mini />
@@ -81,6 +70,7 @@ export function TitleActions(props: PlayerLayoutProps) {
           <Icon.desktopLyrics />
         </button>
       </div>
+      <WindowButtons />
     </nav>
   );
 }
@@ -283,5 +273,15 @@ function renderFeaturePanel(props: PlayerLayoutProps, panel: FeaturePanel) {
     );
   }
 
-  return <LyricsPanel document={props.lyricsDocument} positionMs={props.playback.positionMs} />;
+  return (
+    <LyricsPanel
+      document={props.lyricsDocument}
+      positionMs={props.playback.positionMs}
+      desktopLyrics={props.settings.desktopLyrics}
+      onDesktopLyricsChange={(desktopLyrics) =>
+        props.onSettingsChange({ ...props.settings, desktopLyrics })
+      }
+      onToggleDesktopLyricsWindow={() => props.onPlayerCommand("toggle_desktop_lyrics", {})}
+    />
+  );
 }

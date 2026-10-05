@@ -8,7 +8,11 @@ import {
   FilePlus,
   FolderPlus,
   ListMusic,
+  Lock,
+  Maximize2,
+  Minimize,
   Minimize2,
+  MousePointerClick,
   Palette,
   PanelLeft,
   Pause,
@@ -24,6 +28,7 @@ import {
   Tags,
   Trash2,
   Type,
+  Unlock,
   Volume2,
   VolumeX,
   Waves,
@@ -79,6 +84,14 @@ export const Icon = {
   remove: glyph(X),
   disc: glyph(Disc3),
   panelLeft: glyph(PanelLeft),
+
+  /* Window chrome. */
+  minimize: glyph(Minimize),
+  maximize: glyph(Maximize2),
+  restore: glyph(Minimize2),
+  lock: glyph(Lock),
+  unlock: glyph(Unlock),
+  clickThrough: glyph(MousePointerClick),
 
   /* Visualiser mode glyphs. */
   vizSpectrum: glyph(BarChart3),

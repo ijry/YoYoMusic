@@ -122,6 +122,30 @@ pub struct EqualizerSettings {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DesktopLyricsSettings {
+    /// One of the preset ids in `desktopLyricsTheme.ts`.
+    pub theme: String,
+    /// Multiplier applied to the lyric font size.
+    pub font_scale: f32,
+    /// Position pinned by "lock" — the window stops following the pointer.
+    pub pinned: bool,
+    /// Mouse clicks pass through to whatever is behind the window.
+    pub click_through: bool,
+}
+
+impl Default for DesktopLyricsSettings {
+    fn default() -> Self {
+        Self {
+            theme: "aurora".into(),
+            font_scale: 1.0,
+            pinned: false,
+            click_through: false,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
 pub struct AppSettings {
     pub default_skin: String,
     pub shortcuts: HashMap<String, String>,
@@ -131,6 +155,7 @@ pub struct AppSettings {
     pub restore_session: bool,
     pub visualization_mode: String,
     pub equalizer: EqualizerSettings,
+    pub desktop_lyrics: DesktopLyricsSettings,
 }
 
 impl Default for AppSettings {
@@ -148,6 +173,7 @@ impl Default for AppSettings {
                 preset: "flat".into(),
                 bands: vec![0.0; 10],
             },
+            desktop_lyrics: DesktopLyricsSettings::default(),
         }
     }
 }

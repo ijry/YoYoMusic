@@ -73,6 +73,12 @@ const defaultSettings: AppSettings = {
     preset: "flat",
     bands: Array(10).fill(0),
   },
+  desktopLyrics: {
+    theme: "aurora",
+    fontScale: 1,
+    pinned: false,
+    clickThrough: false,
+  },
 };
 
 export default function App() {

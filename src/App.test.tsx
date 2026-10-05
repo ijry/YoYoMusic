@@ -16,10 +16,21 @@ it("renders the default modern layout skin landmarks", () => {
   expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
 
   const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
-  expect(within(windowActions).getByRole("button", { name: "皮肤" })).toBeInTheDocument();
-  expect(within(windowActions).getByRole("button", { name: "设置" })).toBeInTheDocument();
-  expect(within(windowActions).getByRole("button", { name: "迷你" })).toBeInTheDocument();
+  // The bar only carries window-level actions. Skin and settings used to be
+  // duplicated here *and* in the feature rail; they now live in the rail only.
+  expect(within(windowActions).getByRole("button", { name: "迷你模式" })).toBeInTheDocument();
   expect(within(windowActions).getByRole("button", { name: "桌面歌词" })).toBeInTheDocument();
+  expect(within(windowActions).queryByRole("button", { name: "皮肤" })).not.toBeInTheDocument();
+  expect(within(windowActions).queryByRole("button", { name: "设置" })).not.toBeInTheDocument();
+
+  // ... and the OS title bar is replaced by our own window buttons.
+  const windowButtons = within(windowActions).getByRole("group", { name: "窗口控制" });
+  expect(within(windowButtons).getByRole("button", { name: "最小化" })).toBeInTheDocument();
+  expect(within(windowButtons).getByRole("button", { name: "最大化" })).toBeInTheDocument();
+  expect(within(windowButtons).getByRole("button", { name: "关闭窗口" })).toBeInTheDocument();
+
+  // The top bar doubles as the drag handle now that the frame is undecorated.
+  expect(container.querySelector(".modern-topbar")).toHaveAttribute("data-drag-region", "enabled");
   expect(screen.queryByText("SKN")).not.toBeInTheDocument();
   expect(screen.queryByText("CFG")).not.toBeInTheDocument();
   expect(screen.queryByText("MINI")).not.toBeInTheDocument();
@@ -67,8 +78,7 @@ it("switches built-in layout skins in browser mode", async () => {
   const user = userEvent.setup();
   const { container } = render(<App />);
 
-  const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
-  await user.click(within(windowActions).getByRole("button", { name: "皮肤" }));
+  await user.click(screen.getByRole("button", { name: "皮肤" }));
   expect(screen.getByRole("heading", { name: "皮肤库" })).toBeInTheDocument();
 
   await user.click(screen.getByRole("button", { name: "应用 午夜霓虹" }));

@@ -7,6 +7,7 @@ import {
   PlaylistBlock,
   TitleActions,
 } from "./layoutShared";
+import { DragRegion } from "../shell/WindowChrome";
 import type { PlayerLayoutProps } from "./layoutTypes";
 
 /*
@@ -38,10 +39,11 @@ function ModernPlayerLayout({ skinId, ...props }: PlayerLayoutProps & { skinId: 
           <span className="modern-aurora__blob modern-aurora__blob--three" />
         </div>
 
-        <header className="modern-topbar">
+        {/* The OS title bar is off, so the top bar doubles as the drag handle. */}
+        <DragRegion className="modern-topbar">
           <AppTitle model={skinSubtitles[skinId] ?? "现代玻璃拟态"} />
           <TitleActions {...props} />
-        </header>
+        </DragRegion>
 
         <LayoutErrorBanner error={props.error} />
 

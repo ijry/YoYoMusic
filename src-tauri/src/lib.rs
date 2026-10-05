@@ -18,7 +18,7 @@ pub mod services {
 }
 
 use state::AppState;
-use tauri::Manager;
+use tauri::{Manager, WindowEvent};
 
 pub mod commands {
     use std::path::PathBuf;
@@ -401,6 +401,16 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            // Mini mode stands in for the main window, so closing it has to put
+            // the main window back — otherwise the app looks like it quit.
+            let restore_handle = app.handle().clone();
+            app.on_window_event(move |window, event| {
+                if matches!(event, WindowEvent::Destroyed) && window.label() == "mini" {
+                    services::window::restore_main_window(&restore_handle);
+                }
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

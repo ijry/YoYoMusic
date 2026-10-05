@@ -118,10 +118,13 @@ describe("layout skins", () => {
     expect(container.querySelectorAll(".feature-rail .feature-tab")).toHaveLength(6);
     expect(container.querySelector(".feature-drawer")).toBeInTheDocument();
 
-    expect(container.querySelectorAll(".title-action-button")).toHaveLength(5);
+    // The top bar carries window-level actions only: skin/settings live in the
+    // feature rail, so a duplicated copy here would be the redundant button the
+    // redesign removed.
+    expect(container.querySelectorAll(".title-action-button")).toHaveLength(3);
     const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
     expect(within(windowActions).getByRole("button", { name: "播放列表" })).toBeInTheDocument();
-    expect(within(windowActions).getByRole("button", { name: "皮肤" })).toBeInTheDocument();
+    expect(within(windowActions).getByRole("button", { name: "迷你模式" })).toBeInTheDocument();
     expect(within(windowActions).getByRole("button", { name: "桌面歌词" })).toBeInTheDocument();
     expect(container.querySelector(".feature-tab .lucide")).toBeInTheDocument();
   });
