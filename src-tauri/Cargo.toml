@@ -1,10 +1,10 @@
 [package]
 name = "yoyomusic"
-version = "0.1.0"
-description = "悠悠乐听跨平台音乐播放器"
+version = "0.0.1"
+description = "悠悠乐听 — 跨平台桌面音乐播放器"
 authors = ["xyito"]
-license = ""
-repository = ""
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/ijry/YoYoMusic"
 edition = "2021"
 rust-version = "1.77.2"
 

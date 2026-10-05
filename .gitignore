@@ -28,3 +28,6 @@ dist-ssr
 
 # Superpowers scratch state (dev only)
 .superpowers/
+
+# Agent workspace notes (dev only)
+.workbuddy-ai/

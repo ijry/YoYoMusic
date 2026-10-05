@@ -1,0 +1,6 @@
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+# esbuild leaves these behind when it bundles the VitePress config.
+docs/.vitepress/*.timestamp-*.mjs
+*.log
