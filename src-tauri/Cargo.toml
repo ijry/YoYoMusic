@@ -21,7 +21,10 @@ tauri-build = { version = "2.6.3", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.11.3", features = ["tray-icon"] }
+# `macos-private-api` pairs with `app.macOSPrivateApi` in tauri.conf.json: the
+# desktop-lyrics window is transparent, which macOS only allows through the
+# private API. The tauri build script fails if the two disagree.
+tauri = { version = "2.11.3", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-log = "2"
 thiserror = "2.0.18"
 uuid = { version = "1.20.0", features = ["v4"] }
