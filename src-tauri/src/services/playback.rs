@@ -13,8 +13,33 @@ pub struct PlaybackService {
 }
 
 struct AudioBackend {
-    stream: OutputStream,
+    stream: SendStream,
     sink: Option<Sink>,
+}
+
+/*
+ * `rodio::OutputStream` wraps a cpal stream, and cpal's CoreAudio backend keeps
+ * a `Box<dyn FnMut()>` that is not `Send`. Tauri requires managed state to be
+ * `Send + Sync`, so storing the stream directly fails to compile on macOS —
+ * WASAPI and ALSA happen to be `Send`, which is why only the macOS build
+ * breaks.
+ *
+ * Every access to the stream goes through `Mutex<PlaybackService>`, so the
+ * handle is never used concurrently. The only thing `Send` asserts here is
+ * that the stream can move between threads, which holds for a value whose sole
+ * cross-thread path is behind that lock.
+ */
+struct SendStream(OutputStream);
+
+// SAFETY: see the comment on `SendStream` above.
+unsafe impl Send for SendStream {}
+
+impl std::ops::Deref for SendStream {
+    type Target = OutputStream;
+
+    fn deref(&self) -> &OutputStream {
+        &self.0
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -57,7 +82,10 @@ impl PlaybackService {
         stream.log_on_drop(false);
 
         Ok(Self {
-            audio: Some(AudioBackend { stream, sink: None }),
+            audio: Some(AudioBackend {
+                stream: SendStream(stream),
+                sink: None,
+            }),
             ..Self::new_null()
         })
     }
