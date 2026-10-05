@@ -193,23 +193,31 @@ jobs:
         run: |
           set -euo pipefail
           # Tauri names bundles after `productName`, which is Chinese here, and
-          # the release uploader strips non-ASCII characters — every asset would
-          # otherwise be published as `_0.0.1_x64-setup.exe`. Prefix the ASCII
+          # the release uploader strips non-ASCII characters — the assets would
+          # be published as `_0.0.1_x64-setup.exe`. Rename them to the ASCII
           # product name before uploading.
           while IFS= read -r -d '' file; do
-            mv "$file" "$(dirname "$file")/YoYoMusic$(basename "$file")"
-          done < <(find release-assets -type f -name '_*' -print0)
+            dir="$(dirname "$file")"
+            base="$(basename "$file")"
+            ascii="$(printf '%s' "$base" | sed 's/^[^A-Za-z0-9]*//; s/^_*//')"
+            mv "$file" "$dir/YoYoMusic_${ascii}"
+          done < <(find release-assets -type f ! -name 'YoYoMusic_*' -print0)
           find release-assets -type f | sort
 
-      # The annotated tag message is the changelog, which keeps the release
-      # notes reviewable in the same object that names the release. Note that
-      # `git log -1 $GITHUB_SHA` would return the *commit* message instead,
-      # which is the last fix commit rather than the changelog.
       - name: Collect release notes from the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents)' > release-body.md
-          if [[ ! -s release-body.md ]]; then
+          # The annotated tag message is the changelog. `git log -1 $GITHUB_SHA`
+          # would return the *commit* message instead — the last fix commit —
+          # and actions/checkout does not reliably leave the tag ref behind, so
+          # read the tag object through the API rather than a local ref.
+          ref="repos/${GITHUB_REPOSITORY}/git/ref/tags/${GITHUB_REF_NAME}"
+          if [[ "$(gh api "$ref" -q .object.type)" == "tag" ]]; then
+            tag_sha="$(gh api "$ref" -q .object.sha)"
+            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_sha}" -q .message > release-body.md
+          else
             git log -1 --format=%B "$GITHUB_SHA" > release-body.md
           fi
           if [[ ! -s release-body.md ]]; then
