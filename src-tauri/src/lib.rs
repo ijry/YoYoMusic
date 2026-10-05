@@ -402,16 +402,19 @@ pub fn run() {
                 )?;
             }
 
-            // Mini mode stands in for the main window, so closing it has to put
-            // the main window back — otherwise the app looks like it quit.
-            let restore_handle = app.handle().clone();
-            app.on_window_event(move |window, event| {
-                if matches!(event, WindowEvent::Destroyed) && window.label() == "mini" {
-                    services::window::restore_main_window(&restore_handle);
-                }
-            });
-
             Ok(())
+        })
+        /*
+         * Mini mode stands in for the main window, so closing it has to put the
+         * main window back — otherwise the app looks like it quit.
+         *
+         * This lives on the `Builder`, not inside `setup`: the app-level hook is
+         * `Builder::on_window_event`, whereas `App` only exposes `on_menu_event`.
+         */
+        .on_window_event(|window, event| {
+            if matches!(event, WindowEvent::Destroyed) && window.label() == "mini" {
+                services::window::restore_main_window(window.app_handle());
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_playlist,

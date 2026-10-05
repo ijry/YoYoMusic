@@ -1,5 +1,5 @@
 use tauri::{
-    AppHandle, LogicalPosition, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+    AppHandle, LogicalPosition, LogicalSize, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
 };
 
 use crate::errors::AppError;
@@ -66,7 +66,7 @@ async fn open_or_focus_window(
         return Ok("focused".into());
     }
 
-    let mut builder = WebviewWindowBuilder::new(&app, label, WebviewUrl::App(route.into()))
+    let builder = WebviewWindowBuilder::new(&app, label, WebviewUrl::App(route.into()))
         .always_on_top(true)
         // Every window draws its own chrome, so the OS title bar has to go —
         // otherwise the custom minimise / close buttons sit below a second,
@@ -107,9 +107,11 @@ fn place_bottom_center(window: &WebviewWindow) -> Result<(), AppError> {
         return Ok(());
     };
 
-    let monitor_position = monitor.position().to_logical(scale);
-    let monitor_size = monitor.size().to_logical(scale);
-    let window_size = window
+    // `to_logical` is generic over the pixel type, so each binding needs an
+    // explicit annotation — inference has nothing else to go on here.
+    let monitor_position: LogicalPosition<f64> = monitor.position().to_logical(scale);
+    let monitor_size: LogicalSize<f64> = monitor.size().to_logical(scale);
+    let window_size: LogicalSize<f64> = window
         .outer_size()
         .map_err(|err| AppError::StorageFailed(err.to_string()))?
         .to_logical(scale);
