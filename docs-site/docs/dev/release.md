@@ -45,21 +45,16 @@ cargo test --manifest-path src-tauri/Cargo.toml
 ```bash
 git add -A
 git commit -m "chore: release v0.0.1"
-git tag -a v0.0.1 -m "$(cat <<'EOF'
-## 亮点
-
-- 全新的深色玻璃拟态界面
-- 六种 Canvas 音频可视化
-- 四套内置皮肤
-
-## 修复
-
-- ...
-EOF
-)"
+git tag -a v0.0.1 --cleanup=verbatim -F release-notes.md
 git push origin main
 git push origin v0.0.1
 ```
+
+::: warning 必须加 `--cleanup=verbatim`
+`git tag -F` 默认沿用 commit 的清理规则，会把**以 `#` 开头的行当作注释删掉**。
+更新日志里的 `##` / `###` 小标题会因此整行消失，而正文看起来仍然「有内容」，
+很容易漏掉。用 `--cleanup=verbatim` 原样保留，或者改用 `-m` 传纯文本。
+:::
 
 推送标签后 `release.yml` 会自动跑起来。
 
