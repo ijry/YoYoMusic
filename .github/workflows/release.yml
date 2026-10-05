@@ -205,19 +205,15 @@ jobs:
           find release-assets -type f | sort
 
       - name: Collect release notes from the tag
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           # The annotated tag message is the changelog. `git log -1 $GITHUB_SHA`
           # would return the *commit* message instead — the last fix commit —
-          # and actions/checkout does not reliably leave the tag ref behind, so
-          # read the tag object through the API rather than a local ref.
-          ref="repos/${GITHUB_REPOSITORY}/git/ref/tags/${GITHUB_REF_NAME}"
-          if [[ "$(gh api "$ref" -q .object.type)" == "tag" ]]; then
-            tag_sha="$(gh api "$ref" -q .object.sha)"
-            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_sha}" -q .message > release-body.md
-          else
+          # so read the tag object itself. The tag ref is not guaranteed to be
+          # in the checkout, hence the explicit fetch.
+          git fetch --force --tags origin
+          git cat-file -p "refs/tags/${GITHUB_REF_NAME}" | sed '1,/^$/d' > release-body.md
+          if [[ ! -s release-body.md ]]; then
             git log -1 --format=%B "$GITHUB_SHA" > release-body.md
           fi
           if [[ ! -s release-body.md ]]; then
@@ -225,6 +221,8 @@ jobs:
             exit 1
           fi
           cat .github/release-footer.md >> release-body.md
+          echo "release-body.md: $(wc -l < release-body.md) lines, $(grep -c '^#' release-body.md) headings"
+          head -4 release-body.md
 
       - name: Publish
         uses: softprops/action-gh-release@v2
