@@ -40,12 +40,13 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 ### 3. 提交并打标签
 
-标签信息（annotated tag 的正文）会**原样成为 Release 说明**，所以要把它当成正式更新日志来写：
+标签信息（annotated tag 的正文）会**原样成为 Release 说明**，所以要把它当成正式更新日志来写。
+正文先写在 `.github/release-notes/<版本号>.md`，它受版本控制，重建标签时不会丢：
 
 ```bash
 git add -A
 git commit -m "chore: release v0.0.1"
-git tag -a v0.0.1 --cleanup=verbatim -F release-notes.md
+git tag -a v0.0.1 --cleanup=verbatim -F .github/release-notes/v0.0.1.md
 git push origin main
 git push origin v0.0.1
 ```
@@ -54,6 +55,12 @@ git push origin v0.0.1
 `git tag -F` 默认沿用 commit 的清理规则，会把**以 `#` 开头的行当作注释删掉**。
 更新日志里的 `##` / `###` 小标题会因此整行消失，而正文看起来仍然「有内容」，
 很容易漏掉。用 `--cleanup=verbatim` 原样保留，或者改用 `-m` 传纯文本。
+:::
+
+::: tip 正文只写「这次改了什么」
+`release.yml` 会自动在正文后面拼上 `.github/release-footer.md`，里面已经有
+「下载」「安装提示」「链接」三段。正文里**不要再写一遍**，
+否则 Release 页面上会出现两个同名小标题。
 :::
 
 推送标签后 `release.yml` 会自动跑起来。

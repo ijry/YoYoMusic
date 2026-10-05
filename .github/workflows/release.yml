@@ -220,6 +220,17 @@ jobs:
             echo "::error::Tag ${GITHUB_REF_NAME} carries no message; the release would have no notes."
             exit 1
           fi
+          # The footer already covers 下载 / 安装提示 / 链接. A tag message that
+          # repeats any of those headings renders two identical sections on the
+          # release page, so fail loudly instead of shipping the duplication.
+          # Compare *before* appending, otherwise the footer always matches.
+          dupes="$(comm -12 \
+            <(grep '^#' release-body.md | sort -u) \
+            <(grep '^#' .github/release-footer.md | sort -u))"
+          if [[ -n "$dupes" ]]; then
+            echo "::error::Tag message duplicates release-footer.md headings: $dupes"
+            exit 1
+          fi
           cat .github/release-footer.md >> release-body.md
           echo "release-body.md: $(wc -l < release-body.md) lines, $(grep -c '^#' release-body.md) headings"
           head -4 release-body.md
