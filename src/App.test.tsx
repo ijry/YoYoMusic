@@ -15,6 +15,13 @@ it("renders the default modern layout skin landmarks", () => {
   expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
   expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
 
+  // The title mark is the real logo, not a placeholder glyph.
+  const logo = container.querySelector<HTMLImageElement>(".app-title__logo");
+  expect(logo).toBeInTheDocument();
+  expect(logo?.getAttribute("src")).toBe("/favicon.svg");
+  // Decorative: the accessible name lives on the adjacent <h1>.
+  expect(logo?.getAttribute("alt")).toBe("");
+
   const windowActions = screen.getByRole("navigation", { name: "窗口操作" });
   // The bar only carries window-level actions. Skin and settings used to be
   // duplicated here *and* in the feature rail; they now live in the rail only.

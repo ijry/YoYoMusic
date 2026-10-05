@@ -194,16 +194,26 @@ input:focus-visible {
   min-width: 0;
 }
 
+/*
+ * The mark is now the real logo image, which brings its own gradient and
+ * rounded corners. The container must stay transparent — a background here
+ * would stack a second gradient behind the artwork.
+ */
 .app-title__mark {
   display: grid;
   place-items: center;
   width: 40px;
   height: 40px;
   flex: 0 0 auto;
+}
+
+.app-title__logo {
+  display: block;
+  width: 40px;
+  height: 40px;
   border-radius: 13px;
-  color: #fff;
-  background: linear-gradient(135deg, var(--skin-primary), var(--skin-accent));
-  box-shadow: var(--shadow-glow);
+  /* The artwork is fixed brand art; skin gradients must not tint it. */
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--skin-primary) 32%, transparent);
 }
 
 .app-title__copy {

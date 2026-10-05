@@ -30,10 +30,39 @@ src/
     mini/                     迷你播放器
     shell/                    错误横幅、自绘窗口边框（拖动区 + 窗口按钮）
   styles/                     theme.css / app.css / skin-layouts.css
+public/
+  favicon.svg                唯一的 logo 源文件
 src-tauri/
   src/                        Rust 侧命令与播放服务
+  icons/                      由 `npx tauri icon` 生成，勿手工编辑
 docs-site/                    VitePress 文档站（本页所在站点）
 ```
+
+## 应用图标
+
+`public/favicon.svg` 是仓库里**唯一**的 logo 源文件，它被三处复用：
+
+| 位置 | 引用方式 |
+| --- | --- |
+| 浏览器标签页 | `index.html` 的 `<link rel="icon">` |
+| 应用内标题栏 | `layoutShared.tsx` 的 `.app-title__logo` |
+| 桌面图标 / 安装包 | 由 `npx tauri icon` 从它生成 `src-tauri/icons/**` |
+
+改了 logo 之后重新生成平台图标：
+
+```bash
+npx tauri icon public/favicon.svg
+```
+
+::: warning public 目录必须在仓库根
+Vite 的 `publicDir` 默认是 `<root>/public`，**不是** `src/public`。
+放在 `src/public` 里的文件不会被服务 —— 请求会落到 `index.html`，
+表现为 logo 位置一片空白（而且控制台不报错，很难发现）。
+`src/styles/logo.test.ts` 会守住这个约定。
+:::
+
+`npx tauri icon` 会顺带生成 `icons/android/` 与 `icons/ios/`。
+本项目只做桌面端，这两 directories 生成后可以直接删掉。
 
 ## 皮肤系统
 

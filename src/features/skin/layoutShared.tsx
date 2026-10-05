@@ -78,8 +78,14 @@ export function TitleActions(props: PlayerLayoutProps) {
 export function AppTitle({ model = "现代玻璃拟态" }: { model?: string }) {
   return (
     <div className="app-title">
-      <span className="app-title__mark" aria-hidden="true">
-        <Icon.disc size={22} />
+      {/*
+       * The real logo — the same artwork as the app icon and the docs site,
+       * served from `public/favicon.svg` so there is one copy in the repo.
+       * It carries its own gradient and rounded corners, so
+       * `.app-title__mark` must not paint a background behind it.
+       */}
+      <span className="app-title__mark">
+        <img src="/favicon.svg" alt="" width={40} height={40} className="app-title__logo" />
       </span>
       <span className="app-title__copy">
         <h1 id="app-title">悠悠乐听</h1>
