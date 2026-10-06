@@ -493,6 +493,74 @@ input:focus-visible {
   height: 100%;
 }
 
+/* ---------------------------------------------------------------------------
+ * Maximised visualiser
+ *
+ * The canvas becomes the base layer of the whole frame and every other element
+ * floats above it on its own glass. Two constraints shape this:
+ *
+ * - The layer is `position: absolute` inside `.chrome`. An in-flow child would
+ *   claim a fourth row of the frame's `auto minmax(0, 1fr) auto` grid; and it
+ *   cannot live inside `.modern-grid`, which clips its overflow and would cut
+ *   the layer down to the middle column.
+ * - It is painted under the chrome with `z-index`, not DOM order, because it is
+ *   rendered last so that `VisualizerBackdrop` stays a sibling of the grid.
+ * ------------------------------------------------------------------------ */
+
+.viz-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.audio-visualizer--backdrop {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+/* The frame's own gradient and the decorative blobs would muddy the canvas. */
+.chrome[data-viz="maximized"] {
+  background: var(--color-surface);
+}
+
+.chrome[data-viz="maximized"] .modern-aurora {
+  display: none;
+}
+
+/*
+ * Lift the floating chrome. The panels keep their translucent glass, so the
+ * visualiser reads through them — which is the whole point of the mode.
+ *
+ * The transport's direct child of `.chrome` is `.modern-panel--transport`, not
+ * `.player-controls` (which sits inside it). Missing that leaves the transport
+ * `position: static`, and a static block paints *below* the positioned backdrop
+ * — the canvas would draw over the controls.
+ */
+.chrome[data-viz="maximized"] > .modern-topbar,
+.chrome[data-viz="maximized"] > .modern-grid,
+.chrome[data-viz="maximized"] > .modern-panel--transport {
+  position: relative;
+  z-index: 1;
+}
+
+/* Occupies the middle grid column so the column template never changes. */
+.modern-panel--viz.is-maximized-placeholder {
+  border-color: transparent;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.viz-switcher__divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 3px 2px;
+  background: var(--glass-stroke);
+}
+
 .audio-visualizer--panel {
   min-height: 190px;
   border: 1px solid var(--glass-stroke);

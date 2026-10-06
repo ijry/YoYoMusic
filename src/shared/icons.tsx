@@ -6,6 +6,7 @@ import {
   AudioWaveform,
   BarChart3,
   Disc3,
+  Expand,
   FilePlus,
   FolderPlus,
   ListOrdered,
@@ -23,6 +24,7 @@ import {
   Repeat,
   Repeat1,
   Settings,
+  Shrink,
   Shuffle,
   SkipBack,
   SkipForward,
@@ -114,6 +116,14 @@ export const Icon = {
   vizParticles: glyph(Sparkles),
   vizAurora: glyph(Waves),
   vizWaterfall: glyph(AreaChart),
+
+  /*
+   * Expand the visualiser to the base layer, and the way back. Deliberately
+   * `Expand` / `Shrink` rather than the `Maximize2` / `Minimize2` pair, which
+   * already mean "maximise / restore the window" a few pixels away.
+   */
+  vizExpand: glyph(Expand),
+  vizRestore: glyph(Shrink),
 };
 
 export type IconName = keyof typeof Icon;

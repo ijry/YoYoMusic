@@ -90,6 +90,11 @@ export default function App() {
   /* `null` = the feature inspector starts collapsed to its icon rail. */
   const [activePanel, setActivePanel] = useState<FeaturePanel | null>(null);
   const [libraryOpen, setLibraryOpen] = useState(true);
+  /*
+   * Session-only, not persisted: it is a viewing mode, and remembering it would
+   * mean the app could open with its panels buried under a full-bleed canvas.
+   */
+  const [visualizerMaximized, setVisualizerMaximized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settingsErrorCode, setSettingsErrorCode] = useState<string | null>(null);
   const [skinError, setSkinError] = useState<string | null>(null);
@@ -339,11 +344,13 @@ export default function App() {
       skins={skins}
       activePanel={activePanel}
       libraryOpen={libraryOpen}
+      visualizerMaximized={visualizerMaximized}
       error={error}
       skinError={skinError}
       settingsErrorCode={settingsErrorCode}
       onActivePanelChange={setActivePanel}
       onToggleLibrary={() => setLibraryOpen((open) => !open)}
+      onToggleVisualizerMaximized={() => setVisualizerMaximized((maximized) => !maximized)}
       onPlayerCommand={(command, payload = {}) => void handleCommand(command, payload)}
       onAddFiles={() => void handleAddFiles()}
       onAddFolder={() => void handleAddFolder()}

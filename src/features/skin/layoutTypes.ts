@@ -24,11 +24,17 @@ export interface PlayerLayoutProps {
   activePanel: FeaturePanel | null;
   /** Left playlist column visibility. */
   libraryOpen: boolean;
+  /**
+   * Visualiser takes over the whole frame as the base layer, with the top bar,
+   * panels and transport floating above it.
+   */
+  visualizerMaximized: boolean;
   error: string | null;
   skinError: string | null;
   settingsErrorCode: string | null;
   onActivePanelChange: (panel: FeaturePanel | null) => void;
   onToggleLibrary: () => void;
+  onToggleVisualizerMaximized: () => void;
   onPlayerCommand: (command: CommandName, payload?: CommandPayload) => void;
   onAddFiles: () => void;
   onAddFolder: () => void;

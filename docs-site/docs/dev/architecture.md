@@ -97,6 +97,37 @@ Vite 的 `publicDir` 默认是 `<root>/public`，**不是** `src/public`。
 
 新增一种可视化模式需要同时改四处：`shared/types.ts` 的 `VisualizationMode`、`modes.ts` 的模式目录、`drawModes.ts` 的绘制函数与注册表。Rust 侧的 `visualization_mode` 是无校验字符串，不需要改动后端。
 
+### 信号是合成的，不是频谱分析
+
+解码与播放都在 Rust（rodio），**webview 拿不到采样，也没有 `AnalyserNode`**。
+`signal.ts` 的 `SignalEngine` 合成一段「像音乐」的信号：粉噪式倾斜 + 每频段正弦游走 +
+周期 kick 包络，BPM 92–138 随机，以 trackId 播种。唯一真实输入是 `isPlaying`。
+
+**所以「同一首歌每次形态一致」是设计结果，不是分析结果。**
+若将来要做真频谱，得让 Rust 侧算 FFT 并通过事件推给前端，而不是在 `signal.ts` 里改参数。
+
+## 可视化最大化
+
+`visualizerMaximized` 让画布成为整个外壳的底层，其余元素浮在其上。三条约束：
+
+1. **浮层必须是 `position: absolute`**，且挂在 `.chrome` 上。
+   它是 `.chrome` 三行栅格（`auto minmax(0,1fr) auto`）的直接子元素，
+   若参与布局会多占一行，把播放条挤出去。
+2. **不能放在 `.modern-grid` 里**：`.modern-grid` 有 `overflow: hidden`，
+   会把整屏浮层裁成中间那一列。
+3. **靠 `z-index` 而不是 DOM 顺序压到最底**：浮层渲染在最后（这样它才是栅格的兄弟节点），
+   所以必须给它 `z-index: 0`、给顶栏/栅格/播放条 `z-index: 1`。
+
+::: warning 播放条的直接子元素是 `.modern-panel--transport`
+`.player-controls` 在它**里面**。选择器写错会让播放条保持 `position: static`，
+而静态块级元素的绘制层级**低于**定位元素 —— 画布会盖住播放条。
+:::
+
+最大化时中间列的 `.modern-panel--viz` 变成 `is-maximized-placeholder`：
+不画背景、不画边框、不模糊，只用来**占住中间列**（列模板因此无需切换），
+同时承载模式切换条 —— 切换条留在原处，展开/还原按钮位置不变。
+
+
 ## 布局约束
 
 界面外壳是 `grid-template-rows: auto minmax(0, 1fr) auto`（顶栏 / 主区 / 播放条）。

@@ -6,6 +6,7 @@ import {
   LayoutErrorBanner,
   PlaylistBlock,
   TitleActions,
+  VisualizerBackdrop,
 } from "./layoutShared";
 import { DragRegion } from "../shell/WindowChrome";
 import type { PlayerLayoutProps } from "./layoutTypes";
@@ -32,7 +33,11 @@ function ModernPlayerLayout({ skinId, ...props }: PlayerLayoutProps & { skinId: 
 
   return (
     <main className={`app-shell skin-layout skin-layout--${skinId}`}>
-      <section className="chrome modern-frame" aria-labelledby="app-title">
+      <section
+        className="chrome modern-frame"
+        data-viz={props.visualizerMaximized ? "maximized" : "docked"}
+        aria-labelledby="app-title"
+      >
         <div className="modern-aurora" aria-hidden="true">
           <span className="modern-aurora__blob modern-aurora__blob--one" />
           <span className="modern-aurora__blob modern-aurora__blob--two" />
@@ -63,6 +68,13 @@ function ModernPlayerLayout({ skinId, ...props }: PlayerLayoutProps & { skinId: 
         </div>
 
         <ControlsBlock {...props} />
+
+        {/*
+         * Absolutely positioned, so it neither claims a row of the frame's grid
+         * nor gets clipped by `.modern-grid`. Painted under the chrome via
+         * z-index rather than DOM order.
+         */}
+        {props.visualizerMaximized ? <VisualizerBackdrop {...props} /> : null}
       </section>
     </main>
   );

@@ -69,11 +69,13 @@ function createProps(): PlayerLayoutProps {
     skins: [],
     activePanel: "lyrics",
     libraryOpen: true,
+    visualizerMaximized: false,
     error: null,
     skinError: null,
     settingsErrorCode: null,
     onActivePanelChange: vi.fn(),
     onToggleLibrary: vi.fn(),
+    onToggleVisualizerMaximized: vi.fn(),
     onPlayerCommand: vi.fn(),
     onAddFiles: vi.fn(),
     onAddFolder: vi.fn(),
@@ -102,9 +104,12 @@ describe("layout skins", () => {
     expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
 
-    // Six visualiser modes are reachable straight from the stage.
-    expect(container.querySelectorAll(".viz-switcher__chip")).toHaveLength(6);
+    // Six visualiser modes are reachable straight from the stage, plus the
+    // expand chip that takes the canvas full-frame.
+    expect(container.querySelectorAll(".viz-switcher__chip")).toHaveLength(7);
     expect(container.querySelector(".audio-visualizer--hero")).toBeInTheDocument();
+    expect(container.querySelector(".viz-backdrop")).not.toBeInTheDocument();
+    expect(container.querySelector(".chrome")).toHaveAttribute("data-viz", "docked");
 
     // The now-playing display lives in the transport bar, cover included.
     const controls = screen.getByRole("region", { name: "播放控制" });
@@ -177,5 +182,69 @@ describe("layout skins", () => {
 
     await user.click(screen.getByRole("button", { name: "歌词" }));
     expect(props.onActivePanelChange).toHaveBeenCalledWith(null);
+  });
+
+  describe("maximised visualiser", () => {
+    function renderMaximized() {
+      const props = createProps();
+      props.visualizerMaximized = true;
+      const AuroraLayout = builtInLayoutSkins[0].Layout;
+      return { props, ...render(<AuroraLayout {...props} />) };
+    }
+
+    it("moves the canvas to a frame-level layer behind the chrome", () => {
+      const { container } = renderMaximized();
+
+      expect(container.querySelector(".chrome")).toHaveAttribute("data-viz", "maximized");
+      expect(container.querySelector(".viz-backdrop .audio-visualizer--backdrop")).toBeInTheDocument();
+      // Only one canvas is ever mounted — a second would be a second animation
+      // loop drawing the same thing.
+      expect(container.querySelectorAll("canvas")).toHaveLength(1);
+      expect(container.querySelector(".audio-visualizer--hero")).not.toBeInTheDocument();
+    });
+
+    /*
+     * The placeholder keeps the middle grid column occupied. Without it the
+     * column would collapse and the inspector would slide left.
+     */
+    it("keeps the middle grid column occupied", () => {
+      const { container } = renderMaximized();
+
+      expect(container.querySelector(".modern-panel--viz")).toHaveClass("is-maximized-placeholder");
+      expect(container.querySelector(".modern-grid")).toBeInTheDocument();
+      expect(container.querySelector(".modern-panel--inspector")).toBeInTheDocument();
+    });
+
+    /*
+     * The switcher stays in the middle column rather than moving into the
+     * backdrop, which would bury it under the window controls.
+     */
+    it("keeps the mode switcher reachable, in the same place", () => {
+      const { container } = renderMaximized();
+
+      expect(container.querySelector(".viz-backdrop .viz-switcher")).not.toBeInTheDocument();
+      expect(container.querySelector(".modern-panel--viz .viz-switcher")).toBeInTheDocument();
+      expect(container.querySelectorAll(".viz-switcher__chip")).toHaveLength(7);
+      expect(screen.getByRole("button", { name: "还原可视化" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "最大化可视化" })).not.toBeInTheDocument();
+    });
+
+    it("reports the toggle back to the app", async () => {
+      const user = userEvent.setup();
+      const { props } = renderMaximized();
+
+      await user.click(screen.getByRole("button", { name: "还原可视化" }));
+      expect(props.onToggleVisualizerMaximized).toHaveBeenCalledTimes(1);
+    });
+
+    it("leaves the rest of the chrome mounted so it can float on top", () => {
+      const { container } = renderMaximized();
+
+      expect(container.querySelector(".modern-topbar")).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: "播放控制" })).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: "当前播放列表" })).toBeInTheDocument();
+      // The decorative blobs would muddy the canvas.
+      expect(container.querySelector(".modern-aurora")).toBeInTheDocument();
+    });
   });
 });

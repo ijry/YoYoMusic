@@ -119,15 +119,78 @@ export function PlaylistBlock({ className, ...props }: PlayerLayoutProps & { cla
   );
 }
 
-export function HeroVisualization({ className, ...props }: PlayerLayoutProps & { className?: string }) {
+/*
+ * Mode chips, shared by the docked stage and the maximised backdrop so the two
+ * cannot drift. The expand / restore chip rides along, because that is where a
+ * user looks for it — next to the thing it affects.
+ */
+function VizSwitcher({ props, maximized }: { props: PlayerLayoutProps; maximized: boolean }) {
   const mode = props.settings.visualizationMode;
+
+  return (
+    <div className="viz-switcher" role="group" aria-label="可视化模式快捷切换">
+      {visualizationModes.map((entry) => {
+        const ModeIcon = entry.icon;
+        return (
+          <button
+            key={entry.id}
+            type="button"
+            className="viz-switcher__chip"
+            aria-pressed={entry.id === mode}
+            aria-label={`切换到${entry.label}可视化`}
+            title={entry.hint}
+            onClick={() => props.onVisualizationModeChange(entry.id)}
+          >
+            <ModeIcon size={16} />
+          </button>
+        );
+      })}
+
+      <span className="viz-switcher__divider" aria-hidden="true" />
+
+      <button
+        type="button"
+        className="viz-switcher__chip"
+        aria-pressed={maximized}
+        aria-label={maximized ? "还原可视化" : "最大化可视化"}
+        title={maximized ? "还原" : "最大化：可视化铺满整个界面"}
+        onClick={props.onToggleVisualizerMaximized}
+      >
+        {maximized ? <Icon.vizRestore size={16} /> : <Icon.vizExpand size={16} />}
+      </button>
+    </div>
+  );
+}
+
+export function HeroVisualization({ className, ...props }: PlayerLayoutProps & { className?: string }) {
   const hasTrack = Boolean(props.currentTrack);
+  const maximized = props.visualizerMaximized;
+
+  /*
+   * While maximised, the canvas lives in `VisualizerBackdrop` at the frame
+   * level — it has to, because `.modern-grid` clips its overflow and would cut
+   * a full-bleed layer down to the middle column. This panel stays in the DOM to
+   * keep the middle grid column occupied (so the column template never has to
+   * change) and to hold the switcher, which therefore does not move when the
+   * mode toggles: the restore chip lands exactly where the expand chip was.
+   */
+  if (maximized) {
+    return (
+      <section
+        className={["modern-panel", "modern-panel--viz", "is-maximized-placeholder", className]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <VizSwitcher props={props} maximized={true} />
+      </section>
+    );
+  }
 
   return (
     <section className={["modern-panel", "modern-panel--viz", className].filter(Boolean).join(" ")}>
       <div className="viz-stage" role="img" aria-label="播放动态可视化">
         <AudioVisualizer
-          mode={mode}
+          mode={props.settings.visualizationMode}
           isPlaying={props.playback.isPlaying}
           hasTrack={hasTrack}
           seed={props.currentTrack?.id ?? ""}
@@ -135,25 +198,33 @@ export function HeroVisualization({ className, ...props }: PlayerLayoutProps & {
         />
       </div>
 
-      <div className="viz-switcher" role="group" aria-label="可视化模式快捷切换">
-        {visualizationModes.map((entry) => {
-          const ModeIcon = entry.icon;
-          return (
-            <button
-              key={entry.id}
-              type="button"
-              className="viz-switcher__chip"
-              aria-pressed={entry.id === mode}
-              aria-label={`切换到${entry.label}可视化`}
-              title={entry.hint}
-              onClick={() => props.onVisualizationModeChange(entry.id)}
-            >
-              <ModeIcon size={16} />
-            </button>
-          );
-        })}
-      </div>
+      <VizSwitcher props={props} maximized={false} />
     </section>
+  );
+}
+
+/*
+ * The maximised visualiser: one full-bleed layer sitting at the bottom of the
+ * frame, with the top bar, panels and transport floating above it on their own
+ * glass. Rendered as a direct child of `.chrome` and absolutely positioned, for
+ * two reasons — `.modern-grid` would clip it, and an in-flow child would claim
+ * a fourth row of the frame's grid.
+ *
+ * The mode switcher deliberately stays in the middle column's placeholder panel
+ * rather than living here: the frame-level layer would put it underneath the
+ * window controls, where it could not be clicked.
+ */
+export function VisualizerBackdrop(props: PlayerLayoutProps) {
+  return (
+    <div className="viz-backdrop">
+      <AudioVisualizer
+        mode={props.settings.visualizationMode}
+        isPlaying={props.playback.isPlaying}
+        hasTrack={Boolean(props.currentTrack)}
+        seed={props.currentTrack?.id ?? ""}
+        className="audio-visualizer--backdrop"
+      />
+    </div>
   );
 }
 
