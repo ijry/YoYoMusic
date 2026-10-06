@@ -214,6 +214,13 @@ mod tests {
         tap
     }
 
+    /// A mono buffer of exactly one window, with `head` written over the front.
+    fn windowed_mono(head: &[f32]) -> Vec<f32> {
+        let mut data = vec![0.0; WINDOW_SAMPLES];
+        data[..head.len()].copy_from_slice(head);
+        data
+    }
+
     #[test]
     fn forwards_every_sample_untouched() {
         let source = SamplesBuffer::new(2, 44_100, vec![0.25, -0.25, 0.5, -0.5]);
@@ -226,23 +233,34 @@ mod tests {
 
     #[test]
     fn downmixes_interleaved_channels_to_mono() {
-        // Stereo pairs: (1.0, 0.0) and (0.0, 1.0) average to 0.5 each. Taking
-        // only the first channel would read the second frame as silence.
-        let source = SamplesBuffer::new(2, 44_100, vec![1.0, 0.0, 0.0, 1.0]);
+        /*
+         * Stereo pairs: (1.0, 0.0) and (0.0, 1.0) average to 0.5 each. Taking
+         * only the first channel would read the second frame as silence.
+         *
+         * Padded to a full window because that is what `snapshot` reports — the
+         * FFT needs a fixed-length window, so a partial one is not usable.
+         */
+        let mut data = vec![0.0; WINDOW_SAMPLES * 2];
+        data[0] = 1.0;
+        data[1] = 0.0;
+        data[2] = 0.0;
+        data[3] = 1.0;
+
+        let source = SamplesBuffer::new(2, 44_100, data);
         let tap = tap_of(source);
 
-        let (samples, _, _) = tap.snapshot().expect("window fills after one frame");
-        assert_eq!(samples.len(), 2);
+        let (samples, _, _) = tap.snapshot().expect("a full window is available");
+        assert_eq!(samples.len(), WINDOW_SAMPLES);
         assert!((samples[0] - 0.5).abs() < f32::EPSILON);
         assert!((samples[1] - 0.5).abs() < f32::EPSILON);
     }
 
     #[test]
     fn reports_the_stream_sample_rate() {
-        let source = SamplesBuffer::new(1, 48_000, vec![0.0; 8]);
+        let source = SamplesBuffer::new(1, 48_000, windowed_mono(&[]));
         let tap = tap_of(source);
 
-        let (_, sample_rate, _) = tap.snapshot().unwrap();
+        let (_, sample_rate, _) = tap.snapshot().expect("a full window is available");
         assert_eq!(sample_rate, 48_000);
     }
 
