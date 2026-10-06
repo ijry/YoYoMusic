@@ -20,7 +20,7 @@ export const visualizationModes: VisualizationModeMeta[] = [
   { id: "aurora", label: "音浪绸带", hint: "流动音浪绸带", icon: Icon.vizAurora },
   { id: "particles", label: "粒子星尘", hint: "节拍粒子星尘", icon: Icon.vizParticles },
   { id: "waterfall", label: "镜像瀑布", hint: "滚动频谱瀑布", icon: Icon.vizWaterfall },
-  { id: "generative", label: "生成动画", hint: "实时生成的星轨网络，每次都不一样", icon: Icon.vizGenerative },
+  { id: "generative", label: "生成动画", hint: "程序化生成，每隔十几秒自动换一种形态", icon: Icon.vizGenerative },
   { id: "kaleidoscope", label: "万花筒", hint: "频谱驱动的镜像花瓣", icon: Icon.vizKaleidoscope },
 ];
 

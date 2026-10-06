@@ -52,7 +52,7 @@ const modes = [
   { id: "aurora", name: "音浪绸带", note: "流动音浪绸带" },
   { id: "particles", name: "粒子星尘", note: "节拍粒子星尘" },
   { id: "waterfall", name: "镜像瀑布", note: "滚动频谱瀑布" },
-  { id: "generative", name: "生成动画", note: "每次都不一样的星轨网络" },
+  { id: "generative", name: "生成动画", note: "程序化生成，自动换形态" },
   { id: "kaleidoscope", name: "万花筒", note: "镜像花瓣" },
 ];
 
