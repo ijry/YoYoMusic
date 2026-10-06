@@ -7,7 +7,9 @@ export type VisualizationMode =
   | "radial"
   | "particles"
   | "aurora"
-  | "waterfall";
+  | "waterfall"
+  | "generative"
+  | "kaleidoscope";
 
 export interface Track {
   id: string;

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { VisualizationPanel } from "./VisualizationPanel";
+import { visualizationModes } from "./modes";
 
 describe("VisualizationPanel", () => {
   it("renders every mode control and the panel preview", async () => {
@@ -17,7 +18,9 @@ describe("VisualizationPanel", () => {
       />,
     );
 
-    expect(container.querySelectorAll(".visualization-mode-button")).toHaveLength(6);
+    expect(container.querySelectorAll(".visualization-mode-button")).toHaveLength(
+      visualizationModes.length,
+    );
     expect(container.querySelector(".visualization-panel__status")).toHaveTextContent("示波波形");
     expect(container.querySelector(".visualization-panel__live")).toBeInTheDocument();
     expect(container.querySelector(".audio-visualizer--panel")).toBeInTheDocument();

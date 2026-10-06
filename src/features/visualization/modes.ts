@@ -10,8 +10,8 @@ export interface VisualizationModeMeta {
 }
 
 /*
- * The visualiser mode catalogue. Order is intentional: the three "classic"
- * analyses first, then the three showpieces.
+ * The visualiser mode catalogue. Order is intentional: the analyses first, then
+ * the showpieces, then the two that are generated rather than plotted.
  */
 export const visualizationModes: VisualizationModeMeta[] = [
   { id: "spectrum", label: "频谱柱", hint: "镜像频谱条与峰值保持", icon: Icon.vizSpectrum },
@@ -20,6 +20,8 @@ export const visualizationModes: VisualizationModeMeta[] = [
   { id: "aurora", label: "音浪绸带", hint: "流动音浪绸带", icon: Icon.vizAurora },
   { id: "particles", label: "粒子星尘", hint: "节拍粒子星尘", icon: Icon.vizParticles },
   { id: "waterfall", label: "镜像瀑布", hint: "滚动频谱瀑布", icon: Icon.vizWaterfall },
+  { id: "generative", label: "生成动画", hint: "实时生成的星轨网络，每次都不一样", icon: Icon.vizGenerative },
+  { id: "kaleidoscope", label: "万花筒", hint: "频谱驱动的镜像花瓣", icon: Icon.vizKaleidoscope },
 ];
 
 export function findVisualizationMode(mode: VisualizationMode): VisualizationModeMeta {

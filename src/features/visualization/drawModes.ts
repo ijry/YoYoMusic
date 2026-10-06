@@ -37,8 +37,10 @@ export interface RenderState {
   waterfallFilled: number;
   waterfallClock: number;
   rotation: number;
+  kaleidoRotation: number;
   particles: Particle[];
   particleClock: number;
+  generative: GenerativeState;
 }
 
 export const WATERFALL_ROWS = 72;
@@ -52,8 +54,10 @@ export function createRenderState(bandCount: number): RenderState {
     waterfallFilled: 0,
     waterfallClock: 0,
     rotation: 0,
+    kaleidoRotation: 0,
     particles: [],
     particleClock: 0,
+    generative: createGenerativeState(),
   };
 }
 
@@ -416,6 +420,222 @@ export function roundedRect(
   context.closePath();
 }
 
+export interface GenerativeNode {
+  /** Orbit radii as a fraction of the shorter side. */
+  orbitA: number;
+  orbitB: number;
+  /** Radians per second. */
+  speed: number;
+  phase: number;
+  /** Which band drives this node, so the field answers across the spectrum. */
+  band: number;
+  size: number;
+  /** 0..1, blended between the two palette accents. */
+  tone: number;
+}
+
+/*
+ * Generative composition state.
+ *
+ * The nodes are randomised — not seeded from the track — because the point of
+ * this mode is that it is generated live: no two runs look alike. A beat
+ * re-orbits one node, so the constellation keeps reorganising instead of
+ * settling into a loop.
+ */
+export interface GenerativeState {
+  nodes: GenerativeNode[];
+  clock: number;
+  lastReseed: number;
+  flash: number;
+}
+
+export const GENERATIVE_NODE_COUNT = 22;
+
+export function createGenerativeState(): GenerativeState {
+  return { nodes: [], clock: 0, lastReseed: 0, flash: 0 };
+}
+
+function randomNode(bandCount: number): GenerativeNode {
+  return {
+    orbitA: 0.16 + Math.random() * 0.34,
+    orbitB: 0.16 + Math.random() * 0.34,
+    speed: (Math.random() < 0.5 ? -1 : 1) * (0.08 + Math.random() * 0.42),
+    phase: Math.random() * Math.PI * 2,
+    band: Math.floor(Math.random() * bandCount),
+    size: 0.6 + Math.random() * 1.8,
+    tone: Math.random(),
+  };
+}
+
+/*
+ * A drifting constellation.
+ *
+ * Each node rides its own ellipse at its own speed, so the whole field is a sum
+ * of incommensurate motions — it never returns to a previous arrangement. Links
+ * are drawn between nodes that happen to be close, which makes the structure
+ * emerge rather than be drawn: nothing decides where the mesh appears.
+ */
+export function drawGenerative({ context, width, height, frame, palette, state, dt }: DrawContext) {
+  const bandCount = frame.bands.length;
+  if (state.generative.nodes.length === 0) {
+    for (let i = 0; i < GENERATIVE_NODE_COUNT; i += 1) {
+      state.generative.nodes.push(randomNode(bandCount));
+    }
+  }
+
+  state.generative.clock += dt;
+  state.generative.flash = Math.max(frame.beat, state.generative.flash - dt * 1.6);
+
+  // Re-orbit one node per beat, but rate-limited so a fast track does not
+  // scramble the field faster than the eye can follow.
+  if (frame.beat > 0.5 && state.generative.clock - state.generative.lastReseed > 0.22) {
+    state.generative.lastReseed = state.generative.clock;
+    const index = Math.floor(Math.random() * state.generative.nodes.length);
+    state.generative.nodes[index] = randomNode(bandCount);
+  }
+
+  const cx = width / 2;
+  const cy = height / 2;
+  const scale = Math.min(width, height);
+
+  const points = state.generative.nodes.map((node) => {
+    const angle = state.generative.clock * node.speed + node.phase;
+    // The band value stretches the orbit, so the field breathes with the mix.
+    const stretch = 0.55 + (frame.bands[node.band] ?? 0) * 0.9;
+    return {
+      x: cx + Math.cos(angle) * node.orbitA * scale * stretch,
+      y: cy + Math.sin(angle * 1.13) * node.orbitB * scale * stretch,
+      node,
+      level: frame.bands[node.band] ?? 0,
+    };
+  });
+
+  context.save();
+  context.globalCompositeOperation = "lighter";
+
+  const linkDistance = scale * (0.2 + frame.level * 0.12);
+  context.lineWidth = 1;
+  for (let i = 0; i < points.length; i += 1) {
+    for (let j = i + 1; j < points.length; j += 1) {
+      const dx = points[i].x - points[j].x;
+      const dy = points[i].y - points[j].y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > linkDistance) continue;
+
+      const nearness = 1 - distance / linkDistance;
+      context.globalAlpha = nearness * nearness * (0.3 + state.generative.flash * 0.5);
+      context.strokeStyle = palette.b;
+      context.beginPath();
+      context.moveTo(points[i].x, points[i].y);
+      context.lineTo(points[j].x, points[j].y);
+      context.stroke();
+    }
+  }
+
+  for (const point of points) {
+    const radius = (2 + point.level * 7) * point.node.size * (1 + state.generative.flash * 0.5);
+    const glow = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius * 3.4);
+    glow.addColorStop(0, palette.ink);
+    glow.addColorStop(0.32, point.node.tone > 0.5 ? palette.a : palette.b);
+    glow.addColorStop(1, "transparent");
+
+    context.globalAlpha = 0.55 + point.level * 0.45;
+    context.fillStyle = glow;
+    context.beginPath();
+    context.arc(point.x, point.y, radius * 3.4, 0, Math.PI * 2);
+    context.fill();
+
+    context.globalAlpha = 0.9;
+    context.fillStyle = palette.ink;
+    context.beginPath();
+    context.arc(point.x, point.y, Math.max(0.8, radius * 0.4), 0, Math.PI * 2);
+    context.fill();
+  }
+
+  // A slow bloom in the middle, so the field has a centre of gravity.
+  const bloom = context.createRadialGradient(cx, cy, 0, cx, cy, scale * 0.42);
+  bloom.addColorStop(0, palette.a);
+  bloom.addColorStop(1, "transparent");
+  context.globalAlpha = 0.06 + frame.level * 0.12 + state.generative.flash * 0.08;
+  context.fillStyle = bloom;
+  context.fillRect(0, 0, width, height);
+
+  context.restore();
+}
+
+/*
+ * A kaleidoscope: one spectrum-driven arm, mirrored around the centre.
+ *
+ * Odd sectors draw the arm reflected, which is what turns a pinwheel into a
+ * kaleidoscope — the reflections meet at the sector boundaries and the pattern
+ * reads as symmetric rather than merely repeated.
+ */
+export function drawKaleidoscope({ context, width, height, frame, palette, state, dt }: DrawContext) {
+  const cx = width / 2;
+  const cy = height / 2;
+  const scale = Math.min(width, height);
+  const bands = frame.bands;
+  const bandCount = bands.length;
+
+  state.kaleidoRotation += dt * (0.16 + frame.level * 0.9);
+
+  const sectorCount = 10;
+  const sectorAngle = (Math.PI * 2) / sectorCount;
+  const innerRadius = scale * 0.1;
+  const span = scale * 0.34;
+
+  context.save();
+  context.translate(cx, cy);
+  context.globalCompositeOperation = "lighter";
+
+  const gradient = context.createLinearGradient(0, 0, 0, -span - innerRadius);
+  gradient.addColorStop(0, palette.a);
+  gradient.addColorStop(0.55, palette.b);
+  gradient.addColorStop(1, palette.ink);
+
+  for (let sector = 0; sector < sectorCount; sector += 1) {
+    context.save();
+    context.rotate(sector * sectorAngle + state.kaleidoRotation);
+    // Every other sector mirrors the arm.
+    if (sector % 2 === 1) context.scale(1, -1);
+
+    for (let band = 0; band < bandCount; band += 1) {
+      const value = bands[band] ?? 0;
+      if (value <= 0.012) continue;
+
+      const t = band / bandCount;
+      const radius = innerRadius + t * span;
+      // The arm fans out as it goes, which is what gives the petals their shape.
+      const angle = t * sectorAngle * 0.85;
+      const size = (1.2 + value * 13) * (0.5 + t * 0.9);
+
+      const x = Math.sin(angle) * radius;
+      const y = -Math.cos(angle) * radius;
+
+      context.globalAlpha = 0.18 + value * 0.72;
+      context.fillStyle = gradient;
+      context.beginPath();
+      context.arc(x, y, size, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    context.restore();
+  }
+
+  // Core, brightened on the beat.
+  const core = context.createRadialGradient(0, 0, 0, 0, 0, innerRadius * 1.7);
+  core.addColorStop(0, palette.ink);
+  core.addColorStop(0.4, palette.a);
+  core.addColorStop(1, "transparent");
+  context.globalAlpha = 0.3 + frame.beat * 0.5;
+  context.fillStyle = core;
+  context.beginPath();
+  context.arc(0, 0, innerRadius * (1.15 + frame.beat * 0.5), 0, Math.PI * 2);
+  context.fill();
+
+  context.restore();
+}
+
 export const drawModeMap = {
   spectrum: drawSpectrum,
   waveform: drawWaveform,
@@ -423,4 +643,6 @@ export const drawModeMap = {
   particles: drawParticles,
   aurora: drawAurora,
   waterfall: drawWaterfall,
+  generative: drawGenerative,
+  kaleidoscope: drawKaleidoscope,
 } as const;

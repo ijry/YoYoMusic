@@ -5,6 +5,7 @@ import {
   AreaChart,
   AudioWaveform,
   BarChart3,
+  Blend,
   Disc3,
   Expand,
   FilePlus,
@@ -29,6 +30,7 @@ import {
   SkipBack,
   SkipForward,
   SlidersHorizontal,
+  Snowflake,
   Sparkles,
   Tags,
   Trash2,
@@ -116,6 +118,8 @@ export const Icon = {
   vizParticles: glyph(Sparkles),
   vizAurora: glyph(Waves),
   vizWaterfall: glyph(AreaChart),
+  vizGenerative: glyph(Blend),
+  vizKaleidoscope: glyph(Snowflake),
 
   /*
    * Expand the visualiser to the base layer, and the way back. Deliberately

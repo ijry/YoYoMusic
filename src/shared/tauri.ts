@@ -39,7 +39,7 @@ export function isTauriRuntime() {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
-export type AppEventName = "playback_state_changed" | "playlist_changed";
+export type AppEventName = "playback_state_changed" | "playlist_changed" | "spectrum_frame";
 
 export async function listenToAppEvent<T>(
   event: AppEventName,

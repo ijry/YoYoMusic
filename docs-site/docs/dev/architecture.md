@@ -97,16 +97,43 @@ Vite 的 `publicDir` 默认是 `<root>/public`，**不是** `src/public`。
 
 新增一种可视化模式需要同时改四处：`shared/types.ts` 的 `VisualizationMode`、`modes.ts` 的模式目录、`drawModes.ts` 的绘制函数与注册表。Rust 侧的 `visualization_mode` 是无校验字符串，不需要改动后端。
 
-### 信号是合成的，不是频谱分析
+### 信号：真实频谱 + 合成回退
 
-解码与播放都在 Rust（rodio），**webview 拿不到采样，也没有 `AnalyserNode`**。
-`signal.ts` 的 `SignalEngine` 合成一段「像音乐」的信号：粉噪式倾斜 + 每频段正弦游走 +
-周期 kick 包络，BPM 92–138 随机，以 trackId 播种。唯一真实输入是 `isPlaying`。
+解码与播放都在 Rust（rodio），webview 拿不到采样、也没有 `AnalyserNode`。
+所以由 Rust 侧主动把采样送过来，**FFT 放在前端算**：
 
-**所以「同一首歌每次形态一致」是设计结果，不是分析结果。**
-若将来要做真频谱，得让 Rust 侧算 FFT 并通过事件推给前端，而不是在 `signal.ts` 里改参数。
+```
+rodio Decoder
+  └─ TappedSource（Source 装饰器，转发每个采样，顺路写一份单声道降混）
+       └─ SampleTap（环形缓冲，最近 1024 个单声道采样）
+            └─ spectrum 线程（~30fps，取窗口 → 发 spectrum_frame 事件）
+                 └─ liveSpectrum.ts（订阅、分析、存到模块级变量）
+                      └─ SignalEngine.update(dt, playing, realFrame)
+```
 
-## 可视化最大化
+**为什么 FFT 在前端**：这台机器编不了 Rust crate，写在 Rust 里的变换一行都测不到；
+放在 `fft.ts` / `spectrum.ts` 就能用已知信号严格验证（纯正弦必须落在对应频点）。
+Rust 只做「转发采样」，改动小、风险低。
+
+关键细节：
+
+- **频段按 Hz 划分，不按 bin**（`logBandEdges` 收 `binHz`）。bin 依赖窗口长度，
+  按 bin 划分会让换设备后同一个音高跳到别的频段。
+- **频段边界只保证非递减**。短窗口分辨不了低频（1024 点 @44.1kHz 一个 bin 就是 43 Hz），
+  前二十几个频段会共用同一个 bin。若强行把它们撑开，就会**偷走高频的 bin**，
+  把 440 Hz 挤到 9/56 而不是 22/56，整个显示压到左侧三分之一。让它们共享 bin 才是对的。
+- 无数据时回退到 `SignalEngine` 的合成信号（暂停、未载入、浏览器预览）。
+  `readLiveSpectrum()` 超过 250ms 没收到新帧就返回 `null`，界面因此会回到呼吸态而不是冻在最后一帧。
+- `SampleTap` 会丢弃非有限值（NaN/Inf）——一个 NaN 会让整帧 FFT 全变 NaN，整个可视化直接空白。
+- `AppState.spectrum` 与 `PlaybackService` 共享同一个 `Arc<SampleTap>`，
+  emitter 线程跨曲目持续读取同一个环。
+
+### 合成回退（`signal.ts`）
+
+`SignalEngine` 仍保留合成路径：粉噪式倾斜 + 每频段正弦游走 + 周期 kick 包络，
+BPM 92–138 随机，以 trackId 播种。它现在只在**没有真实数据时**生效。
+
+### 可视化最大化
 
 `visualizerMaximized` 让画布成为整个外壳的底层，其余元素浮在其上。三条约束：
 

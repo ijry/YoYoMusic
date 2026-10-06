@@ -65,7 +65,7 @@ export default defineConfig({
   title: "悠悠乐听",
   titleTemplate: ":title | 悠悠乐听",
   description:
-    "悠悠乐听是一款基于 Tauri 2、React 19 与 Rust 的跨平台桌面音乐播放器：本地优先、无广告、六种实时音频可视化、四套现代玻璃拟态皮肤、十段均衡器、歌词与桌面歌词窗口。以 AGPL-3.0 许可开源。",
+    "悠悠乐听是一款基于 Tauri 2、React 19 与 Rust 的跨平台桌面音乐播放器：本地优先、无广告、八种实时音频可视化、四套现代玻璃拟态皮肤、十段均衡器、歌词与桌面歌词窗口。以 AGPL-3.0 许可开源。",
 
   themeConfig: {
     logo: "/logo.svg",

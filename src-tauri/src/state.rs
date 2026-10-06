@@ -5,7 +5,12 @@ use tauri::Emitter;
 use crate::{
     errors::AppError,
     models::{AppSettings, PlaybackState, PlaylistSnapshot},
-    services::{playback::PlaybackService, playlist::PlaylistService, settings::SettingsService},
+    services::{
+        playback::PlaybackService,
+        playlist::PlaylistService,
+        settings::SettingsService,
+        spectrum::SampleTap,
+    },
 };
 
 pub const PLAYBACK_STATE_CHANGED: &str = "playback_state_changed";
@@ -16,6 +21,11 @@ pub struct AppState {
     pub playlist: Mutex<PlaylistService>,
     pub settings_service: SettingsService,
     pub settings: Mutex<AppSettings>,
+    /*
+     * Shared with the playback service, which writes decoded samples into it,
+     * and with the spectrum emitter thread, which reads them back out.
+     */
+    pub spectrum: std::sync::Arc<SampleTap>,
 }
 
 impl AppState {
@@ -23,11 +33,16 @@ impl AppState {
         let settings_service = SettingsService::new(app_data_dir);
         let settings = settings_service.load()?;
 
+        // One tap for the whole session: the emitter thread keeps reading the
+        // same ring across track changes.
+        let spectrum = SampleTap::new();
+
         Ok(Self {
-            playback: Mutex::new(PlaybackService::new_best_effort()),
+            playback: Mutex::new(PlaybackService::new_best_effort_with_tap(spectrum.clone())),
             playlist: Mutex::new(PlaylistService::default()),
             settings_service,
             settings: Mutex::new(settings),
+            spectrum,
         })
     }
 

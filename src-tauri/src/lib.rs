@@ -13,6 +13,7 @@ pub mod services {
     pub mod settings;
     pub mod shortcuts;
     pub mod skin;
+    pub mod spectrum;
     pub mod tray;
     pub mod window;
 }
@@ -393,6 +394,7 @@ pub fn run() {
             app.manage(state);
             services::tray::setup_tray(app.handle())?;
             services::autoplay::spawn_playback_monitor(app.handle().clone())?;
+            services::spectrum::spawn_spectrum_emitter(app.handle().clone())?;
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(

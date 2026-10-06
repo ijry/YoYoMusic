@@ -1,15 +1,21 @@
-use std::{fs::File, path::Path, time::Duration};
+use std::{fs::File, path::Path, sync::Arc, time::Duration};
 
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
 
 use crate::{
     errors::AppError,
     models::{PlayMode, PlaybackState, Track},
+    services::spectrum::{SampleTap, TappedSource},
 };
 
 pub struct PlaybackService {
     state: PlaybackState,
     audio: Option<AudioBackend>,
+    /*
+     * The tap lives here rather than in `AudioBackend` so it survives a track
+     * change — the emitter thread holds the same `Arc` for the whole session.
+     */
+    tap: Arc<SampleTap>,
 }
 
 struct AudioBackend {
@@ -57,6 +63,11 @@ impl Default for PlaybackService {
 
 impl PlaybackService {
     pub fn new_null() -> Self {
+        Self::with_tap(SampleTap::new())
+    }
+
+    /// Same as `new_null`, but writing samples into a tap the caller owns.
+    pub fn with_tap(tap: Arc<SampleTap>) -> Self {
         Self {
             state: PlaybackState {
                 track_id: None,
@@ -69,14 +80,19 @@ impl PlaybackService {
                 eq_enabled: false,
             },
             audio: None,
+            tap,
         }
     }
 
     pub fn new_best_effort() -> Self {
-        Self::new_with_default_output().unwrap_or_else(|_| Self::new_null())
+        Self::new_best_effort_with_tap(SampleTap::new())
     }
 
-    pub fn new_with_default_output() -> Result<Self, AppError> {
+    pub fn new_best_effort_with_tap(tap: Arc<SampleTap>) -> Self {
+        Self::new_with_default_output(tap.clone()).unwrap_or_else(|_| Self::with_tap(tap))
+    }
+
+    pub fn new_with_default_output(tap: Arc<SampleTap>) -> Result<Self, AppError> {
         let mut stream = OutputStreamBuilder::open_default_stream()
             .map_err(|err| AppError::Unplayable(format!("audio output unavailable: {err}")))?;
         stream.log_on_drop(false);
@@ -86,7 +102,7 @@ impl PlaybackService {
                 stream: SendStream(stream),
                 sink: None,
             }),
-            ..Self::new_null()
+            ..Self::with_tap(tap)
         })
     }
 
@@ -129,8 +145,9 @@ impl PlaybackService {
         }
 
         let effective_volume = self.effective_volume();
+        let tap = self.tap.clone();
         let decoded_duration = if let Some(audio) = self.audio.as_mut() {
-            audio.play_file(&track.file_path, effective_volume)?
+            audio.play_file(&track.file_path, effective_volume, &tap)?
         } else {
             None
         };
@@ -232,7 +249,12 @@ impl PlaybackService {
 }
 
 impl AudioBackend {
-    fn play_file(&mut self, file_path: &str, volume: f32) -> Result<Option<u64>, AppError> {
+    fn play_file(
+        &mut self,
+        file_path: &str,
+        volume: f32,
+        tap: &Arc<SampleTap>,
+    ) -> Result<Option<u64>, AppError> {
         if let Some(sink) = self.sink.take() {
             sink.stop();
         }
@@ -245,7 +267,9 @@ impl AudioBackend {
 
         let sink = Sink::connect_new(self.stream.mixer());
         sink.set_volume(volume);
-        sink.append(source);
+        // The tap forwards every sample untouched; it only copies a mono
+        // downmix aside for the visualiser.
+        sink.append(TappedSource::new(source, tap.clone()));
         self.sink = Some(sink);
 
         Ok(duration_ms)

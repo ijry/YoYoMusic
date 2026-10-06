@@ -6,7 +6,7 @@ const RELEASES = `${REPO}/releases/latest`;
 const ISSUES = `${REPO}/issues`;
 
 const stats = [
-  { value: "6", label: "种实时可视化" },
+  { value: "8", label: "种实时可视化" },
   { value: "4", label: "套玻璃拟态皮肤" },
   { value: "10", label: "段均衡器" },
   { value: "3", label: "个桌面平台" },
@@ -15,8 +15,8 @@ const stats = [
 const features = [
   {
     icon: "wave",
-    title: "六种音频可视化",
-    body: "频谱柱、示波波形、环形律动、音浪绸带、粒子星尘、镜像瀑布。Canvas 逐帧绘制，随节拍呼吸。",
+    title: "八种音频可视化",
+    body: "频谱柱、示波波形、环形律动、音浪绸带、粒子星尘、镜像瀑布，外加实时生成的「生成动画」与「万花筒」。Canvas 逐帧绘制，频谱来自真实音频分析。",
   },
   {
     icon: "palette",
@@ -52,6 +52,8 @@ const modes = [
   { id: "aurora", name: "音浪绸带", note: "流动音浪绸带" },
   { id: "particles", name: "粒子星尘", note: "节拍粒子星尘" },
   { id: "waterfall", name: "镜像瀑布", note: "滚动频谱瀑布" },
+  { id: "generative", name: "生成动画", note: "每次都不一样的星轨网络" },
+  { id: "kaleidoscope", name: "万花筒", note: "镜像花瓣" },
 ];
 
 const skins = [
@@ -99,7 +101,7 @@ const skins = [
     <!-- Visualiser ------------------------------------------------------- -->
     <section class="ys-section">
       <header class="ys-section__head">
-        <h2>六种可视化，一键切换</h2>
+        <h2>八种可视化，一键切换</h2>
         <p>舞台右上角的图标栏可以直接换，右侧面板里也有完整列表。每个可视化都由曲目 id 生成专属信号，同一首歌每次都是一样的舞步。</p>
       </header>
 

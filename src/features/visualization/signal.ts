@@ -99,10 +99,21 @@ export class SignalEngine {
    * Advance the simulation. `dt` is in seconds; call once per animation frame.
    * When `isPlaying` is false the spectrum relaxes into a slow idle breath so
    * a paused player still looks alive rather than frozen.
+   *
+   * `real` is the analysed audio, when there is any. Passing it swaps the
+   * targets for the measured ones but keeps this engine's attack/release
+   * smoothing, so the bars move the same way whichever source feeds them — and
+   * the synthesis stays as the fallback for a paused player and for the browser
+   * preview, where there is no Rust core to tap.
    */
-  update(dt: number, isPlaying: boolean): SignalFrame {
+  update(dt: number, isPlaying: boolean, real: SignalFrame | null = null): SignalFrame {
     const step = Math.min(Math.max(dt, 0), 0.05);
     this.time += step;
+
+    if (real) {
+      this.applyRealFrame(step, real);
+      return this;
+    }
 
     const period = 60 / this.bpm;
     this.beatClock += step;
@@ -154,6 +165,39 @@ export class SignalEngine {
     this.level += ((sum / BAND_COUNT) - this.level) * (1 - Math.exp(-step * 8));
     this.updateWave(isPlaying);
     return this;
+  }
+
+  /*
+   * Smooths a measured frame.
+   *
+   * The analyser already normalises and detects onsets, but its output arrives
+   * at ~30 Hz while this runs at display refresh rate, so the values still need
+   * interpolating between arrivals — otherwise the bars would step visibly.
+   * Fast attack keeps a kick snappy; the slower release is what stops the whole
+   * display from strobing on every transient.
+   */
+  private applyRealFrame(step: number, real: SignalFrame) {
+    const attack = 1 - Math.exp(-step * 26);
+    const release = 1 - Math.exp(-step * 7);
+    let sum = 0;
+
+    for (let index = 0; index < BAND_COUNT; index += 1) {
+      const target = Math.max(0, Math.min(1, real.bands[index] ?? 0));
+      const coefficient = target > this.bands[index] ? attack : release;
+      this.bands[index] += (target - this.bands[index]) * coefficient;
+      sum += this.bands[index];
+    }
+
+    this.level += ((real.level || sum / BAND_COUNT) - this.level) * (1 - Math.exp(-step * 9));
+    this.beat = Math.max(real.beat, this.beat * Math.exp(-step * 7));
+
+    // The oscilloscope is the measured waveform itself — nothing to synthesise.
+    const stride = real.wave.length / WAVE_SAMPLES;
+    for (let index = 0; index < WAVE_SAMPLES; index += 1) {
+      const source = Math.min(real.wave.length - 1, Math.floor(index * stride));
+      const value = real.wave[source] ?? 0;
+      this.wave[index] = value < -1 ? -1 : value > 1 ? 1 : value;
+    }
   }
 
   private updateWave(isPlaying: boolean) {

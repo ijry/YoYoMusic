@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { visualizationModes } from "../visualization/modes";
 import { builtInLayoutSkins } from "./layoutRegistry";
 import type { PlayerLayoutProps } from "./layoutTypes";
 
@@ -104,9 +105,11 @@ describe("layout skins", () => {
     expect(screen.getByRole("complementary", { name: "功能面板" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "播放动态可视化" })).toBeInTheDocument();
 
-    // Six visualiser modes are reachable straight from the stage, plus the
-    // expand chip that takes the canvas full-frame.
-    expect(container.querySelectorAll(".viz-switcher__chip")).toHaveLength(7);
+    // Every mode is reachable straight from the stage, plus the expand chip
+    // that takes the canvas full-frame.
+    expect(container.querySelectorAll(".viz-switcher__chip")).toHaveLength(
+      visualizationModes.length + 1,
+    );
     expect(container.querySelector(".audio-visualizer--hero")).toBeInTheDocument();
     expect(container.querySelector(".viz-backdrop")).not.toBeInTheDocument();
     expect(container.querySelector(".chrome")).toHaveAttribute("data-viz", "docked");
@@ -170,7 +173,9 @@ describe("layout skins", () => {
 
     expect(container.querySelector(".feature-content .audio-visualizer--panel")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "环形律动" })).toHaveAttribute("aria-pressed", "true");
-    expect(container.querySelectorAll(".visualization-mode-button")).toHaveLength(6);
+    expect(container.querySelectorAll(".visualization-mode-button")).toHaveLength(
+      visualizationModes.length,
+    );
   });
 
   it("toggles a panel off when its rail icon is clicked again", async () => {
@@ -224,7 +229,9 @@ describe("layout skins", () => {
 
       expect(container.querySelector(".viz-backdrop .viz-switcher")).not.toBeInTheDocument();
       expect(container.querySelector(".modern-panel--viz .viz-switcher")).toBeInTheDocument();
-      expect(container.querySelectorAll(".viz-switcher__chip")).toHaveLength(7);
+      expect(container.querySelectorAll(".viz-switcher__chip")).toHaveLength(
+      visualizationModes.length + 1,
+    );
       expect(screen.getByRole("button", { name: "还原可视化" })).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "最大化可视化" })).not.toBeInTheDocument();
     });

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { VisualizationMode } from "../../shared/types";
 import { createRenderState, drawModeMap, type VizPalette } from "./drawModes";
+import { readLiveSpectrum, useLiveSpectrum } from "./liveSpectrum";
 import { BAND_COUNT, SignalEngine } from "./signal";
 
 interface AudioVisualizerProps {
@@ -16,9 +17,10 @@ interface AudioVisualizerProps {
  * Canvas visualiser host.
  *
  * Owns the animation loop, canvas sizing (device-pixel-ratio aware) and the
- * palette read from the active skin's CSS custom properties. The signal itself
- * comes from SignalEngine, which is seeded per track and advanced every frame
- * instead of being tied to the 500ms playback-state poll.
+ * palette read from the active skin's CSS custom properties. The signal comes
+ * from the real audio when the Rust core is feeding us samples, and from
+ * `SignalEngine`'s synthesis otherwise — a paused player, or the browser
+ * preview where there is no core at all.
  */
 export function AudioVisualizer({
   mode,
@@ -32,6 +34,8 @@ export function AudioVisualizer({
   const playingRef = useRef(isPlaying && hasTrack);
   const seedRef = useRef(seed);
   const engineRef = useRef<SignalEngine | null>(null);
+
+  useLiveSpectrum();
 
   useEffect(() => {
     modeRef.current = mode;
@@ -102,7 +106,12 @@ function runVisualizer(
   }
 
   function paint(dt: number) {
-    const frame = engine.update(dt, playingRef.current);
+    /*
+     * Real audio when the core is feeding us, synthesis otherwise. Both paths
+     * return the same shape, so the draw modes never learn which one they got.
+     */
+    const live = readLiveSpectrum();
+    const frame = engine.update(dt, playingRef.current, live);
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.clearRect(0, 0, width, height);
 
