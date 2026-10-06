@@ -7,7 +7,6 @@ interface LyricsPanelProps {
   positionMs: number;
   desktopLyrics?: DesktopLyricsSettings;
   onDesktopLyricsChange?: (next: DesktopLyricsSettings) => void;
-  onToggleDesktopLyricsWindow?: () => void;
 }
 
 export function LyricsPanel({
@@ -15,7 +14,6 @@ export function LyricsPanel({
   positionMs,
   desktopLyrics,
   onDesktopLyricsChange,
-  onToggleDesktopLyricsWindow,
 }: LyricsPanelProps) {
   const lineCount = document?.lines.length ?? 0;
 
@@ -28,24 +26,16 @@ export function LyricsPanel({
       </div>
 
       {/*
-       * Desktop-lyrics controls live next to the lyric list because that is
-       * the panel a user opens when they care about lyrics at all. The same
-       * state is editable in the floating window itself; both write through
-       * `save_settings`, so the two views never drift.
+       * Desktop-lyrics *settings* sit next to the lyric list, because this is
+       * the panel a user opens when they care about lyrics. The control that
+       * opens the floating window itself does not: it lives in the top bar
+       * with the other window-level actions, and having it here too was the
+       * same duplication the skin/settings buttons had.
        */}
       {desktopLyrics && onDesktopLyricsChange ? (
         <div className="lyrics-desktop-settings">
           <div className="lyrics-desktop-settings__row">
-            <span className="control-label">桌面歌词</span>
-            <button
-              type="button"
-              className="lyrics-desktop-toggle"
-              aria-label="打开桌面歌词"
-              title="打开桌面歌词"
-              onClick={() => onToggleDesktopLyricsWindow?.()}
-            >
-              <Icon.desktopLyrics size={16} />
-            </button>
+            <span className="lyrics-desktop-settings__title">桌面歌词</span>
             <button
               type="button"
               className="lyrics-desktop-toggle"

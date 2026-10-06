@@ -31,9 +31,10 @@ export const featurePanels: Array<{ id: FeaturePanel; label: string; icon: () =>
  * - The right-hand feature rail owns the six *panels* (lyrics, visualiser,
  *   tags, equaliser, skin, settings). Skin and settings used to be duplicated
  *   here as well, which is what made the corner feel crowded.
- * - This bar therefore only carries *window-level* actions: layout toggle, the
- *   two secondary windows, and the window buttons that replace the OS title
- *   bar (see `decorations: false` in tauri.conf.json).
+ * - This bar carries *window-level* actions only, split into two groups by a
+ *   divider: what the app does (toggle the playlist, open a secondary window)
+ *   and what the window does (minimise / maximise / close). Without the split
+ *   the six buttons read as one undifferentiated row.
  * - The current track is not repeated here either — the transport bar already
  *   shows cover, title and artist.
  */
@@ -70,6 +71,9 @@ export function TitleActions(props: PlayerLayoutProps) {
           <Icon.desktopLyrics />
         </button>
       </div>
+
+      <span className="title-actions__divider" aria-hidden="true" />
+
       <WindowButtons />
     </nav>
   );
@@ -279,7 +283,7 @@ function renderFeaturePanel(props: PlayerLayoutProps, panel: FeaturePanel) {
     );
   }
 
-  return (
+    return (
     <LyricsPanel
       document={props.lyricsDocument}
       positionMs={props.playback.positionMs}
@@ -287,7 +291,6 @@ function renderFeaturePanel(props: PlayerLayoutProps, panel: FeaturePanel) {
       onDesktopLyricsChange={(desktopLyrics) =>
         props.onSettingsChange({ ...props.settings, desktopLyrics })
       }
-      onToggleDesktopLyricsWindow={() => props.onPlayerCommand("toggle_desktop_lyrics", {})}
     />
   );
 }

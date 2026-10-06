@@ -249,21 +249,60 @@ input:focus-visible {
   gap: 6px;
 }
 
-.title-action-button {
+/*
+ * One icon-button system for the whole window chrome.
+ *
+ * The three groups — top-bar actions, window controls, feature rail — used to
+ * carry three unrelated sets of metrics (36/32/44px boxes, 12/8/14px radii) and
+ * two different hover treatments, so the same window read as three different
+ * toolkits stitched together. They now share one base: same radius language,
+ * same hover, and the same "toggled on" fill.
+ *
+ * Only the *size* still differs, and deliberately so: the rail is primary
+ * navigation and is a size up, which is hierarchy rather than accident.
+ */
+.title-action-button,
+.window-button,
+.feature-tab {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
   border: 1px solid transparent;
-  border-radius: 12px;
   color: var(--color-muted);
-  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
-.title-action-button:hover {
+.title-action-button:hover,
+.window-button:hover,
+.feature-tab:hover {
   color: var(--color-text);
-  border-color: var(--glass-stroke);
   background: var(--glass-fill-strong);
+}
+
+/*
+ * Toggled-on state is identical everywhere. The playlist toggle previously set
+ * `aria-pressed` with no styling at all, so it gave no feedback while the rail
+ * buttons lit up.
+ */
+.title-action-button[aria-pressed="true"],
+.feature-tab[aria-pressed="true"] {
+  color: var(--color-text);
+  background: linear-gradient(135deg, var(--skin-primary), var(--skin-accent));
+  box-shadow: var(--shadow-glow);
+}
+
+.title-action-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+}
+
+/* Separates app actions from the OS window controls sitting beside them. */
+.title-actions__divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 2px;
+  flex: 0 0 auto;
+  background: var(--glass-stroke);
 }
 
 /* ---------------------------------------------------------------------------
@@ -1124,31 +1163,15 @@ input:focus-visible {
   background: var(--glass-fill-strong);
 }
 
+/*
+ * The rail is primary navigation, so it keeps its own size (a step up from the
+ * top-bar actions). Everything else — radius language, hover, toggled-on fill —
+ * comes from the shared icon-button base near `.title-actions`.
+ */
 .feature-tab {
-  display: grid;
-  place-items: center;
   width: 44px;
   height: 44px;
-  border: 1px solid transparent;
   border-radius: 14px;
-  color: var(--color-muted);
-  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
-}
-
-.feature-tab:hover {
-  color: var(--color-text);
-  background: var(--glass-fill);
-}
-
-.feature-tab[aria-pressed="true"] {
-  color: #fff;
-  border-color: var(--glass-stroke-strong);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--skin-primary) 62%, transparent),
-    color-mix(in srgb, var(--skin-accent) 42%, transparent)
-  );
-  box-shadow: var(--shadow-glow);
 }
 
 .feature-content {
@@ -1651,6 +1674,14 @@ input:focus-visible {
   flex-wrap: wrap;
 }
 
+/* A visible label, unlike `.control-label`, which is screen-reader-only. */
+.lyrics-desktop-settings__title {
+  margin-right: auto;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+}
+
 .lyrics-desktop-settings__themes {
   gap: 7px;
 }
@@ -1710,23 +1741,19 @@ input:focus-visible {
 .window-buttons {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex: 0 0 auto;
 }
 
+/*
+ * Window controls now match the top-bar actions in size and radius (they were
+ * 32x28 with an 8px radius, which made the corner look like two toolkits).
+ * Only the hover colours differ, because close is destructive.
+ */
 .window-button {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 28px;
-  border-radius: 8px;
-  color: var(--color-muted);
-  transition: background 160ms ease, color 160ms ease;
-}
-
-.window-button:hover {
-  color: var(--color-text);
-  background: var(--glass-fill-strong);
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
 }
 
 .window-button--close:hover {
@@ -1804,12 +1831,17 @@ input:focus-visible {
   gap: 4px;
 }
 
+/*
+ * Sized to match `.window-button` (36x36 / 12px), because the close button sits
+ * in this same row. A 4px difference between neighbours is the kind of thing
+ * that reads as "unfinished" without anyone being able to name it.
+ */
 .mini-icon-button {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
   color: var(--color-muted);
   transition: background 160ms ease, color 160ms ease;
 }

@@ -4,14 +4,37 @@ import { describe, expect, it } from "vitest";
 
 const css = readFileSync(join(process.cwd(), "src/styles/app.css"), "utf8").replace(/\r\n/g, "\n");
 
-function rule(selector: string) {
-  const match = css.match(new RegExp(`${escapeRegExp(selector)}\\s*\\{([\\s\\S]*?)\\}`));
-  if (!match) throw new Error(`Missing CSS rule for ${selector}`);
-  return match[1];
-}
+/*
+ * Comments are stripped before parsing. A `/* ... *\/` banner carries no
+ * braces, so a naive `([^{}]+)\{` swallows it into the following selector —
+ * turning `.chrome` into `---- *\/\n\n.chrome` and making the rule unfindable.
+ */
+const cssWithoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
 
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/**
+ * Returns the body of the CSS rule for `selector`.
+ *
+ * A selector can appear in more than one block: shared "base" rules list it
+ * alongside siblings (`.a, .b, .c { ... }`) and carry only the common
+ * declarations. The *standalone* block is the one holding that selector's own
+ * metrics, so it wins — otherwise `rule(".feature-tab")` would return the
+ * grouped base and miss the `width` the assertion is looking for.
+ */
+function rule(selector: string) {
+  const blocks = [...cssWithoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((match) => ({
+    selectors: match[1].split(",").map((part) => part.trim()),
+    body: match[2],
+  }));
+
+  // A comma-joined request (e.g. `html,\nbody,\n#root`) asks for that exact group.
+  const wanted = selector.split(",").map((part) => part.trim()).filter(Boolean);
+  const exact = blocks.find((block) => block.selectors.join(",") === wanted.join(","));
+  if (exact) return exact.body;
+
+  const candidates = blocks.filter((block) => block.selectors.includes(selector));
+  if (candidates.length === 0) throw new Error(`Missing CSS rule for ${selector}`);
+
+  return (candidates.find((block) => block.selectors.length === 1) ?? candidates[0]).body;
 }
 
 describe("modern player layout CSS", () => {
@@ -55,6 +78,48 @@ describe("modern player layout CSS", () => {
     expect(rule(".feature-drawer")).toContain("grid-template-rows: auto minmax(0, 1fr);");
     expect(rule(".feature-tab")).toContain("width: 44px;");
     expect(rule(".feature-drawer__close")).toContain("border-radius: 9px;");
+  });
+
+  describe("window chrome buttons", () => {
+    it("shares one base across the top bar, window controls and the rail", () => {
+      // These three groups used to carry unrelated metrics (36/32/44px boxes,
+      // 12/8/14px radii) and two hover treatments, so the same window looked
+      // like three toolkits. The grouped base is what keeps them in step.
+      const base = rule(".title-action-button,\n.window-button,\n.feature-tab");
+      expect(base).toContain("display: grid;");
+      expect(base).toContain("border: 1px solid transparent;");
+      expect(base).toContain("transition:");
+    });
+
+    it("matches the top-bar actions and the window controls in size", () => {
+      expect(rule(".title-action-button")).toContain("width: 36px;");
+      expect(rule(".title-action-button")).toContain("border-radius: 12px;");
+      expect(rule(".window-button")).toContain("width: 36px;");
+      expect(rule(".window-button")).toContain("border-radius: 12px;");
+    });
+
+    it("keeps only the close button's hover destructive", () => {
+      expect(rule(".window-button--close:hover")).toContain("background: #e5484d;");
+    });
+
+    it("styles the toggled-on state identically everywhere", () => {
+      // The playlist toggle set `aria-pressed` with no styling at all, so it
+      // gave no feedback while the rail buttons lit up.
+      const active = rule('.title-action-button[aria-pressed="true"],\n.feature-tab[aria-pressed="true"]');
+      expect(active).toContain("linear-gradient(135deg");
+      expect(active).toContain("box-shadow: var(--shadow-glow);");
+    });
+
+    it("separates app actions from the OS window controls", () => {
+      expect(rule(".title-actions__divider")).toContain("width: 1px;");
+    });
+
+    it("sizes the mini player's own buttons to match the close button beside them", () => {
+      // The close button lives in that row, so a 32px neighbour would read as
+      // unfinished.
+      expect(rule(".mini-icon-button")).toContain("width: 36px;");
+      expect(rule(".mini-icon-button")).toContain("border-radius: 12px;");
+    });
   });
 
   it("gives the visualiser a real box to draw into", () => {

@@ -79,6 +79,10 @@ export function WindowButtons({
     });
   }
 
+  /*
+   * One glyph size across the trio. They were 16 / 14 / 16 — the kind of
+   * difference nobody names but everybody feels.
+   */
   return (
     <div className={`window-buttons ${className}`.trim()} role="group" aria-label="窗口控制">
       {showMinimize ? (
@@ -100,7 +104,7 @@ export function WindowButtons({
           title={maximized ? "向下还原" : "最大化"}
           onClick={() => run("toggleMaximize")}
         >
-          {maximized ? <Icon.restore size={14} /> : <Icon.maximize size={14} />}
+          {maximized ? <Icon.restore size={16} /> : <Icon.maximize size={16} />}
         </button>
       ) : null}
       <button

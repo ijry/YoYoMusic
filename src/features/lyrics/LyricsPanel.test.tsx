@@ -41,21 +41,31 @@ describe("LyricsPanel", () => {
       clickThrough: false,
     };
 
-    function renderWithDesktop(onChange = vi.fn(), onOpen = vi.fn()) {
+    function renderWithDesktop(onChange = vi.fn()) {
       const utils = render(
         <LyricsPanel
           positionMs={0}
           document={null}
           desktopLyrics={base}
           onDesktopLyricsChange={onChange}
-          onToggleDesktopLyricsWindow={onOpen}
         />,
       );
-      return { onChange, onOpen, ...utils };
+      return { onChange, ...utils };
     }
 
-    it("hides the controls when no handler is wired up", () => {
+    it("hides the settings when no handler is wired up", () => {
       render(<LyricsPanel positionMs={0} document={null} />);
+      expect(screen.queryByRole("button", { name: "锁定桌面歌词位置" })).not.toBeInTheDocument();
+      expect(screen.queryByText("桌面歌词")).not.toBeInTheDocument();
+    });
+
+    /*
+     * Opening the floating window is a window-level action and lives in the top
+     * bar. Duplicating it here is the same mistake the skin/settings buttons
+     * made, so the panel deliberately offers settings only.
+     */
+    it("does not duplicate the control that opens the floating window", () => {
+      renderWithDesktop();
       expect(screen.queryByRole("button", { name: "打开桌面歌词" })).not.toBeInTheDocument();
     });
 
@@ -85,12 +95,5 @@ describe("LyricsPanel", () => {
       expect(onChange).toHaveBeenCalledWith({ ...base, fontScale: 1.8 });
     });
 
-    it("requests the desktop lyrics window", async () => {
-      const user = userEvent.setup();
-      const { onOpen } = renderWithDesktop();
-
-      await user.click(screen.getByRole("button", { name: "打开桌面歌词" }));
-      expect(onOpen).toHaveBeenCalledTimes(1);
-    });
   });
 });

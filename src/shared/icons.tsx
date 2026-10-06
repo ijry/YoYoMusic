@@ -1,13 +1,14 @@
 import {
   Activity,
+  AlignLeft,
   Aperture,
   AreaChart,
-  AudioLines,
+  AudioWaveform,
   BarChart3,
   Disc3,
   FilePlus,
   FolderPlus,
-  ListMusic,
+  ListOrdered,
   Lock,
   Maximize2,
   Minimize,
@@ -16,7 +17,9 @@ import {
   Palette,
   PanelLeft,
   Pause,
+  PictureInPicture2,
   Play,
+  RectangleHorizontal,
   Repeat,
   Repeat1,
   Settings,
@@ -27,7 +30,6 @@ import {
   Sparkles,
   Tags,
   Trash2,
-  Type,
   Unlock,
   Volume2,
   VolumeX,
@@ -43,6 +45,13 @@ import type { LucideIcon } from "lucide-react";
  * Icons are always decorative (`aria-hidden`) — the accessible name belongs on
  * the surrounding button's `aria-label`, so screen readers and the existing
  * `getByRole("button", { name: ... })` tests keep working.
+ *
+ * **One glyph, one meaning.** The same shape must never stand for two ideas,
+ * and two different ideas that sit next to each other must not look alike.
+ * Both were violated before: `Minimize2` meant *both* "mini mode" and "restore
+ * window" while sitting one button away from the real minimise (`Minimize`),
+ * and the lyrics panel (`Type`, a letter T) and the desktop-lyrics window
+ * (`ListMusic`) used unrelated glyphs for the same concept.
  */
 
 const SIZE = 18;
@@ -66,18 +75,22 @@ export const Icon = {
   next: glyph(SkipForward),
   volume: glyph(Volume2),
   muted: glyph(VolumeX),
-  sequence: glyph(AudioLines),
+  /* Play modes. `ListOrdered` for plain sequence, so the waveform glyph below
+   * stays free to mean "visualiser" and nothing else. */
+  sequence: glyph(ListOrdered),
   repeatAll: glyph(Repeat),
   repeatOne: glyph(Repeat1),
   shuffle: glyph(Shuffle),
-  lyrics: glyph(Type),
-  visualization: glyph(AudioLines),
+  /* Lyrics: the panel is lines of text, the floating window is an overlay. */
+  lyrics: glyph(AlignLeft),
+  desktopLyrics: glyph(PictureInPicture2),
+  visualization: glyph(AudioWaveform),
   tags: glyph(Tags),
   equalizer: glyph(SlidersHorizontal),
   skin: glyph(Palette),
   settings: glyph(Settings),
-  mini: glyph(Minimize2),
-  desktopLyrics: glyph(ListMusic),
+  /* Mini mode is a short wide strip — deliberately not a window-control arrow. */
+  mini: glyph(RectangleHorizontal),
   addFiles: glyph(FilePlus),
   addFolder: glyph(FolderPlus),
   clear: glyph(Trash2),
@@ -85,7 +98,8 @@ export const Icon = {
   disc: glyph(Disc3),
   panelLeft: glyph(PanelLeft),
 
-  /* Window chrome. */
+  /* Window chrome. `minimize` / `restore` / `maximize` are the OS trio and are
+   * never reused for app features. */
   minimize: glyph(Minimize),
   maximize: glyph(Maximize2),
   restore: glyph(Minimize2),
