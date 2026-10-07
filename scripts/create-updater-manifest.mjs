@@ -29,6 +29,18 @@ const PLATFORMS = new Map([
 ]);
 
 /**
+ * Every platform the release is supposed to ship.
+ *
+ * Checked explicitly, because the first signed release went out with only two
+ * of the three: macOS had been built with `--bundles dmg`, and `dmg` is not an
+ * updater-enabled target, so it produced no `.sig`. Tauri only *warned* about
+ * that, and this script silently omitted the platform it had no signature for —
+ * so the release looked successful and macOS users would simply never be
+ * offered an update. A missing platform is a broken release, not a smaller one.
+ */
+const REQUIRED_PLATFORMS = [...PLATFORMS.values()];
+
+/**
  * Which signed file is the update payload.
  *
  * A signed directory can hold several bundles — Windows signs both the NSIS
@@ -129,6 +141,17 @@ export async function createManifest({ assetsDir, tag, repo, notesFile, output }
   }
 
   const notes = notesFile ? (await readFile(notesFile, "utf8")).trim() : "";
+
+  const missing = REQUIRED_PLATFORMS.filter((platform) => !platforms[platform]);
+  if (missing.length > 0) {
+    throw new Error(
+      `No signed updater bundle for: ${missing.join(", ")}.\n` +
+        `  Every build directory must contain at least one signed file. The usual cause is a ` +
+        `platform built without an updater-enabled target — macOS needs \`--bundles app\` ` +
+        `(dmg alone is not enough), Windows needs nsis, Linux needs appimage.`,
+    );
+  }
+
   const manifest = {
     version: tag.replace(/^v/i, ""),
     notes,

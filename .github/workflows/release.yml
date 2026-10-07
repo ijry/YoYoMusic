@@ -142,7 +142,15 @@ jobs:
               src-tauri/target/release/bundle/msi/*.msi.sig
           - label: macOS
             os: macos-latest
-            bundles: "dmg"
+            # `app` is not optional: `dmg` alone produces no updater artifact,
+            # and Tauri only warns about it —
+            #   "The bundler was configured to create updater artifacts but no
+            #    updater-enabled targets were built. Please enable one of these
+            #    targets: app, appimage, msi, nsis"
+            # — so the build succeeds while shipping nothing the updater can
+            # install. Windows (`nsis`) and Linux (`appimage`) are already
+            # updater-enabled targets.
+            bundles: "app,dmg"
             artifact: yoyomusic-macos
             paths: |
               src-tauri/target/release/bundle/dmg/*.dmg

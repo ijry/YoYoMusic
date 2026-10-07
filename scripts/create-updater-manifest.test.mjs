@@ -155,12 +155,45 @@ describe("create-updater-manifest", () => {
     );
   });
 
-  it("still works when only one platform built", async () => {
-    const { manifest } = await run({
-      "yoyomusic-linux/YoYoMusic_0.0.1_amd64.AppImage": "appimage",
-      "yoyomusic-linux/YoYoMusic_0.0.1_amd64.AppImage.sig": "sig-linux\n",
-    });
+  it("refuses a release that is missing a platform", async () => {
+    /*
+     * The failure this guards, which actually shipped once: macOS was built with
+     * `--bundles dmg`, and dmg is not an updater-enabled target, so no `.sig`
+     * was produced. Tauri only warned; the manifest silently listed two
+     * platforms, the release looked green, and macOS users would never have
+     * been offered an update.
+     */
+    const withoutMacos = { ...REAL_LAYOUT };
+    for (const key of Object.keys(withoutMacos)) {
+      if (key.startsWith("yoyomusic-macos/")) delete withoutMacos[key];
+    }
 
-    assert.deepEqual(Object.keys(manifest.platforms), ["linux-x86_64"]);
+    await assert.rejects(run(withoutMacos), /No signed updater bundle for: darwin-aarch64/);
+  });
+
+  it("explains what to do about it", async () => {
+    const withoutMacos = { ...REAL_LAYOUT };
+    for (const key of Object.keys(withoutMacos)) {
+      if (key.startsWith("yoyomusic-macos/")) delete withoutMacos[key];
+    }
+
+    await assert.rejects(run(withoutMacos), (error) => {
+      assert.match(error.message, /macOS needs `--bundles app`/);
+      assert.match(error.message, /Windows needs nsis/);
+      assert.match(error.message, /Linux needs appimage/);
+      return true;
+    });
+  });
+
+  it("names every missing platform, not just the first", async () => {
+    const onlyWindows = {};
+    for (const [key, value] of Object.entries(REAL_LAYOUT)) {
+      if (key.startsWith("yoyomusic-windows/")) onlyWindows[key] = value;
+    }
+
+    await assert.rejects(
+      run(onlyWindows),
+      /darwin-aarch64, linux-x86_64/,
+    );
   });
 });
