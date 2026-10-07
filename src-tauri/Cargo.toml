@@ -24,7 +24,7 @@ log = "0.4"
 # `macos-private-api` pairs with `app.macOSPrivateApi` in tauri.conf.json: the
 # desktop-lyrics window is transparent, which macOS only allows through the
 # private API. The tauri build script fails if the two disagree.
-tauri = { version = "2.11.3", features = ["tray-icon", "macos-private-api"] }
+tauri = { version = "2.12", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-log = "2"
 thiserror = "2.0.18"
 uuid = { version = "1.20.0", features = ["v4"] }
@@ -38,12 +38,12 @@ tauri-plugin-dialog = "2.7.1"
 # Self-update: `updater` checks the release manifest and installs a signed
 # bundle; `process` provides the relaunch that finishes the job.
 #
-# Pinned to the minor, not `"2"`. The newest 2.13.1 / 2.4.0 require `tauri ^2.12`,
-# which would drag the `tauri` crate off the 2.11 line that the frontend's
-# `@tauri-apps/api` is pinned to — and `tauri build` refuses to run when the two
-# differ by a minor version. 2.12.0 / 2.3.1 only need `tauri ^2.10` / `^2.8.2`.
-tauri-plugin-updater = "~2.12.0"
-tauri-plugin-process = "~2.3.1"
+# Pinned to the minor, not `"2"`, so a patch release cannot quietly move the
+# whole `tauri` line. `tauri build` refuses to run when this crate and the npm
+# `@tauri-apps/api` differ by a minor version — `scripts/check-tauri-versions.mjs`
+# guards it.
+tauri-plugin-updater = "~2.13.0"
+tauri-plugin-process = "~2.4.0"
 
 [dev-dependencies]
 tempfile = "3.27.0"
