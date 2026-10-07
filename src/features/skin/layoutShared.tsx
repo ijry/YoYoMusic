@@ -350,6 +350,8 @@ function renderFeaturePanel(props: PlayerLayoutProps, panel: FeaturePanel) {
         enrichmentEnabled={props.settings.enrichmentEnabled}
         errorCode={props.settingsErrorCode}
         onShortcutChange={props.onShortcutChange}
+        updateStatus={props.updateStatus}
+        onCheckUpdate={props.onCheckUpdate}
       />
     );
   }

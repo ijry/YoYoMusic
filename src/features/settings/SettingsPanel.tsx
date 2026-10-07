@@ -1,8 +1,14 @@
+import { Icon } from "../../shared/icons";
+import { UpdateStatusLine } from "../update/UpdatePrompt";
+import type { UpdateStatus } from "../update/useUpdateChecker";
+
 interface SettingsPanelProps {
   shortcuts: Record<string, string>;
   enrichmentEnabled: boolean;
   errorCode: string | null;
   onShortcutChange: (action: string, shortcut: string) => void;
+  updateStatus: UpdateStatus;
+  onCheckUpdate: () => void;
 }
 
 export function SettingsPanel({
@@ -10,7 +16,11 @@ export function SettingsPanel({
   enrichmentEnabled,
   errorCode,
   onShortcutChange,
+  updateStatus,
+  onCheckUpdate,
 }: SettingsPanelProps) {
+  const checking = updateStatus.kind === "checking";
+
   return (
     <section className="settings-panel" aria-labelledby="settings-title">
       <div className="panel-heading">
@@ -40,6 +50,24 @@ export function SettingsPanel({
           onChange={(event) => onShortcutChange("next_track", event.currentTarget.value)}
         />
       </label>
+
+      <div className="settings-panel__field settings-panel__update">
+        <span>软件更新</span>
+        <div className="settings-panel__update-row">
+          <UpdateStatusLine status={updateStatus} />
+          <button
+            type="button"
+            className="update-button"
+            aria-label="检查更新"
+            title="检查更新"
+            disabled={checking}
+            onClick={onCheckUpdate}
+          >
+            <Icon.updateCheck size={15} />
+            {checking ? "检查中…" : "检查更新"}
+          </button>
+        </div>
+      </div>
     </section>
   );
 }

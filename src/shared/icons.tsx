@@ -6,7 +6,9 @@ import {
   AudioWaveform,
   BarChart3,
   Blend,
+  CircleCheck,
   Disc3,
+  Download,
   Expand,
   FilePlus,
   FolderPlus,
@@ -22,8 +24,10 @@ import {
   PictureInPicture2,
   Play,
   RectangleHorizontal,
+  RefreshCw,
   Repeat,
   Repeat1,
+  RotateCcw,
   Settings,
   Shrink,
   Shuffle,
@@ -34,6 +38,7 @@ import {
   Sparkles,
   Tags,
   Trash2,
+  TriangleAlert,
   Unlock,
   Volume2,
   VolumeX,
@@ -128,6 +133,13 @@ export const Icon = {
    */
   vizExpand: glyph(Expand),
   vizRestore: glyph(Shrink),
+
+  /* Updates. */
+  updateAvailable: glyph(Download),
+  updateCheck: glyph(RefreshCw),
+  updateRestart: glyph(RotateCcw),
+  updateReady: glyph(CircleCheck),
+  warning: glyph(TriangleAlert),
 };
 
 export type IconName = keyof typeof Icon;

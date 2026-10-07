@@ -83,6 +83,30 @@ Vite 的 `publicDir` 默认是 `<root>/public`，**不是** `src/public`。
 2. `src/styles/skin-layouts.css` 增加 `.skin-layout--<id>` 配色块。
 3. 同文件增加 `.skin-thumbnail--<id> span` 缩略图渐变（缩略图必须写死自己的颜色，因为它渲染在**当前**皮肤里）。
 
+### 压在皮肤色上的文字必须用 `--skin-ink`
+
+四套皮肤的强调色都偏亮（`#22d3ee` / `#ffc857` / `#14e0a8`），
+**白字压上去对比度最低只有 1.54 : 1**，几乎看不清。`--skin-ink` 是每套皮肤各自调过的深墨色
+（`#07070f` / `#0a0616` / `#150a06` / `#04100e`），对各自的两个强调色都 ≥ 4.5 : 1（WCAG AA），
+最差 4.60。
+
+所以任何「用皮肤渐变作背景、且自己带文字」的规则，`color` 一律用 `var(--skin-ink)`：
+
+```css
+.track-flag--current {
+  color: var(--skin-ink);                                   /* 不是 #fff */
+  background: linear-gradient(135deg, var(--skin-primary), var(--skin-accent));
+}
+```
+
+注意 **`--color-text`（`#f5f6fc`）同样不合格**——它接近白色，失败方式一模一样，
+最初的修复就漏掉了顶栏、右侧图标栏、静音按钮与桌面歌词开关的选中态。
+`src/styles/skin-contrast.test.ts` 会扫描 `app.css` 拦住这两类写法。
+
+**半透明淡染不受此约束**：`color-mix(... var(--skin-primary) 18%, transparent)`
+是压在深色面板上的浅色薄雾，底色仍然是深的，那里就该用浅色文字。
+测试按背景里有没有 `color-mix` / `transparent` 区分这两种情况。
+
 ## 可视化引擎
 
 后端在 Rust 侧解码，webview 拿不到 PCM 数据，也没有 `AnalyserNode`。因此可视化使用一套模拟信号引擎：
@@ -249,6 +273,62 @@ BPM 92–138 随机，以 trackId 播种。它现在只在**没有真实数据�
 整份 settings 文档只放 `useRef` 里当写入目标，
 **加载完成前不落盘**（否则会用默认值覆盖用户真实设置）。
 歌词面板与桌面歌词浮窗写的是同一份数据，通过持久化文件同步，不做跨窗口消息。
+
+## 自动更新
+
+前端用 `@tauri-apps/plugin-updater` 的 `check()` / `downloadAndInstall()`，
+每 30 分钟一次；Rust 侧只注册插件，端点与公钥写在 `tauri.conf.json` 的 `plugins.updater`。
+
+代码分三层，**所有插件调用都集中在 `updater.ts`**：
+
+| 文件 | 职责 |
+| --- | --- |
+| `updater.ts` | 唯一接触插件的地方；`isTauriRuntime()` 短路，浏览器预览下不碰插件 |
+| `useUpdateChecker.ts` | 轮询、状态机（idle / checking / up-to-date / available / downloading / ready / error） |
+| `UpdatePrompt.tsx` | 对话框 + 设置面板里的一行状态 |
+
+几个刻意的决定：
+
+- **待安装的更新句柄放在模块变量里，不放 React state。** 它持有已下载的字节，
+  重建就等于把下载丢掉。
+- **自动检查失败保持沉默，手动检查才报错。** 自动那次用户没要求，网络抖一下不该弹错误条。
+- **「稍后」会一直记住**（`dismissed` ref），同一个版本不再弹；手动检查会清掉这个标记。
+- **下载中不能关闭**对话框，否则字节已提交却无从继续。
+- 对话框 **portal 到 `body` 且 `position: fixed`**：每个 `.modern-panel` 都有 `overflow: hidden`，
+  直接渲染会被裁掉且按钮点不到（和音量浮层同一个坑）。
+- 卡片背景用 `--color-surface-strong`（不透明）而不是 `--color-surface`。
+  后者本身就是 `rgba(22,23,38,0.66)`，在它上面做 `color-mix` 不改变不透明度，
+  弹窗会透出背后的可视化，更新说明看不清。
+
+### 发布侧：签名与 `latest.json`
+
+```
+tauri build（带 TAURI_SIGNING_PRIVATE_KEY）
+  └─ 每个 bundle 旁生成 .sig
+       └─ normalise-asset-names.mjs   改名为 ASCII 资产名
+            └─ create-updater-manifest.mjs   生成 latest.json（签名内联）
+                 └─ 上传到 Release
+```
+
+**`normalise-asset-names` 必须在 `create-updater-manifest` 之前跑**：
+manifest 里的 URL 是按磁盘上的名字拼的，先改名才能对上最终资产名。
+改名不影响签名——minisign 签的是文件内容，不是文件名。
+
+踩过的坑：
+
+- **`sed 's/^[^A-Za-z0-9]*//'` 会把 `.` 也吃掉**，于是 `悠悠乐听.app.tar.gz` 变成
+  `YoYoMusic_app.tar.gz`，`.app` 这个「这是 macOS 更新包」的语义就没了。
+  字符类要写成 `[^A-Za-z0-9.]`。这段逻辑现在在 `scripts/normalise-asset-names.mjs` 里，
+  **有测试**，不再是一段没测过的 shell。
+- **Windows 上 NSIS 与 MSI 都有 `.sig`，但更新包只有 NSIS**（`-setup.exe`）。
+  manifest 选错会让 Windows 更新静默失效。选择顺序写在 `PAYLOAD_PREFERENCE`。
+- **Linux 的更新包就是 `.AppImage` 本身，不打包成 tar.gz**；只有 macOS 是 `.app.tar.gz`。
+- **`.sig` 的内容要内联进 manifest**，不能写成路径或 URL。
+- `release.yml` 的 verify 任务会**先检查签名密钥存在**，
+  否则要等三个平台都构建完才发现没签上。
+
+两个脚本都在 `scripts/` 下用 `node:test` 测试（`npm run test:scripts`），
+`vitest` 通过 `exclude: ["scripts/**"]` 跳过它们——否则 vitest 会去打包 `node:test` 这个内置模块而报错。
 
 ## 测试与校验
 

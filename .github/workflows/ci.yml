@@ -47,6 +47,12 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # The release scripts decide what every existing install polls and
+      # downloads, so a regression here silently strands users on an old
+      # version. They are plain node modules precisely so they can be tested.
+      - name: Release script tests
+        run: node --test scripts/*.test.mjs
+
   rust:
     name: Rust
     runs-on: ubuntu-latest

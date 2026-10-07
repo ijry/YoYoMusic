@@ -25,6 +25,14 @@
     },
     "macOSPrivateApi": true
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/ijry/YoYoMusic/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDODEzOEIwQzMwMTk4N0IKUldSN21BSERzRGlCUEJ2dVMzWjdodU5ocEcxdWE1Z0ZRdGU3Vm9WTnU4Z1hvdEhmcUl6V0s2eTcK"
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
@@ -33,7 +41,8 @@
     "copyright": "Copyright © 2026 xyito. Licensed under AGPL-3.0-or-later.",
     "homepage": "https://ijry.github.io/YoYoMusic/",
     "shortDescription": "跨平台桌面音乐播放器",
-    "longDescription": "悠悠乐听是一款基于 Tauri 2 与 Rust 的本地音乐播放器，支持六种实时音频可视化、四套现代玻璃拟态皮肤、十段均衡器、歌词与桌面歌词窗口。",
+    "longDescription": "悠悠乐听是一款基于 Tauri 2 与 Rust 的本地音乐播放器，支持八种实时音频可视化、四套现代玻璃拟态皮肤、十段均衡器、歌词与桌面歌词窗口。",
+    "createUpdaterArtifacts": true,
     "windows": {
       "wix": {
         "language": "zh-CN"

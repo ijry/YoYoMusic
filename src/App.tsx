@@ -10,6 +10,8 @@ import {
 import type { SkinSummary } from "./features/skin/SkinManager";
 import type { FeaturePanel } from "./features/skin/layoutTypes";
 import type { TagDraft } from "./features/tags/TagEditor";
+import { UpdatePrompt } from "./features/update/UpdatePrompt";
+import { useUpdateChecker } from "./features/update/useUpdateChecker";
 import { mapAppError } from "./shared/errors";
 import { openAudioFiles, openAudioFolders, openSkinPackageFolder } from "./shared/fileDialog";
 import {
@@ -95,6 +97,12 @@ export default function App() {
    * mean the app could open with its panels buried under a full-bleed canvas.
    */
   const [visualizerMaximized, setVisualizerMaximized] = useState(false);
+  /*
+   * One checker for the whole app: the hook owns the poll timer and the pending
+   * download handle, so a second instance would double the polling and lose the
+   * downloaded bytes.
+   */
+  const update = useUpdateChecker();
   const [error, setError] = useState<string | null>(null);
   const [settingsErrorCode, setSettingsErrorCode] = useState<string | null>(null);
   const [skinError, setSkinError] = useState<string | null>(null);
@@ -335,33 +343,38 @@ export default function App() {
   }
 
   return (
-    <ActiveLayout
-      playlist={playlist}
-      playback={playback}
-      currentTrack={currentTrack}
-      lyricsDocument={lyricsDocument}
-      settings={settings}
-      skins={skins}
-      activePanel={activePanel}
-      libraryOpen={libraryOpen}
-      visualizerMaximized={visualizerMaximized}
-      error={error}
-      skinError={skinError}
-      settingsErrorCode={settingsErrorCode}
-      onActivePanelChange={setActivePanel}
-      onToggleLibrary={() => setLibraryOpen((open) => !open)}
-      onToggleVisualizerMaximized={() => setVisualizerMaximized((maximized) => !maximized)}
-      onPlayerCommand={(command, payload = {}) => void handleCommand(command, payload)}
-      onAddFiles={() => void handleAddFiles()}
-      onAddFolder={() => void handleAddFolder()}
-      onClearPlaylist={() => void handleCommand("clear_playlist")}
-      onSaveTags={handleSaveTags}
-      onApplySkin={(skinId) => void handleApplySkin(skinId)}
-      onImportSkin={() => void handleImportSkin()}
-      onShortcutChange={handleShortcutChange}
-      onVisualizationModeChange={handleVisualizationModeChange}
-      onSettingsChange={updateSettings}
-    />
+    <>
+      <ActiveLayout
+        playlist={playlist}
+        playback={playback}
+        currentTrack={currentTrack}
+        lyricsDocument={lyricsDocument}
+        settings={settings}
+        skins={skins}
+        activePanel={activePanel}
+        libraryOpen={libraryOpen}
+        visualizerMaximized={visualizerMaximized}
+        error={error}
+        skinError={skinError}
+        settingsErrorCode={settingsErrorCode}
+        updateStatus={update.status}
+        onCheckUpdate={update.checkNow}
+        onActivePanelChange={setActivePanel}
+        onToggleLibrary={() => setLibraryOpen((open) => !open)}
+        onToggleVisualizerMaximized={() => setVisualizerMaximized((maximized) => !maximized)}
+        onPlayerCommand={(command, payload = {}) => void handleCommand(command, payload)}
+        onAddFiles={() => void handleAddFiles()}
+        onAddFolder={() => void handleAddFolder()}
+        onClearPlaylist={() => void handleCommand("clear_playlist")}
+        onSaveTags={handleSaveTags}
+        onApplySkin={(skinId) => void handleApplySkin(skinId)}
+        onImportSkin={() => void handleImportSkin()}
+        onShortcutChange={handleShortcutChange}
+        onVisualizationModeChange={handleVisualizationModeChange}
+        onSettingsChange={updateSettings}
+      />
+      <UpdatePrompt checker={update} />
+    </>
   );
 }
 

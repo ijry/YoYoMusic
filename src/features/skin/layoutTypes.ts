@@ -9,6 +9,7 @@ import type {
   VisualizationMode,
 } from "../../shared/types";
 import type { TagDraft } from "../tags/TagEditor";
+import type { UpdateStatus } from "../update/useUpdateChecker";
 import type { SkinSummary } from "./SkinManager";
 
 export type FeaturePanel = "lyrics" | "visualization" | "tags" | "equalizer" | "skin" | "settings";
@@ -45,6 +46,9 @@ export interface PlayerLayoutProps {
   onShortcutChange: (action: string, shortcut: string) => void;
   onVisualizationModeChange: (mode: VisualizationMode) => void;
   onSettingsChange: (settings: AppSettings) => void;
+  /** Latest self-update state, for the settings panel. */
+  updateStatus: UpdateStatus;
+  onCheckUpdate: () => void;
 }
 
 export interface LayoutSkinDefinition {
