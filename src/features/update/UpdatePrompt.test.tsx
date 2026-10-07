@@ -43,6 +43,67 @@ describe("UpdatePrompt", () => {
     expect(screen.getByText(/播放列表不再跳行/)).toBeInTheDocument();
   });
 
+  describe("release notes rendering", () => {
+    /*
+     * The notes are the annotated tag message, which is Markdown. Printing it
+     * raw showed the literal `##` and `-`, which is not what the release page
+     * does — it renders the same text.
+     *
+     * These query `document`, not the render container: the dialog is portalled
+     * to <body>, so nothing it renders is inside the container.
+     */
+    function renderNotes(notes: string) {
+      render(
+        <UpdatePrompt
+          checker={checkerWith({ kind: "available", update: { ...release, notes } })}
+        />,
+      );
+      return document.querySelector(".update-card__notes");
+    }
+
+    it("renders headings as headings, not as literal hashes", () => {
+      renderNotes("## 修复\n- 播放列表不再跳行");
+
+      const heading = document.querySelector(".update-card__notes-heading");
+      expect(heading).toHaveTextContent("修复");
+      expect(heading?.textContent).not.toContain("#");
+      expect(document.querySelector(".update-card__notes")?.textContent).not.toContain("##");
+    });
+
+    it("renders bullets as items without their marker", () => {
+      renderNotes("- 播放列表不再跳行");
+
+      const item = document.querySelector(".update-card__notes-item");
+      expect(item).toHaveTextContent("播放列表不再跳行");
+      expect(item?.textContent).not.toMatch(/^[-*]\s/);
+    });
+
+    it("keeps a plain paragraph as text", () => {
+      renderNotes("修了一些问题");
+      expect(document.querySelector(".update-card__notes-text")).toHaveTextContent("修了一些问题");
+    });
+
+    it("never injects markup from the release body", () => {
+      // The manifest is fetched over the network; its content must stay text.
+      renderNotes("<img src=x onerror=alert(1)>");
+
+      expect(document.querySelector(".update-card__notes img")).toBeNull();
+      expect(document.querySelector(".update-card__notes")?.textContent).toContain(
+        "<img src=x onerror=alert(1)>",
+      );
+    });
+
+    it("ignores blank lines rather than spacing them out", () => {
+      const notes = renderNotes("## 标题\n\n\n- 一条\n\n- 两条\n");
+      expect(notes?.children).toHaveLength(3);
+    });
+
+    it("renders nothing when the notes are only whitespace", () => {
+      renderNotes("   \n\n  ");
+      expect(document.querySelector(".update-card__notes")).toBeNull();
+    });
+  });
+
   it("hides the notes block when the release has none", () => {
     const { container } = render(
       <UpdatePrompt

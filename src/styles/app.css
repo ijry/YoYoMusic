@@ -1918,8 +1918,10 @@ input:focus-visible {
   background: var(--glass-fill-strong);
 }
 
-/* Release notes come from the manifest and are plain text. */
+/* Release notes come from the manifest and are Markdown. */
 .update-card__notes {
+  display: grid;
+  gap: 5px;
   max-height: 200px;
   overflow: auto;
   padding: 11px 13px;
@@ -1927,9 +1929,39 @@ input:focus-visible {
   border-radius: var(--radius-sm);
   color: var(--color-muted);
   font-size: 0.78rem;
-  line-height: 1.65;
-  white-space: pre-wrap;
+  line-height: 1.6;
   background: var(--glass-fill);
+}
+
+.update-card__notes-heading {
+  margin-top: 5px;
+  color: var(--color-text);
+  font-size: 0.79rem;
+}
+
+.update-card__notes-heading:first-child {
+  margin-top: 0;
+}
+
+.update-card__notes-item {
+  position: relative;
+  padding-left: 13px;
+}
+
+/* A drawn bullet, so the marker aligns with wrapped lines. */
+.update-card__notes-item::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0.62em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--skin-primary);
+}
+
+.update-card__notes-text {
+  color: var(--color-text);
 }
 
 .update-card__progress {

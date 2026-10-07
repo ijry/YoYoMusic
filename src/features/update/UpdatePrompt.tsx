@@ -14,6 +14,65 @@ function formatBytes(value: number): string {
 }
 
 /*
+ * The notes are the annotated tag message, which is Markdown — the release page
+ * renders it, but plain text here showed the literal `##` and `-`. This handles
+ * the three things a changelog actually uses: headings, bullets and paragraphs.
+ *
+ * It builds elements rather than HTML, so a release body can never inject
+ * markup into the app.
+ */
+function ReleaseNotes({ notes }: { notes: string }) {
+  const blocks: Array<{ kind: "heading" | "item" | "text"; text: string }> = [];
+
+  for (const raw of notes.split("\n")) {
+    const line = raw.trimEnd();
+    if (line.trim().length === 0) continue;
+
+    const heading = line.match(/^#{1,6}\s+(.*)$/);
+    if (heading) {
+      blocks.push({ kind: "heading", text: heading[1].trim() });
+      continue;
+    }
+
+    const item = line.match(/^\s*[-*+]\s+(.*)$/);
+    if (item) {
+      blocks.push({ kind: "item", text: item[1].trim() });
+      continue;
+    }
+
+    blocks.push({ kind: "text", text: line.trim() });
+  }
+
+  if (blocks.length === 0) return null;
+
+  return (
+    <div className="update-card__notes">
+      {blocks.map((block, index) => {
+        if (block.kind === "heading") {
+          return (
+            <strong className="update-card__notes-heading" key={index}>
+              {block.text}
+            </strong>
+          );
+        }
+        if (block.kind === "item") {
+          return (
+            <span className="update-card__notes-item" key={index}>
+              {block.text}
+            </span>
+          );
+        }
+        return (
+          <span className="update-card__notes-text" key={index}>
+            {block.text}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+/*
  * The update dialog.
  *
  * Portalled to <body> and fixed-positioned, because every `.modern-panel` sets
@@ -74,7 +133,7 @@ export function UpdatePrompt({ checker }: UpdatePromptProps) {
         </header>
 
         {update.notes && status.kind === "available" ? (
-          <div className="update-card__notes">{update.notes}</div>
+          <ReleaseNotes notes={update.notes} />
         ) : null}
 
         {status.kind === "downloading" ? (
