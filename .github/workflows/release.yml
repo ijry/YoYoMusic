@@ -88,6 +88,11 @@ jobs:
       - name: Release script tests
         run: node --test scripts/*.test.mjs
 
+      # Belt and braces: CI runs this too, but the release is where a mismatch
+      # actually breaks the build, and this job is cheap.
+      - name: Tauri version check
+        run: node scripts/check-tauri-versions.mjs
+
       - name: Install Linux dependencies
         run: |
           sudo apt-get update

@@ -47,6 +47,14 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # `tauri build` refuses to run when the Rust `tauri` crate and the npm
+      # `@tauri-apps/api` package are on different minor versions, and nothing
+      # else notices: `cargo test` does not care and neither does this build.
+      # Without this check the mismatch only shows up in the release job, after
+      # a tag has been pushed. It has already cost one release.
+      - name: Tauri version check
+        run: node scripts/check-tauri-versions.mjs
+
       # The release scripts decide what every existing install polls and
       # downloads, so a regression here silently strands users on an old
       # version. They are plain node modules precisely so they can be tested.

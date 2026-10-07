@@ -37,8 +37,13 @@ tauri-plugin-window-state = "2.4.1"
 tauri-plugin-dialog = "2.7.1"
 # Self-update: `updater` checks the release manifest and installs a signed
 # bundle; `process` provides the relaunch that finishes the job.
-tauri-plugin-updater = "2"
-tauri-plugin-process = "2"
+#
+# Pinned to the minor, not `"2"`. The newest 2.13.1 / 2.4.0 require `tauri ^2.12`,
+# which would drag the `tauri` crate off the 2.11 line that the frontend's
+# `@tauri-apps/api` is pinned to — and `tauri build` refuses to run when the two
+# differ by a minor version. 2.12.0 / 2.3.1 only need `tauri ^2.10` / `^2.8.2`.
+tauri-plugin-updater = "~2.12.0"
+tauri-plugin-process = "~2.3.1"
 
 [dev-dependencies]
 tempfile = "3.27.0"
