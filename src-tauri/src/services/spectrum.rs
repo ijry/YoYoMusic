@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use rodio::{ChannelCount, SampleRate, Source};
+use rodio::{source::SeekError, ChannelCount, SampleRate, Source};
 use serde::Serialize;
 use tauri::{Emitter, Manager};
 
@@ -164,6 +164,30 @@ impl<S: Source> Source for TappedSource<S> {
     fn total_duration(&self) -> Option<Duration> {
         self.inner.total_duration()
     }
+
+    /*
+     * Forwarded, and not optional.
+     *
+     * `Source::try_seek` has a default that reports "not supported", and leaving
+     * the decorator on that default made every file unseekable: dragging the
+     * progress bar failed with
+     *
+     *     Seeking is not supported by source: ...TappedSource<Decoder<...>>
+     *
+     * and the UI, reading `AppError::Unplayable`, told people their file could
+     * not be played. Nothing is wrong with the file — the decorator simply
+     * swallowed the ability of the decoder underneath it.
+     */
+    fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
+        self.inner.try_seek(pos)?;
+
+        // A seek lands on a frame boundary, so drop whatever partial frame was
+        // in flight rather than averaging samples from either side of the jump.
+        self.position_in_frame = 0;
+        self.frame_sum = 0.0;
+
+        Ok(())
+    }
 }
 
 /// Ships a window of samples to the UI on a fixed cadence.
@@ -202,7 +226,16 @@ pub fn spawn_spectrum_emitter(app: tauri::AppHandle) -> Result<(), AppError> {
 
 #[cfg(test)]
 mod tests {
-    use rodio::{buffer::SamplesBuffer, Source};
+    use std::{
+        sync::{Arc, Mutex},
+        time::Duration,
+    };
+
+    use rodio::{
+        buffer::SamplesBuffer,
+        source::SeekError,
+        ChannelCount, SampleRate, Source,
+    };
 
     use super::{SampleTap, TappedSource, WINDOW_SAMPLES};
 
@@ -298,5 +331,144 @@ mod tests {
         assert_eq!(samples[0], 0.0);
         assert_eq!(samples[1], 0.0);
         assert!(samples.iter().all(|sample| sample.is_finite()));
+    }
+
+    /// A source that records the seeks it was asked to perform.
+    ///
+    /// `SamplesBuffer` does support seeking, so it can prove the decorator does
+    /// not *break* seeking — but not that the position arrives intact, nor that
+    /// a refusal is passed back up rather than swallowed.
+    struct SeekSpy {
+        samples: std::vec::IntoIter<f32>,
+        channels: u16,
+        seeks: Arc<Mutex<Vec<Duration>>>,
+        refuses: bool,
+    }
+
+    impl SeekSpy {
+        fn new(samples: Vec<f32>, channels: u16) -> (Self, Arc<Mutex<Vec<Duration>>>) {
+            let seeks = Arc::new(Mutex::new(Vec::new()));
+            (
+                Self {
+                    samples: samples.into_iter(),
+                    channels,
+                    seeks: seeks.clone(),
+                    refuses: false,
+                },
+                seeks,
+            )
+        }
+
+        fn refusing(mut self) -> Self {
+            self.refuses = true;
+            self
+        }
+    }
+
+    impl Iterator for SeekSpy {
+        type Item = f32;
+
+        fn next(&mut self) -> Option<f32> {
+            self.samples.next()
+        }
+    }
+
+    impl Source for SeekSpy {
+        fn current_span_len(&self) -> Option<usize> {
+            None
+        }
+
+        fn channels(&self) -> ChannelCount {
+            self.channels
+        }
+
+        fn sample_rate(&self) -> SampleRate {
+            44_100
+        }
+
+        fn total_duration(&self) -> Option<Duration> {
+            None
+        }
+
+        fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
+            if self.refuses {
+                return Err(SeekError::NotSupported { underlying_source: "SeekSpy" });
+            }
+            self.seeks.lock().unwrap().push(pos);
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn forwards_seek_to_the_source_it_wraps() {
+        /*
+         * Regression: the decorator did not implement `try_seek` at all, so it
+         * inherited the default that reports "not supported" and every file
+         * became unseekable. Dragging the progress bar surfaced it as
+         * "file is unplayable: seek failed: Seeking is not supported by source:
+         * ...TappedSource<...>".
+         */
+        let (source, seeks) = SeekSpy::new(vec![0.0; WINDOW_SAMPLES], 1);
+        let tap = SampleTap::new();
+        let mut tapped = TappedSource::new(source, tap);
+
+        tapped
+            .try_seek(Duration::from_millis(4_200))
+            .expect("the decorator must not refuse a seek its source supports");
+
+        assert_eq!(*seeks.lock().unwrap(), vec![Duration::from_millis(4_200)]);
+    }
+
+    #[test]
+    fn reports_a_refusal_from_the_source_instead_of_swallowing_it() {
+        // The position must not silently disagree with where the audio actually
+        // is, so a real refusal has to travel back up.
+        let (source, _) = SeekSpy::new(vec![0.0; 8], 1);
+        let mut tapped = TappedSource::new(source.refusing(), SampleTap::new());
+
+        assert!(tapped.try_seek(Duration::from_secs(1)).is_err());
+    }
+
+    #[test]
+    fn seeking_between_frames_does_not_average_across_the_jump() {
+        /*
+         * The tap downmixes one frame at a time, accumulating across `next`
+         * calls. Seeking in the middle of a frame used to leave that partial
+         * frame in place, so the first mono sample after the jump mixed audio
+         * from both sides of it.
+         *
+         * Values are chosen so the two behaviours differ: the pre-seek sample is
+         * 1.0 and every post-seek frame is (0.2, 0.6), which averages to 0.4. A
+         * stale accumulator would instead push (1.0 + 0.2) / 2 = 0.6.
+         */
+        let mut data = vec![1.0];
+        data.extend(std::iter::repeat([0.2, 0.6]).take(WINDOW_SAMPLES).flatten());
+
+        let (source, _) = SeekSpy::new(data, 2);
+        let tap = SampleTap::new();
+        let mut tapped = TappedSource::new(source, tap.clone());
+
+        // Leave a partial frame in flight, then jump.
+        tapped.next().expect("the first sample");
+        tapped.try_seek(Duration::from_secs(1)).expect("seek");
+
+        for _ in tapped {}
+
+        let (samples, _, _) = tap.snapshot().expect("a full window is available");
+        assert!(
+            (samples[0] - 0.4).abs() < 1e-6,
+            "first mono sample after the seek was {} — the partial frame leaked across it",
+            samples[0],
+        );
+    }
+
+    #[test]
+    fn seeking_keeps_seeking_beyond_the_end_working() {
+        // `SamplesBuffer` clamps; the decorator must not turn that into an error
+        // or change the position it forwards.
+        let source = SamplesBuffer::new(1, 44_100, vec![0.5; WINDOW_SAMPLES * 2]);
+        let mut tapped = TappedSource::new(source, SampleTap::new());
+
+        assert!(tapped.try_seek(Duration::from_secs(30)).is_ok());
     }
 }

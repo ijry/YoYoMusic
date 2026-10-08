@@ -7,6 +7,14 @@ pub enum AppError {
     FileMissing(String),
     #[error("file is unplayable: {0}")]
     Unplayable(String),
+    /*
+     * Kept apart from `Unplayable` on purpose. A source that cannot seek is
+     * still perfectly playable, and reporting a failed seek as `Unplayable` told
+     * people their file was broken while it was playing fine — which is exactly
+     * what a decorator swallowing `try_seek` used to cause.
+     */
+    #[error("cannot seek: {0}")]
+    SeekFailed(String),
     #[error("metadata read failed: {0}")]
     MetadataReadFailed(String),
     #[error("metadata write failed: {0}")]
@@ -34,6 +42,7 @@ impl Serialize for AppError {
         let code = match self {
             AppError::FileMissing(_) => "file_missing",
             AppError::Unplayable(_) => "unplayable",
+            AppError::SeekFailed(_) => "seek_failed",
             AppError::MetadataReadFailed(_) => "metadata_read_failed",
             AppError::MetadataWriteFailed(_) => "metadata_write_failed",
             AppError::InvalidSkinPackage(_) => "invalid_skin_package",

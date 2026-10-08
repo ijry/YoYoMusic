@@ -6,6 +6,9 @@ export interface AppErrorPayload {
 const errorPrefix: Record<string, string> = {
   file_missing: "文件丢失",
   unplayable: "音频文件不可播放",
+  // Distinct from `unplayable`: the file plays, the position just cannot be
+  // reached. Saying "音频文件不可播放" here was misleading.
+  seek_failed: "无法跳转到该位置",
   metadata_read_failed: "标签读取失败",
   metadata_write_failed: "标签写回失败",
   invalid_skin_package: "皮肤包无效",

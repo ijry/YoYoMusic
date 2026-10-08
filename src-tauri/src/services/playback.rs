@@ -194,11 +194,23 @@ impl PlaybackService {
     }
 
     pub fn seek(&mut self, position_ms: u64) -> Result<PlaybackState, AppError> {
-        self.state.position_ms = position_ms.min(self.state.duration_ms);
+        let target = position_ms.min(self.state.duration_ms);
+
         if let Some(sink) = self.audio.as_ref().and_then(|audio| audio.sink.as_ref()) {
-            sink.try_seek(Duration::from_millis(self.state.position_ms))
-                .map_err(|err| AppError::Unplayable(format!("seek failed: {err}")))?;
+            /*
+             * A refused seek is not a broken file. Reporting it as
+             * `AppError::Unplayable` showed "音频文件不可播放" for a track that was
+             * playing perfectly well, which is what made a decorator that
+             * swallowed `try_seek` so confusing to diagnose.
+             */
+            sink.try_seek(Duration::from_millis(target))
+                .map_err(|err| AppError::SeekFailed(err.to_string()))?;
         }
+
+        // Committed only once the audio has actually moved; otherwise the
+        // progress bar would claim a position the player never reached.
+        self.state.position_ms = target;
+
         Ok(self.current_state())
     }
 
