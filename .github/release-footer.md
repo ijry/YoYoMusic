@@ -6,8 +6,11 @@
 | 平台 | 安装包 |
 | --- | --- |
 | Windows 10/11 | `.exe`（NSIS 安装器）或 `.msi` |
-| macOS（Apple Silicon / Intel） | `.dmg` |
+| macOS（Apple Silicon） | `.dmg` |
 | Linux | `.deb` 或 `.AppImage` |
+
+> macOS 目前只提供 Apple Silicon（M 系列）构建，Intel 机型暂不可用 ——
+> 构建跑在 arm64 runner 上，产物是 `aarch64.dmg`，无法在 Intel 上运行。
 
 ## 安装提示
 

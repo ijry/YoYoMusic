@@ -1,7 +1,7 @@
 {
   "name": "yoyomusic",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -42,7 +42,7 @@
     "vite": "^8.1.1",
     "vitest": "^4.1.9"
   },
-  "description": "悠悠乐听 — 基于 Tauri 2 + React 19 的跨平台桌面音乐播放器，内置六种实时音频可视化与四套现代玻璃拟态皮肤。",
+  "description": "\u60a0\u60a0\u4e50\u542c \u2014 \u57fa\u4e8e Tauri 2 + React 19 \u7684\u8de8\u5e73\u53f0\u684c\u9762\u97f3\u4e50\u64ad\u653e\u5668\uff0c\u5185\u7f6e\u516d\u79cd\u5b9e\u65f6\u97f3\u9891\u53ef\u89c6\u5316\u4e0e\u56db\u5957\u73b0\u4ee3\u73bb\u7483\u62df\u6001\u76ae\u80a4\u3002",
   "author": "xyito",
   "license": "AGPL-3.0-or-later",
   "homepage": "https://ijry.github.io/YoYoMusic/",

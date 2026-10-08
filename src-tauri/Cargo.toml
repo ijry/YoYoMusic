@@ -1,6 +1,6 @@
 [package]
 name = "yoyomusic"
-version = "0.0.1"
+version = "0.0.2"
 description = "悠悠乐听 — 跨平台桌面音乐播放器"
 authors = ["xyito"]
 license = "AGPL-3.0-or-later"
