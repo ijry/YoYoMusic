@@ -1,5 +1,4 @@
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +16,12 @@ import { fileURLToPath } from "node:url";
  * reads what was actually published, which is the only thing a client sees.
  *
  *   node scripts/verify-release.mjs v0.0.2
+ *
+ * Reads the GitHub API over `fetch` rather than shelling out to `gh`: the `gh`
+ * CLI is a shell wrapper on Windows, and this machine blocks Node from spawning
+ * subprocesses at all (`EBUSY`), which made the shelling-out version impossible
+ * to run where it is needed. `fetch` has no such problem, and drops the
+ * dependency on `gh` being installed.
  */
 
 /**
@@ -30,26 +35,52 @@ export const REQUIRED_PLATFORMS = ["windows-x86_64", "darwin-aarch64", "linux-x8
 /** Asset names that must never be published — the signatures are inlined. */
 export const FORBIDDEN_SUFFIX = ".sig";
 
-function gh(args) {
-  return execFileSync("gh", args, { encoding: "utf8", cwd: repoRoot() });
-}
+/** Owner/repo the release lives in. Matches the manifest URLs the workflow builds. */
+export const REPOSITORY = "ijry/YoYoMusic";
 
 function repoRoot() {
   return path.resolve(fileURLToPath(import.meta.url), "../..");
 }
 
-export function releaseAssets(tag) {
-  const json = gh(["release", "view", tag, "--json", "assets"]);
-  return JSON.parse(json).assets.map((asset) => asset.name);
+function apiUrl(tag) {
+  return `https://api.github.com/repos/${REPOSITORY}/releases/tags/${encodeURIComponent(tag)}`;
 }
 
-export function releaseBody(tag) {
-  return gh(["release", "view", tag, "--json", "body", "-q", ".body"]);
+function headers() {
+  const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+  return {
+    accept: "application/vnd.github+json",
+    ...(token ? { authorization: `Bearer ${token}` } : {}),
+  };
 }
 
-export function downloadManifest(tag, into) {
-  gh(["release", "download", tag, "-p", "latest.json", "--clobber", "--dir", into]);
-  return JSON.parse(readFileSync(path.join(into, "latest.json"), "utf8"));
+/** The release's asset names and body, straight from the API. */
+export async function fetchRelease(tag) {
+  const response = await fetch(apiUrl(tag), { headers: headers() });
+  if (!response.ok) {
+    throw new Error(
+      `GitHub API returned ${response.status} for ${tag}. ` +
+        `Is the tag published, and does the repo exist?`,
+    );
+  }
+  const release = await response.json();
+  return {
+    assets: release.assets.map((asset) => asset.name),
+    body: release.body ?? "",
+    // The manifest is an asset; the API gives a direct URL for its bytes.
+    manifestUrl: release.assets.find((asset) => asset.name === "latest.json")?.browser_download_url ?? null,
+  };
+}
+
+export async function fetchManifest(release, into) {
+  if (!release.manifestUrl) return null;
+  const response = await fetch(release.manifestUrl, { headers: headers() });
+  if (!response.ok) throw new Error(`Could not download latest.json (${response.status})`);
+
+  const text = await response.text();
+  await mkdir(into, { recursive: true });
+  await writeFile(path.join(into, "latest.json"), text);
+  return JSON.parse(text);
 }
 
 /**
@@ -125,20 +156,28 @@ if (isMain) {
     console.error("Usage: node scripts/verify-release.mjs <tag>   e.g. v0.0.2");
     process.exitCode = 1;
   } else {
-    const into = path.join(repoRoot(), ".visual-check");
-    const assets = releaseAssets(tag);
-    const manifest = downloadManifest(tag, into);
-    const problems = inspectRelease({ tag, assets, manifest, body: releaseBody(tag) });
+    try {
+      const into = path.join(repoRoot(), ".visual-check");
+      const release = await fetchRelease(tag);
+      const manifest = await fetchManifest(release, into);
+      const problems = inspectRelease({ tag, ...release, manifest });
 
-    console.log(`资产（${assets.length}）:`);
-    for (const name of [...assets].sort()) console.log(`  ${name}`);
-    console.log(`\n平台: ${Object.keys(manifest.platforms).sort().join(", ")}`);
+      console.log(`资产（${release.assets.length}）:`);
+      for (const name of [...release.assets].sort()) console.log(`  ${name}`);
+      if (manifest) {
+        console.log(`\n平台: ${Object.keys(manifest.platforms).sort().join(", ")}`);
+        console.log(`清单版本: ${manifest.version}`);
+      }
 
-    if (problems.length === 0) {
-      console.log(`\n${tag} 核对通过 ✓`);
-    } else {
-      console.error(`\n发现 ${problems.length} 个问题:`);
-      for (const problem of problems) console.error(`  ✗ ${problem}`);
+      if (problems.length === 0) {
+        console.log(`\n${tag} 核对通过 ✓`);
+      } else {
+        console.error(`\n发现 ${problems.length} 个问题:`);
+        for (const problem of problems) console.error(`  ✗ ${problem}`);
+        process.exitCode = 1;
+      }
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
       process.exitCode = 1;
     }
   }
