@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"image"
 	"image/color"
@@ -31,10 +32,14 @@ var cliArgs struct {
 func parseFlags() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	fs.BoolVar(&cliArgs.play, "play", false, "start playback of the imported files")
-	// flag.ContinueOnError prints usage and returns ErrHelp for -h/--help;
-	// exit instead of starting a GUI nobody asked for. This also gives CI a
-	// cheap way to check the binary runs.
+	// flag.ContinueOnError prints usage and returns ErrHelp for -h/--help:
+	// exit instead of starting a GUI nobody asked for, with the conventional
+	// status 0. A malformed flag exits 2. Both give CI a cheap way to check
+	// the binary runs without a display.
 	if err := fs.Parse(os.Args[1:]); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			os.Exit(0)
+		}
 		os.Exit(2)
 	}
 	cliArgs.imports = fs.Args()

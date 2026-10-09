@@ -56,6 +56,9 @@ jobs:
       # MyGo needs no cgo, so no system packages are required: this is the
       # whole reason the project moved off Tauri, whose Linux builds need
       # webkit2gtk, appindicator, rsvg and patchelf installed first.
+      #
+      # .gitattributes pins *.go to LF, so a Windows runner's
+      # core.autocrlf=true cannot hand gofmt CRLF and fail every file.
       - name: Format check
         run: |
           unformatted="$(gofmt -l .)"
@@ -97,9 +100,9 @@ jobs:
 
       - name: Smoke test the binary
         run: |
-          # --help exits without starting the GUI, so this works on a
-          # headless runner. A binary that cannot even parse its flags
-          # fails here rather than in the release.
+          # --help prints usage and exits 0 without starting the GUI, so this
+          # works on a headless runner. A binary that cannot even parse its
+          # flags fails here rather than in the release.
           case "$RUNNER_OS" in
             Windows) ./yoyomusic.exe --help ;;
             *)       ./yoyomusic --help ;;
