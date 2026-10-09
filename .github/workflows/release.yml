@@ -20,6 +20,12 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+# Every step runs bash, including on Windows: the default shell there is
+# PowerShell, which cannot parse `if [ ... ]; then` or `${VAR#prefix}`.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   verify:
     name: Verify release
@@ -81,8 +87,9 @@ jobs:
 
       - name: Format check
         run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "::error::these files need gofmt:$(gofmt -l . | tr '\n' ' ')"
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "::error::these files need gofmt: $(echo "$unformatted" | tr '\n' ' ')"
             exit 1
           fi
 
@@ -124,15 +131,10 @@ jobs:
 
       - name: Install NSIS
         if: runner.os == 'Windows'
-        # mygo build writes the Windows installer with NSIS and downloads it
-        # itself when missing, but doing it here keeps the build reproducible
-        # and avoids a surprise download in the middle of a release.
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          choco install nsis -y --no-progress
-          $nsis = "${env:ProgramFiles(x86)}\NSIS"
-          if (Test-Path $nsis) { echo "$nsis" >> $env:GITHUB_PATH }
+        # mygo build writes the Windows installer with NSIS. It downloads NSIS
+        # itself when it is missing, but installing it here keeps the build
+        # reproducible and avoids a surprise download mid-release.
+        run: choco install nsis -y --no-progress
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -152,7 +154,6 @@ jobs:
         run: go tool mygo build -platform ${{ matrix.target }} -upload
 
       - name: Collect artifacts
-        shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/artifacts"

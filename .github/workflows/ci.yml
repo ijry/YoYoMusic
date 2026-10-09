@@ -19,9 +19,16 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Every step runs bash, including on Windows: the default shell there is
+# PowerShell, which cannot parse `if [ ... ]; then` and fails the whole job
+# before the build even starts.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
-    name: Build & test
+    name: Build & test (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -51,11 +58,12 @@ jobs:
       # webkit2gtk, appindicator, rsvg and patchelf installed first.
       - name: Format check
         run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "::error::these files need gofmt:$(gofmt -l . | tr '\n' ' ')"
-            gofmt -l .
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "::error::these files need gofmt: $(echo "$unformatted" | tr '\n' ' ')"
             exit 1
           fi
+          echo "gofmt clean"
 
       - name: Vet
         run: go vet ./...
@@ -69,30 +77,47 @@ jobs:
       # runner, which is free precisely because there is no cgo.
       - name: Cross-compile every platform
         run: |
-          go build -o /dev/null .
+          set -euo pipefail
+          for target in windows/amd64 darwin/arm64 darwin/amd64 linux/arm64; do
+            echo "--- cross-compiling $target ---"
+            GOOS="${target%/*}" GOARCH="${target#*/}" go build -o /dev/null .
+          done
+
+      # The binary of this runner's own platform: the smoke test needs
+      # something to run and the packaging step needs something to bundle.
+      - name: Build the native binary
+        run: |
+          set -euo pipefail
+          case "$RUNNER_OS" in
+            Windows) out=yoyomusic.exe ;;
+            *)       out=yoyomusic ;;
+          esac
+          go build -o "$out" .
+          ls -la "$out"
 
       - name: Smoke test the binary
-        shell: bash
         run: |
           # --help exits without starting the GUI, so this works on a
           # headless runner. A binary that cannot even parse its flags
           # fails here rather than in the release.
-          ./yoyomusic --help
+          case "$RUNNER_OS" in
+            Windows) ./yoyomusic.exe --help ;;
+            *)       ./yoyomusic --help ;;
+          esac
           echo "binary responds to --help"
 
       # Packaging is where platform bugs hide: a missing resource, an
-      # installer that NSIS refuses to write, an icon that will not decode.
+      # installer NSIS refuses to write, an icon that will not decode.
       # Building the installers on every push means the first real check is
       # not the release itself.
       - name: Package for ${{ matrix.target }}
-        shell: bash
         run: |
           set -euo pipefail
           go tool mygo build -platform ${{ matrix.target }}
           echo "--- artifacts ---"
           find dist -type f | sort
-          # Every platform must produce at least one installer/archive.
-          count=$(find dist -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.deb' -o -name '*.tar.gz' -o -name '*.app' -o -name '*.zip' \) | wc -l)
+          count=$(find dist -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.deb' \
+            -o -name '*.tar.gz' -o -name '*.app' \) | wc -l)
           if [ "$count" -lt 1 ]; then
             echo "::error::no installers were produced for ${{ matrix.target }}"
             exit 1
