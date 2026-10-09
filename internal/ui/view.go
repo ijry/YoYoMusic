@@ -72,7 +72,15 @@ func View(a *app.App) func(c *myui.Context) {
 			// Fill() child here would split the column's height between the
 			// two layers — measured at 227px each in a 681px window — and
 			// push the whole chrome into the middle of the screen.
-			backdrop := myui.Box(c).Absolute().Left(0).Top(0).Right(0).Bottom(0)
+			//
+			// Its insets keep it off the chrome: it starts under the toolbar
+			// and stops just above the transport, so nothing is drawn where
+			// the opaque bars cover it anyway. Insetting from the bottom by
+			// the whole transport height would leave a dead band between the
+			// spectrum and the seek bar, so the visualiser reaches down into
+			// the transport's own upper padding instead.
+			backdrop := myui.Box(c).Absolute().
+				Left(0).Top(topBarH).Right(0).Bottom(transportH - vizDeckInset)
 			backdrop.Children(func() { visualizerBackdrop(c, a, skin) })
 
 			// Layer 2: the chrome. It must ALSO be absolute: mygo paints all
@@ -343,23 +351,28 @@ func vizSlide(d float32) myui.ElementTransition {
 // single icon of the mode in use, and the pointer unfolds the rest of the modes
 // around it, folds them back when it leaves.
 //
-// Three details are what make that work rather than fight the pointer:
+// Every mode button — the face included — is absolutely positioned, which is
+// what keeps the eight of them the same size and on one line. An earlier
+// version kept the face in flow and hung the other seven off the row; the
+// face then measured 55 wide while the other seven measured 32, because a
+// flow child's width is its flex base (hyp = max(minMain, …)) while an
+// absolute child's is the width it was given outright, and Button's own
+// Padding(t.Space(1.5), t.Space(3.5)) pushed the face's intrinsic minimum past
+// its 28. Absolute placement sidesteps the flex maths entirely.
 //
-//   - The row is always vizPickerWidth wide, open or folded, and centres the
-//     face. A row that grew with its contents would be re-centred by the two
-//     Grow() spacers around it as they took back the room, sliding the icon
-//     out from under the cursor the moment it was hovered — and since the
-//     folded row is what opens it, the picker would flicker open and shut.
-//   - Only the face is in flow. The other modes hang off it absolutely, so
-//     they cannot widen the row and cannot move the face.
-//   - The face carries no transition. A transition works in the parent's
-//     coordinates, and a face animating from its folded offset to its place
-//     among the open modes would be dragged across the bar by a move the
-//     layout had already made.
+// The row itself is always vizPickerWidth wide, open or folded, and centres
+// the face. It has to be: a row that grew with its contents would be
+// re-centred by the two Grow() spacers around it as they took back the room,
+// sliding the icon out from under the cursor the moment it was hovered — and
+// since the folded row is what opens it, the picker would flicker open and
+// shut. That does mean the picker answers the pointer across its whole width
+// even when folded, which is a little eager, but the alternative is the
+// flicker.
 //
-// The room being fixed does mean the picker answers the pointer across its
-// whole width even when folded, which is a little eager, but the alternative —
-// a row that widens as it opens — is the flicker above.
+// The face carries no transition. A transition works in the parent's
+// coordinates, so a face animating from its folded offset to its place among
+// the open modes would be dragged across the bar by a move the layout had
+// already made.
 //
 // Eight names would not fit as labels, so each mode is an icon button with a
 // tooltip carrying the full name, and the active one is highlighted instead of
@@ -368,15 +381,15 @@ func vizModePicker(c *myui.Context, a *app.App) {
 	t := c.Theme()
 	active := app.VizOrder[a.VizMode]
 
-	row := myui.Row(c).Width(vizPickerWidth).Height(vizItemSize).
-		AlignItems(myui.Center).Justify(myui.Center)
+	row := myui.Row(c).Width(vizPickerWidth).Height(vizItemSize)
 	open := row.Hovered()
 
 	row.Children(func() {
 		// The face: the mode in use, always in the same place, and the one
 		// control that is there whether the picker is open or folded.
 		face := iconButton(c, "viz-face", vizIcon(active), vizLabel(active))
-		face.Size(vizItemSize, vizItemSize).Radius(7).
+		face.Absolute().Top(0).Left(vizFaceX()).
+			Size(vizItemSize, vizItemSize).Radius(7).
 			Background(t.Accent.Alpha(0.22)).
 			OnClick(func() { a.SetVisualization(active) })
 
@@ -483,6 +496,13 @@ func sidePanelIcon(p string) string {
 const (
 	topBarH    = 52
 	transportH = 92 // seek bar plus the deck
+
+	// vizDeckInset is how far the visualiser's floor sits above the window
+	// bottom. It is less than the transport height on purpose: the seek bar
+	// occupies the top of the transport, so the spectrum may run down into
+	// the deck's padding and still clear the bar. Insetting by the whole
+	// transport height would leave a dead band between the two.
+	vizDeckInset = 34
 )
 
 // leftRail is the playlist column: a floating panel when open, a slim icon

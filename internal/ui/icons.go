@@ -99,8 +99,16 @@ func icon(name string) *myui.SVG {
 // iconButton is a button whose label is an SVG icon rather than text. The
 // tooltip carries the accessible name, since an icon alone says nothing to a
 // screen reader.
+//
+// The tip is drawn by hand rather than with Tooltip, for two reasons. The
+// theme's own tooltip is the inverse of the theme, which on these dark skins
+// is a white plate with dark text — a bright block dropped over a dark window;
+// styling it to the skin keeps it quiet. And it is placed over the button from
+// the button's own box rather than left to AttachTo, which resolves against
+// the overlay's box — the whole window — instead of the anchor, so a tip for a
+// button in the middle of the toolbar landed a hundred-odd pixels off.
 func iconButton(c *myui.Context, key, name, tip string) myui.Element {
-	b := myui.Button(c.Key(key), "").Tooltip(tip)
+	b := myui.Button(c.Key(key), "")
 	if svg := icon(name); svg != nil {
 		// Icon takes its colour from the surrounding TextColor, so it
 		// follows the theme without being told. The icon is centred in a
@@ -113,5 +121,35 @@ func iconButton(c *myui.Context, key, name, tip string) myui.Element {
 			})
 		})
 	}
+	if tip == "" {
+		return b
+	}
+	// Where the pointer is inside the button, in the button's coordinates,
+	// plus where the button is in the window: together they are the pointer's
+	// window position, which is where the tip goes. Both are read here, while
+	// the frame is being built, because the tooltip callback runs later. They
+	// are zero until the pointer first lands on the button, which is also when
+	// the tip starts showing, so that is exactly when they are needed.
+	px, py, _ := b.PointerPosition()
+	bb := b.Bounds()
+	tipW := float32(len([]rune(tip)))*14 + 20
+	myui.TooltipBase(c, b, func(t myui.Element) {
+		th := c.Theme()
+		// The tip is a child of the overlay, whose box is the window's, so
+		// these are window coordinates: the pointer's own position, nudged
+		// clear of the cursor.
+		t.Absolute().Left(bb.X+px+14).Top(bb.Y+py-34).
+			Width(tipW).Padding(th.Space(1.25), th.Space(2)).
+			Radius(th.Space(1.25)).FontSize(th.FontSize-1).
+			Background(th.Surface.Mix(th.Text, 0.12)).
+			TextColor(th.Text).
+			Border(1, th.Border)
+		t.Shadow(0, 2, 8, 0, myui.RGBA(0, 0, 0, 0.35))
+		t.Children(func() {
+			// TextAlign, not the box's align: the tip is a box, and a box
+			// lays its text child out across its whole width.
+			myui.Text(c, tip).TextAlign(myui.Center)
+		})
+	})
 	return b
 }

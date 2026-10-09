@@ -45,8 +45,9 @@ const (
 // vizState holds the per-frame stateful effects. One instance per app, shared
 // by every draw call, since there is only one visualiser canvas.
 type vizState struct {
-	peaks   [audio.BandCount]float32 // spectrum peak-hold caps
-	falling [audio.BandCount]bool    // whether each cap is falling
+	peaks     [audio.BandCount]float32 // spectrum peak-hold caps
+	falling   [audio.BandCount]bool    // whether each cap is falling
+	spectrumT float64                  // spectrum wall-clock, for the idle swell
 
 	water    [waterfallRows][audio.BandCount]float32
 	waterH   int // ring buffer head
@@ -162,8 +163,31 @@ func drawSpectrum(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Sk
 	upSpan := reach - lowSpan
 	const barAlpha = 0.9
 
+	// With nothing playing the real bands sit at zero and the deck would be a
+	// flat line of two-pixel stubs — an empty window, not an idle one. Blend
+	// in a slow time-driven swell (idleW scales it) so the spectrum keeps
+	// breathing while paused, and let real music override it as it comes in.
+	// The waveform is a product of two slow sines so it never repeats within
+	// a breath, and each band keeps a fixed phase so the bars still read as
+	// lows on the left, highs on the right.
+	//
+	// The idle weight's threshold is well above the floor noise an idle audio
+	// device reports — measured at 0.06 on this machine — because that noise
+	// is not music. A threshold of 0.1 left idleW at 0.4 there, which made the
+	// swell too short to see; 0.2 lets anything quieter than a fifth of full
+	// scale read as idle.
+	viz.spectrumT += float64(dt)
+	idleW := 1 - math.Min(1, float64(f.Level)/0.2)
+
 	for i := 0; i < n; i++ {
 		v := f.Bands[i]
+		if idleW > 0 {
+			tt := float64(i) / float64(n)
+			swell := 0.5 + 0.5*math.Sin(viz.spectrumT*0.9-tt*3.1)
+			swell *= 0.6 + 0.4*math.Sin(viz.spectrumT*0.37+tt*5.3)
+			// A gentle tilt so the right of the deck is not left dark.
+			v = float32(math.Max(float64(v), swell*(0.34-0.2*tt)*idleW))
+		}
 		h := float32(math.Max(2, float64(v)*float64(reach)))
 		x := r.X + float32(i)*(barW+gap)
 		y := floor - h
