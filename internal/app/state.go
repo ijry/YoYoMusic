@@ -16,16 +16,18 @@ const (
 	ModeShuffle   PlayMode = "shuffle"
 )
 
-// VisualizationMode is one of the six built-in visualisers.
+// VisualizationMode is one of the eight built-in visualisers.
 type VisualizationMode string
 
 const (
-	VizSpectrum  VisualizationMode = "spectrum"
-	VizWaveform  VisualizationMode = "waveform"
-	VizRadial    VisualizationMode = "radial"
-	VizParticles VisualizationMode = "particles"
-	VizAurora    VisualizationMode = "aurora"
-	VizWaterfall VisualizationMode = "waterfall"
+	VizSpectrum   VisualizationMode = "spectrum"
+	VizWaveform   VisualizationMode = "waveform"
+	VizRadial     VisualizationMode = "radial"
+	VizAurora     VisualizationMode = "aurora"
+	VizParticles  VisualizationMode = "particles"
+	VizWaterfall  VisualizationMode = "waterfall"
+	VizGenerative VisualizationMode = "generative"
+	VizKaleido    VisualizationMode = "kaleidoscope"
 )
 
 // TrackStatus / TagStatus describe a track's health.

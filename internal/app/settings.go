@@ -28,7 +28,10 @@ func LoadSettings(dir string) (AppSettings, error) {
 	if loaded.Shortcuts == nil {
 		loaded.Shortcuts = def.Shortcuts
 	}
-	if loaded.VisualizationMode == "" {
+	// A mode this build does not know — a settings file written by a newer
+	// version, or a hand edit — must fall back, or the mode picker points at
+	// a mode nothing can draw.
+	if !isKnownViz(loaded.VisualizationMode) {
 		loaded.VisualizationMode = def.VisualizationMode
 	}
 	if loaded.Equalizer.Preset == "" {

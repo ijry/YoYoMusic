@@ -92,7 +92,12 @@ func main() {
 
 		registerShortcuts(a)
 		buildTray(a)
-		mygo.App.SetMenu(buildMenu(a))
+		// No menu bar: every action lives in the window (top toolbar, side
+		// panels, tray) or on a global shortcut. A menu bar on Windows and
+		// Linux would take a row of vertical space the floating layout needs,
+		// and on macOS it would duplicate the panels. mygo.App.SetMenu is
+		// deliberately not called; the tray keeps the same actions reachable
+		// when the window is closed.
 
 		mygo.NewWindow(mygo.WindowOptions{
 			Title:     "悠悠乐听",
@@ -176,48 +181,9 @@ func registerShortcuts(a *app.App) {
 
 // buildMenu assembles the application menu bar (macOS) or window menu
 // (Linux, Windows).
-func buildMenu(a *app.App) *mygo.Menu {
-	return mygo.NewMenu([]*mygo.MenuItem{
-		{Role: mygo.RoleAppMenu},
-		{
-			Label: "播放控制",
-			Submenu: []*mygo.MenuItem{
-				{Label: "播放/暂停", Accelerator: boundShortcuts["toggle_playback"], Click: func(*mygo.MenuItem, *mygo.Window) { a.TogglePlay() }},
-				{Label: "上一首", Accelerator: boundShortcuts["previous_track"], Click: func(*mygo.MenuItem, *mygo.Window) { a.Prev() }},
-				{Label: "下一首", Accelerator: boundShortcuts["next_track"], Click: func(*mygo.MenuItem, *mygo.Window) { a.Next() }},
-			},
-		},
-		{
-			Label: "显示",
-			Submenu: []*mygo.MenuItem{
-				{Label: "播放列表", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleLibrary() }},
-				{Label: "固定播放列表", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleLibraryPin() }},
-				mygo.Separator(),
-				{Label: "均衡器", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("eq") }},
-				{Label: "歌词", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("lyrics") }},
-				{Label: "外观", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("skins") }},
-				{Label: "关于", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("about") }},
-			},
-		},
-		{
-			Label: "文件",
-			Submenu: []*mygo.MenuItem{
-				{Label: "导入音乐…", Click: func(*mygo.MenuItem, *mygo.Window) { ui.TriggerImport(a) }},
-				mygo.Separator(),
-				{Label: "检查更新…", Click: func(*mygo.MenuItem, *mygo.Window) {
-					// Open the about panel, which hosts the update controls.
-					a.ToggleSidePanel("about")
-					a.Updater.CheckAsync(true)
-				}},
-				mygo.Separator(),
-				{Role: mygo.RoleQuit},
-			},
-		},
-		{Role: mygo.RoleEditMenu},
-	})
-}
-
-// buildTray adds a notification-area / menu-bar icon with playback controls.
+// buildTray adds a notification-area / menu-bar icon. With the menu bar gone,
+// the tray is where the actions that have no window affordance live: import,
+// the four panels, and checking for updates.
 func buildTray(a *app.App) {
 	menu := mygo.NewMenu([]*mygo.MenuItem{
 		{Label: "播放/暂停", Click: func(*mygo.MenuItem, *mygo.Window) { a.TogglePlay() }},
@@ -225,6 +191,14 @@ func buildTray(a *app.App) {
 		{Label: "下一首", Click: func(*mygo.MenuItem, *mygo.Window) { a.Next() }},
 		mygo.Separator(),
 		{Label: "导入音乐…", Click: func(*mygo.MenuItem, *mygo.Window) { ui.TriggerImport(a) }},
+		mygo.Separator(),
+		{Label: "均衡器", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("eq") }},
+		{Label: "歌词", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("lyrics") }},
+		{Label: "外观", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("skins") }},
+		{Label: "关于与更新", Click: func(*mygo.MenuItem, *mygo.Window) {
+			a.ToggleSidePanel("about")
+			a.Updater.CheckAsync(true)
+		}},
 		mygo.Separator(),
 		{Label: "退出", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})

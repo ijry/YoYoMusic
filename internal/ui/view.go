@@ -131,6 +131,10 @@ func visualizerBackdrop(c *myui.Context, a *app.App, skin app.Skin) {
 				drawAurora(p, r, f, skin, now)
 			case app.VizWaterfall:
 				drawWaterfall(p, r, f, skin, dt)
+			case app.VizGenerative:
+				drawGenerative(p, r, f, skin, dt)
+			case app.VizKaleido:
+				drawKaleidoscope(p, r, f, skin, dt)
 			}
 		})
 	})
@@ -183,7 +187,7 @@ func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 			myui.Text(c, "悠悠乐听").FontSize(16).Bold().TextColor(t.Text)
 
 			// Playlist toggle: folds the left column, or pins it open.
-			lb := myui.Button(c.Key("library-toggle"), "☰").Tooltip(playlistTip(a))
+			lb := iconButton(c, "library-toggle", "playlist", playlistTip(a))
 			lb.Size(32, 32).Radius(8).OnClick(func() {
 				if a.LibraryPinned {
 					a.ToggleLibraryPin()
@@ -201,13 +205,19 @@ func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 
 		myui.Box(c).Grow(1)
 
+		// Centre: the visualiser mode picker. Eight modes do not fit as
+		// labels, so it is a compact row of buttons with tooltips, carrying
+		// the same information as the old build's mode strip.
+		vizModePicker(c, a)
+
+		myui.Box(c).Grow(1)
+
 		// Right: the feature-panel icons, each toggling its panel.
 		for _, p := range app.SidePanels {
 			panel := p
 			label := sidePanelLabel(panel)
-			b := myui.Button(c.Key("panel-"+panel), sidePanelGlyph(panel)).Tooltip(label)
-			active := a.SidePanel == panel
-			if active {
+			b := iconButton(c, "panel-"+panel, sidePanelIcon(panel), label)
+			if a.SidePanel == panel {
 				b.Background(t.Accent.Alpha(0.22))
 			}
 			b.Size(32, 32).Radius(8).OnClick(func() { a.ToggleSidePanel(panel) })
@@ -226,6 +236,51 @@ func playlistTip(a *app.App) string {
 	}
 }
 
+// vizModePicker is the compact visualiser-mode row in the top bar. Each mode
+// is a button with a tooltip rather than a label: eight names would not fit,
+// and the active mode is highlighted instead of spelled out.
+func vizModePicker(c *myui.Context, a *app.App) {
+	t := c.Theme()
+	myui.Row(c).Gap(3).AlignItems(myui.Center).Children(func() {
+		for _, m := range app.VizOrder {
+			mode := m
+			label := app.VizLabels[mode]
+			if label == "" {
+				label = string(mode)
+			}
+			b := myui.Button(c.Key("viz-"+string(mode)), modeShort(mode)).Tooltip(label)
+			if app.VizOrder[a.VizMode] == mode {
+				b.Background(t.Accent.Alpha(0.22))
+			}
+			b.Size(28, 28).Radius(7).OnClick(func() { a.SetVisualization(mode) })
+		}
+	})
+}
+
+// modeShort is the one- or two-character badge for a visualiser mode. Short
+// because the row holds all eight; the tooltip carries the full name.
+func modeShort(m app.VisualizationMode) string {
+	switch m {
+	case app.VizSpectrum:
+		return "频"
+	case app.VizWaveform:
+		return "波"
+	case app.VizRadial:
+		return "环"
+	case app.VizAurora:
+		return "光"
+	case app.VizParticles:
+		return "粒"
+	case app.VizWaterfall:
+		return "瀑"
+	case app.VizGenerative:
+		return "生"
+	case app.VizKaleido:
+		return "花"
+	}
+	return "·"
+}
+
 func sidePanelLabel(p string) string {
 	switch p {
 	case "eq":
@@ -240,18 +295,19 @@ func sidePanelLabel(p string) string {
 	return p
 }
 
-func sidePanelGlyph(p string) string {
+// sidePanelIcon maps a panel id to its SVG icon name.
+func sidePanelIcon(p string) string {
 	switch p {
 	case "eq":
-		return "🎚"
+		return "eq"
 	case "lyrics":
-		return "🎤"
+		return "lyrics"
 	case "skins":
-		return "🎨"
+		return "skins"
 	case "about":
-		return "ℹ"
+		return "about"
 	}
-	return "•"
+	return ""
 }
 
 // leftRail is the playlist column: a floating panel when open, a slim icon
@@ -261,7 +317,7 @@ func leftRail(c *myui.Context, a *app.App, skin app.Skin) {
 	if folded {
 		// The rail keeps just the toggle, so the playlist is one click away.
 		myui.Box(c).Width(44).FillHeight().Padding(6, 6).Children(func() {
-			b := myui.Button(c.Key("rail-library"), "☰").Tooltip("展开播放列表")
+			b := iconButton(c, "rail-library", "playlist", "展开播放列表")
 			b.Size(32, 32).Radius(8).OnClick(func() {
 				a.LibraryOpen = true
 				a.ToggleLibraryPin()
@@ -311,11 +367,16 @@ func transport(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 func transportNowPlaying(c *myui.Context, a *app.App, skin app.Skin, cur *app.Track) {
 	t := c.Theme()
 	myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
-		myui.Box(c).Size(48, 48).Radius(10).Draw(func(p *myui.Painter, r myui.Rect) {
-			p.FillGradient(r, myui.LinearGradient{
-				From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
-			}, 10)
-			p.Text(r.X+8, r.Y+30, "♪", 18, colOf(skin.VizInk).Alpha(0.85))
+		// Cover art: the gradient tile with the music icon centred in it.
+		myui.Box(c).Size(48, 48).Radius(10).Children(func() {
+			myui.Box(c).Fill().Radius(10).Draw(func(p *myui.Painter, r myui.Rect) {
+				p.FillGradient(r, myui.LinearGradient{
+					From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
+				}, 10)
+			})
+			myui.Box(c).Fill().AlignItems(myui.Center).Justify(myui.Center).Children(func() {
+				myui.Icon(c, icon("music")).TextColor(colOf(skin.VizInk).Alpha(0.9))
+			})
 		})
 		myui.Column(c).Gap(2).Children(func() {
 			if cur == nil {
@@ -332,18 +393,20 @@ func transportNowPlaying(c *myui.Context, a *app.App, skin app.Skin, cur *app.Tr
 // transportButtons is the centred prev/play/next group.
 func transportButtons(c *myui.Context, a *app.App, skin app.Skin, t *myui.Theme) {
 	myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
-		prev := myui.Button(c.Key("prev"), "⏮").Tooltip("上一首")
+		prev := iconButton(c, "prev", "prev", "上一首")
 		prev.Size(38, 38).Radius(19).OnClick(func() { a.Prev() })
 
 		var play myui.Element
 		if a.IsPlaying() {
-			play = myui.PrimaryButton(c.Key("play"), "⏸").Tooltip("暂停")
+			play = myui.PrimaryButton(c.Key("play"), "").Tooltip("暂停")
+			play.Children(func() { myui.Icon(c, icon("pause")) })
 		} else {
-			play = myui.PrimaryButton(c.Key("play"), "▶").Tooltip("播放")
+			play = myui.PrimaryButton(c.Key("play"), "").Tooltip("播放")
+			play.Children(func() { myui.Icon(c, icon("play")) })
 		}
 		play.Size(46, 46).Radius(23).OnClick(func() { a.TogglePlay() })
 
-		next := myui.Button(c.Key("next"), "⏭").Tooltip("下一首")
+		next := iconButton(c, "next", "next", "下一首")
 		next.Size(38, 38).Radius(19).OnClick(func() { a.Next() })
 	})
 }
@@ -361,26 +424,26 @@ func transportUtility(c *myui.Context, a *app.App, t *myui.Theme) {
 	})
 }
 
-// muteBtn is the speaker button: one click toggles mute, and the glyph shows
+// muteBtn is the speaker button: one click toggles mute, and the icon shows
 // the current state the way desktop players do.
 func muteBtn(c *myui.Context, a *app.App, t *myui.Theme) myui.Element {
-	glyph, tip := speakerGlyph(a.Volume, a.Muted)
-	b := myui.Button(c.Key("mute"), glyph).Tooltip(tip)
+	name, tip := speakerIcon(a.Volume, a.Muted)
+	b := iconButton(c, "mute", name, tip)
 	b.Size(32, 32).Radius(8).OnClick(func() { a.ToggleMute() })
 	return b
 }
 
-// speakerGlyph picks the speaker icon and tooltip for the current volume.
-func speakerGlyph(vol float64, muted bool) (glyph, tip string) {
+// speakerIcon picks the volume icon and tooltip for the current volume.
+func speakerIcon(vol float64, muted bool) (name, tip string) {
 	switch {
 	case muted || vol <= 0:
-		return "🔇", "取消静音"
+		return "volume-mute", "取消静音"
 	case vol < 0.34:
-		return "🔈", "静音"
+		return "volume-low", "静音"
 	case vol < 0.67:
-		return "🔉", "静音"
+		return "volume-mid", "静音"
 	default:
-		return "🔊", "静音"
+		return "volume-high", "静音"
 	}
 }
 
@@ -397,7 +460,7 @@ func playlistPanel(c *myui.Context, a *app.App, skin app.Skin) {
 				myui.Text(c, "播放列表").FontSize(14).Bold().TextColor(t.Text)
 				myui.Box(c).Grow(1)
 				myui.Text(c, fmt.Sprintf("%d 首", len(snap.Tracks))).FontSize(11).TextColor(t.TextMuted)
-				pin := myui.Button(c.Key("pin-library"), "📌").Tooltip(playlistTip(a))
+				pin := iconButton(c, "pin-library", "pin", playlistTip(a))
 				pin.Size(26, 26).Radius(6).OnClick(func() { a.ToggleLibraryPin() })
 			})
 			myui.Row(c).Gap(6).Children(func() {
@@ -470,7 +533,7 @@ func sidePanel(c *myui.Context, a *app.App, skin app.Skin) {
 			myui.Row(c).AlignItems(myui.Center).Children(func() {
 				myui.Text(c, sidePanelLabel(a.SidePanel)).FontSize(14).Bold().TextColor(t.Text)
 				myui.Box(c).Grow(1)
-				cl := myui.Button(c.Key("close-panel"), "✕").Tooltip("关闭")
+				cl := iconButton(c, "close-panel", "close", "关闭")
 				cl.Size(26, 26).Radius(6).OnClick(func() { a.CloseSidePanel() })
 			})
 			myui.Scroll(c).Fill().Children(func() {
@@ -590,7 +653,7 @@ func skinCard(c *myui.Context, a *app.App, s app.Skin, cur string) myui.Element 
 			myui.Text(c, "@"+s.Author).FontSize(11).TextColor(t.TextMuted)
 		})
 		if active {
-			myui.Text(c, "✓").FontSize(14).TextColor(t.Accent)
+			myui.Icon(c, icon("check")).TextColor(t.Accent)
 		}
 	})
 	e.OnClick(func() { a.SetSkin(s.ID) })

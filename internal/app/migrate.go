@@ -302,7 +302,8 @@ func skinExists(st *AppState, id string) bool {
 
 func isKnownViz(m VisualizationMode) bool {
 	switch m {
-	case VizSpectrum, VizWaveform, VizRadial, VizParticles, VizAurora, VizWaterfall:
+	case VizSpectrum, VizWaveform, VizRadial, VizParticles, VizAurora, VizWaterfall,
+		VizGenerative, VizKaleido:
 		return true
 	}
 	return false

@@ -69,9 +69,24 @@ type App struct {
 	saveQueued bool
 }
 
-// VizOrder lists the visualisers in the same order as the Tabs labels.
+// VizOrder lists the visualisers in the same order as the Tabs labels, which
+// is the order the Tauri build used: the analyses first, then the showpieces,
+// then the two that are generated rather than plotted.
 var VizOrder = []VisualizationMode{
-	VizSpectrum, VizWaveform, VizRadial, VizParticles, VizAurora, VizWaterfall,
+	VizSpectrum, VizWaveform, VizRadial, VizAurora, VizParticles, VizWaterfall,
+	VizGenerative, VizKaleido,
+}
+
+// VizLabels names each mode for the mode picker, in VizOrder.
+var VizLabels = map[VisualizationMode]string{
+	VizSpectrum:   "频谱",
+	VizWaveform:   "波形",
+	VizRadial:     "径向",
+	VizAurora:     "极光",
+	VizParticles:  "粒子",
+	VizWaterfall:  "瀑布",
+	VizGenerative: "生成",
+	VizKaleido:    "万花筒",
 }
 
 // NewApp builds the orchestrator, loading persisted settings when present.
