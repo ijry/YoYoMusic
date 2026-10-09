@@ -1,0 +1,26 @@
+# Build output
+/yoyomusic
+/yoyomusic.exe
+/yoyomusic.exe~
+*.exe
+*.dll
+*.so
+*.dylib
+
+# mygo build artifacts
+/mygo-dist/
+/dist/
+
+# Editor / tooling caches
+.mygo_tree.json
+.ref/
+.idea/
+.vscode/
+
+# Local test scratch
+_pt/
+_t/
+
+# OS noise
+.DS_Store
+Thumbs.db

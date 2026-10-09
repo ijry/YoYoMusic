@@ -1,0 +1,12 @@
+{
+  "name": "悠悠乐听",
+  "identifier": "net.lingyun.yoyomusic",
+  "version": "1.0.0",
+  "updates": {
+    "publicKey": "mjeFVaJQcfXLgxDrq3wNQrA0uERR35kirRui/ULlbTU=",
+    "github": "xyito/YoYoMusic",
+    "tagPrefix": "go-v",
+    "deltas": 3,
+    "changelog": "CHANGELOG.md"
+  }
+}
