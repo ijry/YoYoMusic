@@ -511,6 +511,41 @@ func (a *App) SetVisualization(m VisualizationMode) {
 	}
 }
 
+// SetPlayMode changes the play mode and persists it with the library, so the
+// choice survives a restart (Next/Prev read it from the playlist).
+func (a *App) SetPlayMode(m PlayMode) {
+	a.State.SetPlayMode(m)
+	a.autosaveLibrary()
+}
+
+// NextPlayMode is the order the transport's mode button cycles through.
+func NextPlayMode(m PlayMode) PlayMode {
+	switch m {
+	case ModeSequence:
+		return ModeRepeatAll
+	case ModeRepeatAll:
+		return ModeRepeatOne
+	case ModeRepeatOne:
+		return ModeShuffle
+	default:
+		return ModeSequence
+	}
+}
+
+// PlayModeLabel names a mode for the button's tooltip.
+func PlayModeLabel(m PlayMode) string {
+	switch m {
+	case ModeRepeatAll:
+		return "列表循环"
+	case ModeRepeatOne:
+		return "单曲循环"
+	case ModeShuffle:
+		return "随机播放"
+	default:
+		return "顺序播放"
+	}
+}
+
 // SetSkin selects the active skin.
 func (a *App) SetSkin(id string) {
 	a.State.SetDefaultSkin(id)

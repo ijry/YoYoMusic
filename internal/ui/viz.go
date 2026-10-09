@@ -123,11 +123,22 @@ func bandAt(f audio.SignalFrame, t float64) float32 {
 // drawSpectrum renders 56 vertical bars rising from a baseline, with a
 // two-segment gradient, a reflection under the floor, and peak-hold caps that
 // fall back down — the detail that makes a spectrum read as an instrument.
+// clamp01 constrains t to the 0..1 range, for gradient interpolation.
+func clamp01(t float32) float32 {
+	if t < 0 {
+		return 0
+	}
+	if t > 1 {
+		return 1
+	}
+	return t
+}
+
 func drawSpectrum(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Skin, dt float32) {
 	n := audio.BandCount
 	gap := float32(math.Max(1, float64(r.W/float32(n))*0.24))
 	barW := float32(math.Max(1, float64(r.W-gap*float32(n-1))/float64(n)))
-	floor := r.Y + r.H*0.86
+	floor := r.Y + r.H*0.82
 	reach := floor - r.Y - 6
 	radius := float32(math.Min(float64(barW)/2, 4))
 
@@ -135,31 +146,54 @@ func drawSpectrum(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Sk
 	colB := colOf(skin.VizB)
 	ink := colOf(skin.VizInk)
 
+	// One colour ramp for the whole canvas, not one per bar — this is what
+	// the Tauri build does, and it is the difference between a calm deck
+	// and a garish one. The ramp runs bottom to top over the full reach:
+	// colB at the floor, colA 55% up, ink at the very top. A bar is then
+	// coloured by how high it stands on screen, so a short bar stays near
+	// colB and only a tall one climbs to the bright ink. Colouring each bar
+	// by its own height — what this did before — made every bar, however
+	// short, sweep the whole way to ink, which is what glared.
+	//
+	// mygo gradients take two stops, so each bar is drawn as up to two
+	// segments whose end colours are interpolated from the same ramp.
+	split := floor - reach*0.55 // where the ramp passes through colA
+	lowSpan := reach * 0.55
+	upSpan := reach - lowSpan
+	const barAlpha = 0.9
+
 	for i := 0; i < n; i++ {
 		v := f.Bands[i]
 		h := float32(math.Max(2, float64(v)*float64(reach)))
 		x := r.X + float32(i)*(barW+gap)
 		y := floor - h
 
-		// The bar: accent at the bottom, primary through the middle, bright
-		// ink at the top, so tall bars read brighter than short ones. mygo
-		// gradients are two-stop, so the bar is two stacked segments.
-		if h > 4 {
-			mid := y + h*0.45
-			p.FillGradient(myui.Rect{X: x, Y: mid, W: barW, H: floor - mid},
-				myui.LinearGradient{From: colB, To: colA, Angle: 180}, radius)
+		switch {
+		case y <= split:
+			// Tall bar: the upper segment runs from the bar's own colour
+			// down to colA at the 55% line, the lower one from colA to colB.
+			if split-y >= 0.5 {
+				t := clamp01((split - y) / upSpan)
+				p.FillGradient(myui.Rect{X: x, Y: y, W: barW, H: split - y},
+					myui.LinearGradient{From: colA.Mix(ink, t).Alpha(barAlpha), To: colA.Alpha(barAlpha), Angle: 180},
+					radius)
+			}
+			p.FillGradient(myui.Rect{X: x, Y: split, W: barW, H: floor - split},
+				myui.LinearGradient{From: colA.Alpha(barAlpha), To: colB.Alpha(barAlpha), Angle: 180},
+				radius)
+		default:
+			// Short bar: entirely within the colB → colA band.
+			t := clamp01((floor - y) / lowSpan)
+			p.FillGradient(myui.Rect{X: x, Y: y, W: barW, H: floor - y},
+				myui.LinearGradient{From: colB.Mix(colA, t).Alpha(barAlpha), To: colB.Alpha(barAlpha), Angle: 180},
+				radius)
 		}
-		topH := h * 0.55
-		if topH < 2 {
-			topH = 2
-		}
-		p.FillGradient(myui.Rect{X: x, Y: y, W: barW, H: topH},
-			myui.LinearGradient{From: colA, To: ink, Angle: 180}, radius)
 
-		// Reflection under the floor keeps the deck feeling like glass.
+		// Reflection under the floor keeps the deck feeling like glass. The
+		// ramp's colour at the floor is colB, so that is what reflects.
 		if h > 2 {
 			p.FillGradient(myui.Rect{X: x, Y: floor + 2, W: barW, H: h * 0.35},
-				myui.LinearGradient{From: colA.Alpha(0.20), To: colA.Alpha(0), Angle: 180},
+				myui.LinearGradient{From: colB.Alpha(0.16), To: colB.Alpha(0), Angle: 180},
 				float32(math.Min(float64(barW)/2, 3)))
 		}
 

@@ -48,6 +48,14 @@ func parseFlags() {
 func main() {
 	mygo.App.SetName("悠悠乐听")
 	mygo.App.SetVersion("0.0.3")
+
+	// Every skin is dark, so declare the appearance instead of following the
+	// system. Windows otherwise paints the native minimise, maximise and
+	// close glyphs for a *light* title bar — dark strokes — which left them
+	// all but invisible on the dark toolbar. mygo drives
+	// DWMWA_USE_IMMERSIVE_DARK_MODE from this, so the controls draw light.
+	mygo.Theme.SetSource(mygo.ThemeDark)
+
 	parseFlags()
 
 	mygo.App.WhenReady(func() {

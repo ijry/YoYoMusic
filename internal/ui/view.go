@@ -308,25 +308,117 @@ func playlistTip(a *app.App) string {
 	}
 }
 
-// vizModePicker is the compact visualiser-mode row in the top bar. Each mode
-// is an icon button with a tooltip carrying the full name: eight names would
-// not fit as labels, and the active mode is highlighted instead of spelled out.
+// The mode picker's geometry. vizPickerWidth is the room it keeps in the top
+// bar whether it is folded or open, vizItemSize and vizFanStep are one mode
+// button and the pitch of one button plus the gap after it, and vizFanLeft is
+// how many of the other modes sit on the left of the face.
+const (
+	vizPickerWidth float32 = 276
+	vizItemSize    float32 = 28
+	vizFanStep     float32 = 31
+	vizFanLeft             = 3
+)
+
+// vizFaceX is where the face sits: the row centres it, so it is half the room
+// the fan does not use on either side.
+func vizFaceX() float32 { return (vizPickerWidth - vizItemSize) / 2 }
+
+// vizSlide is the transition a mode button enters and leaves with. d is signed
+// how far the button's slot is from the face, so the motion runs along the row:
+// the button starts at the face and slides out to its slot, fading in as it
+// goes, and slides back into the face on the way out.
+//
+// Collapse is deliberately not set: the buttons are absolute, so they take no
+// room either way, and a collapsing button would be wiped out from the side as
+// well as slid, which reads as a glitch rather than a fold.
+func vizSlide(d float32) myui.ElementTransition {
+	return myui.ElementTransition{
+		Duration: 180 * time.Millisecond,
+		Enter:    &myui.Motion{X: -d, Opacity: 0},
+		Exit:     &myui.Motion{X: -d, Opacity: 0},
+	}
+}
+
+// vizModePicker is the visualiser-mode picker in the top bar: folded it is the
+// single icon of the mode in use, and the pointer unfolds the rest of the modes
+// around it, folds them back when it leaves.
+//
+// Three details are what make that work rather than fight the pointer:
+//
+//   - The row is always vizPickerWidth wide, open or folded, and centres the
+//     face. A row that grew with its contents would be re-centred by the two
+//     Grow() spacers around it as they took back the room, sliding the icon
+//     out from under the cursor the moment it was hovered — and since the
+//     folded row is what opens it, the picker would flicker open and shut.
+//   - Only the face is in flow. The other modes hang off it absolutely, so
+//     they cannot widen the row and cannot move the face.
+//   - The face carries no transition. A transition works in the parent's
+//     coordinates, and a face animating from its folded offset to its place
+//     among the open modes would be dragged across the bar by a move the
+//     layout had already made.
+//
+// The room being fixed does mean the picker answers the pointer across its
+// whole width even when folded, which is a little eager, but the alternative —
+// a row that widens as it opens — is the flicker above.
+//
+// Eight names would not fit as labels, so each mode is an icon button with a
+// tooltip carrying the full name, and the active one is highlighted instead of
+// spelled out.
 func vizModePicker(c *myui.Context, a *app.App) {
 	t := c.Theme()
-	myui.Row(c).Gap(3).AlignItems(myui.Center).Children(func() {
+	active := app.VizOrder[a.VizMode]
+
+	row := myui.Row(c).Width(vizPickerWidth).Height(vizItemSize).
+		AlignItems(myui.Center).Justify(myui.Center)
+	open := row.Hovered()
+
+	row.Children(func() {
+		// The face: the mode in use, always in the same place, and the one
+		// control that is there whether the picker is open or folded.
+		face := iconButton(c, "viz-face", vizIcon(active), vizLabel(active))
+		face.Size(vizItemSize, vizItemSize).Radius(7).
+			Background(t.Accent.Alpha(0.22)).
+			OnClick(func() { a.SetVisualization(active) })
+
+		if !open {
+			return
+		}
+
+		// The other modes unfold around the face, four to its right and three
+		// to its left, in the order they are listed. Keeping the slots fixed
+		// and folding the active mode out of the list — rather than putting
+		// the active mode first — means the row does not renumber itself
+		// every time the mode changes.
+		slot := 0
 		for _, m := range app.VizOrder {
 			mode := m
-			label := app.VizLabels[mode]
-			if label == "" {
-				label = string(mode)
+			if mode == active {
+				continue
 			}
-			b := iconButton(c, "viz-"+string(mode), vizIcon(mode), label)
-			if app.VizOrder[a.VizMode] == mode {
-				b.Background(t.Accent.Alpha(0.22))
+			var k float32
+			if slot < vizFanLeft {
+				k = float32(slot - vizFanLeft)
+			} else {
+				k = float32(slot - vizFanLeft + 1)
 			}
-			b.Size(28, 28).Radius(7).OnClick(func() { a.SetVisualization(mode) })
+			slot++
+			d := (k - 0.5) * vizFanStep
+
+			b := iconButton(c, "viz-"+string(mode), vizIcon(mode), vizLabel(mode))
+			b.Absolute().Top(0).Left(vizFaceX()+d).
+				Size(vizItemSize, vizItemSize).Radius(7).
+				OnClick(func() { a.SetVisualization(mode) }).
+				Transition(vizSlide(d))
 		}
 	})
+}
+
+// vizLabel is the display name of a visualiser mode, or its id if it has none.
+func vizLabel(m app.VisualizationMode) string {
+	if s := app.VizLabels[m]; s != "" {
+		return s
+	}
+	return string(m)
 }
 
 // vizIcon maps a visualiser mode to its icon name.
@@ -441,7 +533,7 @@ func transport(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 		myui.Row(c).Grow(1).Padding(10, 16).Gap(14).AlignItems(myui.Center).Children(func() {
 			transportNowPlaying(c, a, skin, cur)
 			myui.Box(c).Grow(1)
-			transportButtons(c, a, skin, t)
+			transportButtons(c, a, skin, t, snap.Playback.PlayMode)
 			myui.Box(c).Grow(1)
 			transportUtility(c, a, t)
 		})
@@ -452,17 +544,22 @@ func transport(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 func transportNowPlaying(c *myui.Context, a *app.App, skin app.Skin, cur *app.Track) {
 	t := c.Theme()
 	myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
-		// Cover art: the gradient tile with the music icon centred in it.
-		myui.Box(c).Size(48, 48).Radius(10).Children(func() {
-			myui.Box(c).Fill().Radius(10).Draw(func(p *myui.Painter, r myui.Rect) {
+		// Cover art placeholder: a gradient tile with the music mark centred
+		// in it. It is ONE box that paints its own background in Draw and
+		// centres the icon as its child — two Fill() children would split
+		// the tile in half (a Box stacks like a column), which put the
+		// gradient on the top half and the mark in the bottom half.
+		myui.Box(c).Size(48, 48).Radius(10).
+			AlignItems(myui.Center).Justify(myui.Center).
+			Draw(func(p *myui.Painter, r myui.Rect) {
 				p.FillGradient(r, myui.LinearGradient{
 					From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
 				}, 10)
+			}).
+			Children(func() {
+				myui.Icon(c, icon("music")).Size(22, 22).
+					TextColor(colOf(skin.VizInk).Alpha(0.92))
 			})
-			myui.Box(c).Fill().AlignItems(myui.Center).Justify(myui.Center).Children(func() {
-				myui.Icon(c, icon("music")).TextColor(colOf(skin.VizInk).Alpha(0.9))
-			})
-		})
 		myui.Column(c).Gap(2).Children(func() {
 			if cur == nil {
 				myui.Text(c, "尚未播放").FontSize(14).Bold().TextColor(t.Text)
@@ -475,9 +572,14 @@ func transportNowPlaying(c *myui.Context, a *app.App, skin app.Skin, cur *app.Tr
 	})
 }
 
-// transportButtons is the centred prev/play/next group.
-func transportButtons(c *myui.Context, a *app.App, skin app.Skin, t *myui.Theme) {
+// transportButtons is the centred play-mode / prev / play / next group.
+func transportButtons(c *myui.Context, a *app.App, skin app.Skin, t *myui.Theme, mode app.PlayMode) {
 	myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
+		// Play-mode cycle: sequence → repeat all → repeat one → shuffle.
+		mb := iconButton(c, "play-mode", playModeIcon(mode),
+			app.PlayModeLabel(mode)+"（点击切换）")
+		mb.Size(34, 34).Radius(9).OnClick(func() { a.SetPlayMode(app.NextPlayMode(mode)) })
+
 		prev := iconButton(c, "prev", "prev", "上一首")
 		prev.Size(38, 38).Radius(19).OnClick(func() { a.Prev() })
 
@@ -494,6 +596,20 @@ func transportButtons(c *myui.Context, a *app.App, skin app.Skin, t *myui.Theme)
 		next := iconButton(c, "next", "next", "下一首")
 		next.Size(38, 38).Radius(19).OnClick(func() { a.Next() })
 	})
+}
+
+// playModeIcon maps a play mode to its icon name.
+func playModeIcon(m app.PlayMode) string {
+	switch m {
+	case app.ModeRepeatAll:
+		return "repeat"
+	case app.ModeRepeatOne:
+		return "repeat-one"
+	case app.ModeShuffle:
+		return "shuffle"
+	default:
+		return "sequence"
+	}
 }
 
 // transportUtility holds the clock, volume and mute on the right of the deck.
