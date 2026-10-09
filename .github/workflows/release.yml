@@ -136,13 +136,20 @@ jobs:
         # reproducible and avoids a surprise download mid-release.
         run: choco install nsis -y --no-progress
 
-      - name: Install Linux dependencies
+      - name: Check the .deb toolchain
         if: runner.os == 'Linux'
-        # Only for building the .deb. No webkit, no appindicator, no rsvg:
-        # there is no webview to embed.
+        # No system packages are needed: MyGo needs no cgo and there is no
+        # webview to embed. dpkg-deb is a binary from the dpkg package, not a
+        # package of its own — `apt-get install dpkg-deb` fails with
+        # "Unable to locate package", which is how this step was originally
+        # written. It is already present on the runner; assert that.
         run: |
-          sudo apt-get update
-          sudo apt-get install -y dpkg-deb
+          set -euo pipefail
+          if ! command -v dpkg-deb >/dev/null 2>&1; then
+            echo "::error::dpkg-deb is missing; install the dpkg package"
+            exit 1
+          fi
+          dpkg-deb --version | head -1
 
       - name: Build and upload
         env:
@@ -166,7 +173,9 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.target }}
+          # Artifact names may not contain "/", so the GOOS/GOARCH target
+          # ("windows/amd64") has to be flattened into a single token.
+          name: build-${{ matrix.label }}
           path: ${{ runner.temp }}/artifacts/
           if-no-files-found: error
           retention-days: 14
@@ -190,6 +199,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: release-assets
+          # Matches build-Windows / build-macOS / build-Linux, the flattened
+          # labels the build job uploads under.
           pattern: build-*
           merge-multiple: true
 
