@@ -12,6 +12,7 @@ package ui
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"yoyomusic/internal/app"
@@ -57,8 +58,13 @@ func View(a *app.App) func(c *myui.Context) {
 		}
 
 		// The root is a plain Box filling the window, so the layers below can
-		// be positioned over the visualiser instead of beside it.
-		root := myui.Box(c).Fill()
+		// be positioned over the visualiser instead of beside it. It is also
+		// the window's drag handle: a press anywhere that does not land on
+		// a control moves the window, which is what frameless-style chrome
+		// asks for. Descendants that are interactive — buttons, sliders,
+		// rows — take the press first and work as usual, because the input
+		// engine picks the innermost interactive element in the hit chain.
+		root := myui.Box(c).Fill().DragWindow()
 		trackPointer(root, c, a)
 		root.Children(func() {
 			// Layer 1: the visualiser, absolutely positioned so it fills the
@@ -192,10 +198,19 @@ func idleFolded(pinned bool) bool {
 }
 
 // topBar is the floating toolbar across the top: the brand, the playlist
-// toggle on the left, and the feature-panel icons on the right.
+// toggle, the visualiser mode picker and the feature-panel icons.
+//
+// macOS differs in one respect: its window controls — the traffic lights —
+// sit at the top-left, so the app name moves to the right-hand end of the
+// bar instead of sharing that corner with them. The playlist toggle stays
+// on the left either way, next to the column it folds.
 func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	t := c.Theme()
 	bar := c.TitleBar()
+	// macOS keeps its window controls on the left; Windows and Linux keep
+	// them on the right. Which end is taken decides where the name goes.
+	mac := runtime.GOOS == "darwin"
+
 	return myui.Row(c).Height(52).Padding(12, 14).Gap(10).AlignItems(myui.Center).
 		Background(t.Surface.Alpha(0.82)).DragWindow().Children(func() {
 		// Reserve the room the OS keeps for its window controls when the
@@ -205,31 +220,16 @@ func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 			myui.Box(c).Width(float32(bar.Left))
 		}
 
-		// Left: brand plus the playlist fold toggle.
-		myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
-			myui.Box(c).Size(22, 22).Radius(11).Draw(func(p *myui.Painter, r myui.Rect) {
-				p.FillGradient(r, myui.LinearGradient{
-					From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
-				}, 11)
+		if mac {
+			// Left: only the playlist toggle, beside the traffic lights.
+			libraryToggleButton(c, a)
+		} else {
+			// Left: brand plus the playlist fold toggle.
+			myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
+				brandBadge(c, skin, t)
+				libraryToggleButton(c, a)
 			})
-			myui.Text(c, "悠悠乐听").FontSize(16).Bold().TextColor(t.Text)
-
-			// Playlist toggle: folds the left column, or pins it open.
-			lb := iconButton(c, "library-toggle", "playlist", playlistTip(a))
-			lb.Size(32, 32).Radius(8).OnClick(func() {
-				if a.LibraryPinned {
-					a.ToggleLibraryPin()
-					a.ToggleLibrary()
-					return
-				}
-				if a.LibraryOpen {
-					a.ToggleLibrary()
-				} else {
-					a.LibraryOpen = true
-					a.ToggleLibraryPin()
-				}
-			})
-		})
+		}
 
 		myui.Box(c).Grow(1)
 
@@ -241,19 +241,60 @@ func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 		myui.Box(c).Grow(1)
 
 		// Right: the feature-panel icons, each toggling its panel.
-		for _, p := range app.SidePanels {
-			panel := p
-			label := sidePanelLabel(panel)
-			b := iconButton(c, "panel-"+panel, sidePanelIcon(panel), label)
-			if a.SidePanel == panel {
-				b.Background(t.Accent.Alpha(0.22))
-			}
-			b.Size(32, 32).Radius(8).OnClick(func() { a.ToggleSidePanel(panel) })
+		sidePanelIcons(c, a, t)
+
+		if mac {
+			// Right end: the app name, clear of the traffic lights.
+			brandBadge(c, skin, t)
 		}
+
 		if bar.Right > 0 {
 			myui.Box(c).Width(float32(bar.Right))
 		}
 	})
+}
+
+// brandBadge is the gradient mark plus the app name.
+func brandBadge(c *myui.Context, skin app.Skin, t *myui.Theme) {
+	myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
+		myui.Box(c).Size(22, 22).Radius(11).Draw(func(p *myui.Painter, r myui.Rect) {
+			p.FillGradient(r, myui.LinearGradient{
+				From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
+			}, 11)
+		})
+		myui.Text(c, "悠悠乐听").FontSize(16).Bold().TextColor(t.Text)
+	})
+}
+
+// libraryToggleButton is the playlist fold/unpin toggle.
+func libraryToggleButton(c *myui.Context, a *app.App) {
+	lb := iconButton(c, "library-toggle", "playlist", playlistTip(a))
+	lb.Size(32, 32).Radius(8).OnClick(func() {
+		if a.LibraryPinned {
+			a.ToggleLibraryPin()
+			a.ToggleLibrary()
+			return
+		}
+		if a.LibraryOpen {
+			a.ToggleLibrary()
+		} else {
+			a.LibraryOpen = true
+			a.ToggleLibraryPin()
+		}
+	})
+}
+
+// sidePanelIcons is the row of feature-panel toggles.
+func sidePanelIcons(c *myui.Context, a *app.App, t *myui.Theme) {
+	for _, p := range app.SidePanels {
+		panel := p
+		label := sidePanelLabel(panel)
+		b := iconButton(c, "panel-"+panel, sidePanelIcon(panel), label)
+		if a.SidePanel == panel {
+			b.Background(t.Accent.Alpha(0.22))
+		}
+		b.Size(32, 32).Radius(8).OnClick(func() { a.ToggleSidePanel(panel) })
+	}
 }
 
 func playlistTip(a *app.App) string {
