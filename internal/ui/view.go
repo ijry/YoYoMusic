@@ -155,26 +155,38 @@ func visualizerHost(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 		p.Fill(r, bg, 16)
 		p.Clip(r, 16, func() {
 			f := a.Frame()
+			// dt drives every stateful effect (peak fall, rotation,
+			// particle motion, waterfall scroll). Deriving it from the
+			// painter's clock keeps them frame-rate independent.
+			now := c.Now()
+			dt := float32(now.Sub(vizLast).Seconds())
+			if dt <= 0 || dt > 0.25 {
+				dt = 1.0 / 60
+			}
+			vizLast = now
+
 			switch app.VizOrder[a.VizMode] {
 			case app.VizSpectrum:
-				drawSpectrum(p, r, f, skin)
+				drawSpectrum(p, r, f, skin, dt)
 			case app.VizWaveform:
 				drawWaveform(p, r, f, skin)
 			case app.VizRadial:
-				drawRadial(p, r, f, skin)
+				drawRadial(p, r, f, skin, dt)
 			case app.VizParticles:
-				drawParticles(p, r, f, skin, c.Now())
+				drawParticles(p, r, f, skin, dt)
 			case app.VizAurora:
-				drawAurora(p, r, f, skin, c.Now())
+				drawAurora(p, r, f, skin, now)
 			case app.VizWaterfall:
-				a.Observe(f.Bands)
-				drawWaterfall(p, r, a, skin)
+				drawWaterfall(p, r, f, skin, dt)
 			}
 		})
 		p.Stroke(r, colOf(skin.Primary).Alpha(0.25), 16, 1)
 		p.AnimationFrame()
 	})
 }
+
+// vizLast is when the previous visualiser frame ran, for computing dt.
+var vizLast time.Time
 
 // transport holds the seek bar, play controls, time and volume.
 func transport(c *myui.Context, a *app.App, skin app.Skin) myui.Element {

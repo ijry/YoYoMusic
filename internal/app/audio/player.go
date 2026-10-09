@@ -44,6 +44,12 @@ type Player struct {
 	closeCh      chan struct{}
 	started      bool
 
+	// win is the reusable window buffer analyseAt fills each tick.
+	win []float32
+	// lastAnalyse is when the previous analysis ran, giving the analyser a
+	// real dt for its attack/release and peak decay.
+	lastAnalyse time.Time
+
 	// eqBands/eqEnabled are the user's live equaliser settings, kept here
 	// so Load can re-apply them after rebuilding the filter chain for a
 	// new sample rate.
@@ -54,8 +60,12 @@ type Player struct {
 // NewPlayer creates an idle player.
 func NewPlayer() *Player {
 	p := &Player{
-		vol:       0.8,
-		analyser:  NewAnalyser(2048),
+		vol: 0.8,
+		// 1024 samples at 44.1 kHz is a ~23 ms window: the same one the
+		// original visualiser uses. Small enough that the bars respond
+		// quickly, large enough that one bin spans ~43 Hz so the bass bands
+		// have something to read.
+		analyser:  NewAnalyser(1024),
 		smoothing: 0.55,
 		closeCh:   make(chan struct{}),
 	}
@@ -83,6 +93,12 @@ func (p *Player) Load(dec *Decoded) error {
 	p.pausedSample = 0
 	p.lastWritten = 0
 	p.mono = p.buildMono(dec)
+	p.win = make([]float32, p.analyser.size)
+	// Rebuild the band edges for this track's sample rate so a pitch always
+	// lands in the same band regardless of what the file was encoded at.
+	p.analyser.Rebuild(p.sr)
+	p.analyser.Reset()
+	p.lastAnalyse = time.Time{}
 	// Keep the live equaliser settings across a track change: rebuilding it
 	// flat here would silently discard the user's bands whenever a new
 	// track is loaded. NewEQ re-seeds flat coefficients for the new sample
@@ -468,7 +484,7 @@ func (p *Player) analyseAt(pos int64, sr int) {
 	if start < 0 {
 		start = 0
 	}
-	win := make([]float32, w)
+	win := p.win[:w]
 	for i := 0; i < w; i++ {
 		idx := start + int64(i)
 		if idx >= p.total {
@@ -479,27 +495,38 @@ func (p *Player) analyseAt(pos int64, sr int) {
 		}
 		win[i] = p.mono[idx]
 	}
-	f := p.analyser.Analyse(win, sr)
-	// exponential smoothing across frames for fluid motion
+	// The analyser owns attack/release smoothing, peak decay and the beat
+	// envelope; smoothing again here would double-lag every transition and
+	// make the display feel sluggish.
+	now := time.Now()
+	dt := float32(now.Sub(p.lastAnalyse).Seconds())
+	if p.lastAnalyse.IsZero() {
+		dt = 1.0 / 60
+	}
+	p.lastAnalyse = now
+	f := p.analyser.Analyse(win, sr, dt)
+
 	p.mu.Lock()
-	for i := 0; i < BandCount; i++ {
-		p.lastFrame.Bands[i] += (f.Bands[i] - p.lastFrame.Bands[i]) * float32(p.smoothing)
-	}
-	for i := 0; i < WaveSamples; i++ {
-		p.lastFrame.Wave[i] += (f.Wave[i] - p.lastFrame.Wave[i]) * float32(p.smoothing)
-	}
-	p.lastFrame.Level += (f.Level - p.lastFrame.Level) * float32(p.smoothing)
-	p.lastFrame.Beat += (f.Beat - p.lastFrame.Beat) * float32(p.smoothing)
+	p.lastFrame = f
 	p.mu.Unlock()
 }
 
 // idleFrame synthesises a calm, time-varying frame so the visualiser is
 // never dead while paused or before a track loads.
+// idleFrame synthesises a calm, time-varying frame so the visualiser is never
+// dead while paused or before a track loads. The bands keep a pink-ish tilt
+// and a per-band wander, so an idle player shows a shaped resting spectrum
+// rather than a flat strip or a frozen frame.
 func (p *Player) idleFrame() SignalFrame {
 	t := float64(time.Now().UnixNano()) / 1e9
 	var f SignalFrame
+	breath := 1 + math.Sin(t*0.9)*0.35
 	for i := 0; i < BandCount; i++ {
-		v := 0.12 + 0.10*math.Sin(t*1.6+float64(i)*0.35)
+		ratio := float64(i) / float64(BandCount-1)
+		// Tilt: more energy in the low end, like real music.
+		tilt := math.Pow(1-ratio, 1.35)*0.88 + 0.12
+		wander := 0.5 + 0.5*math.Sin(t*1.3+float64(i)*0.7)
+		v := 0.045 * breath * tilt * (0.7 + ratio*0.6) * (0.55 + wander*0.8)
 		if v < 0 {
 			v = 0
 		}
@@ -510,7 +537,7 @@ func (p *Player) idleFrame() SignalFrame {
 			math.Sin(t*0.7+float64(i)*0.013)
 		f.Wave[i] = float32(v)
 	}
-	f.Level = 0.14
-	f.Beat = 0.12
+	f.Level = 0.06
+	f.Beat = 0
 	return f
 }

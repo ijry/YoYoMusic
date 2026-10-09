@@ -24,12 +24,6 @@ var eqPresets = map[string][10]float64{
 var eqPresetNames = []string{"flat", "rock", "pop", "classical", "bass", "vocal", "treble"}
 
 // VizState holds per-frame visualiser history that must survive rebuilds.
-type VizState struct {
-	water [64][audio.BandCount]float32
-	wpos  int
-	last  time.Time
-}
-
 // App ties the UI-facing state to the audio engine and playback controls.
 // The UI thread (the mygo view) is the only writer of Panel/Muted/Volume/
 // eqUI; the player callbacks (OnEnd) may mutate playback state from a
@@ -51,8 +45,6 @@ type App struct {
 	EQEnabled bool
 	// EQBands mirrors the 10 EQ band sliders.
 	EQBands [10]float64
-
-	Viz *VizState
 
 	// Updater drives the signed self-update flow.
 	Updater *Updater
@@ -82,7 +74,6 @@ func NewApp(dataDir string) *App {
 		dataDir: dataDir,
 		Panel:   "library",
 		Volume:  st.playback.Volume,
-		Viz:     &VizState{},
 		Updater: NewUpdater(),
 	}
 	a.Muted = st.playback.Muted
@@ -343,26 +334,6 @@ func (a *App) Frame() audio.SignalFrame { return a.Player.Frame() }
 func (a *App) PositionMs() int64 { return a.Player.PositionMs() }
 func (a *App) DurationMs() int64 { return a.Player.DurationMs() }
 func (a *App) IsPlaying() bool   { return a.Player.IsPlaying() }
-
-// Observe feeds the waterfall history (throttled to ~22 rows/sec).
-func (a *App) Observe(bands [audio.BandCount]float32) {
-	v := a.Viz
-	now := time.Now()
-	if now.Sub(v.last) < 45*time.Millisecond {
-		return
-	}
-	v.last = now
-	v.water[v.wpos] = bands
-	v.wpos = (v.wpos + 1) % 64
-}
-
-// Waterfall returns the history oldest→newest, newest last.
-func (a *App) Waterfall() [64][audio.BandCount]float32 {
-	return a.Viz.water
-}
-
-// WaterfallPos returns the ring write position.
-func (a *App) WaterfallPos() int { return a.Viz.wpos }
 
 // FmtTime formats milliseconds as m:ss.
 func FmtTime(ms int64) string {
