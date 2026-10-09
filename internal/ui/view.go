@@ -69,10 +69,13 @@ func View(a *app.App) func(c *myui.Context) {
 			backdrop := myui.Box(c).Absolute().Left(0).Top(0).Right(0).Bottom(0)
 			backdrop.Children(func() { visualizerBackdrop(c, a, skin) })
 
-			// Layer 2: the chrome, in normal flow over the backdrop. The
-			// middle band is a plain Grow(1) spacer, so the toolbar pins to
-			// the top and the transport to the bottom.
-			myui.Column(c).Fill().Children(func() {
+			// Layer 2: the chrome. It must ALSO be absolute: mygo paints all
+			// flow children before any absolute child (paint.go paints
+			// e.first twice, split by flagAbsolute), so a flow chrome here
+			// lands UNDER the backdrop and the toolbar and transport vanish
+			// behind the visualiser. Among absolute children the declaration
+			// order holds, so declaring it after the backdrop keeps it on top.
+			myui.Column(c).Absolute().Left(0).Top(0).Right(0).Bottom(0).Children(func() {
 				topBar(c, a, skin)
 				myui.Box(c).Grow(1)
 				transport(c, a, skin)
@@ -80,7 +83,8 @@ func View(a *app.App) func(c *myui.Context) {
 
 			// Layer 3: the two side panels, absolutely positioned so they
 			// float over the visualiser rather than squeezing it. They sit
-			// below the toolbar and above the transport by inset.
+			// below the toolbar and above the transport by inset, and paint
+			// above the chrome because they are declared after it.
 			leftRail(c, a, skin)
 			rightRail(c, a, skin)
 		})
