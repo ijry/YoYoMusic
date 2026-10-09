@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "updates": {
     "publicKey": "mjeFVaJQcfXLgxDrq3wNQrA0uERR35kirRui/ULlbTU=",
-    "github": "xyito/YoYoMusic",
+    "github": "ijry/YoYoMusic",
     "tagPrefix": "go-v",
     "deltas": 3,
     "changelog": "CHANGELOG.md"
