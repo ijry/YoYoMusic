@@ -188,12 +188,25 @@ func buildMenu(a *app.App) *mygo.Menu {
 			},
 		},
 		{
+			Label: "显示",
+			Submenu: []*mygo.MenuItem{
+				{Label: "播放列表", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleLibrary() }},
+				{Label: "固定播放列表", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleLibraryPin() }},
+				mygo.Separator(),
+				{Label: "均衡器", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("eq") }},
+				{Label: "歌词", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("lyrics") }},
+				{Label: "外观", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("skins") }},
+				{Label: "关于", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("about") }},
+			},
+		},
+		{
 			Label: "文件",
 			Submenu: []*mygo.MenuItem{
 				{Label: "导入音乐…", Click: func(*mygo.MenuItem, *mygo.Window) { ui.TriggerImport(a) }},
 				mygo.Separator(),
 				{Label: "检查更新…", Click: func(*mygo.MenuItem, *mygo.Window) {
-					a.SetPanel("about")
+					// Open the about panel, which hosts the update controls.
+					a.ToggleSidePanel("about")
 					a.Updater.CheckAsync(true)
 				}},
 				mygo.Separator(),

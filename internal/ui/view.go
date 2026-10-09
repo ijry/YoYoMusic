@@ -1,6 +1,12 @@
 // Package ui builds the native (GPU-drawn) interface for YoYoMusic with the
 // mygo ui package. It is named "ui" but imports the framework as myui to avoid
 // a name clash with github.com/egoist/mygo/ui.
+//
+// The layout mirrors the Tauri build's modern shell: a full-bleed visualiser
+// behind everything, a floating playlist column on the left, a floating
+// feature panel on the right, and a full-width transport along the bottom
+// that carries the cover art and track information. Both side columns fold to
+// an icon rail after the pointer has been still for a while.
 package ui
 
 import (
@@ -14,150 +20,97 @@ import (
 	myui "github.com/egoist/mygo/ui"
 )
 
+// idleFold is how long the pointer must stay still before a side column
+// folds back to its rail.
+const idleFold = 10 * time.Second
+
+// layoutState holds the per-window layout bookkeeping the view function
+// cannot keep on the stack, because it is rebuilt every frame.
+type layoutState struct {
+	// lastMove is when the pointer last moved; drives the idle fold.
+	lastMove time.Time
+	// lastX/lastY is the previous pointer position, so a frame that reports
+	// the same coordinates does not reset the timer.
+	lastX, lastY float32
+	// hadPointer is whether the pointer has ever been inside the window.
+	hadPointer bool
+}
+
+var layout = &layoutState{}
+
 // View returns the window view function bound to the app orchestrator.
 func View(a *app.App) func(c *myui.Context) {
 	return func(c *myui.Context) {
 		skin := a.CurrentSkin()
 		c.SetTheme(skinTheme(skin))
 
-		// Keep the window redrawing while playing (transport + clock); when
-		// paused the visualiser canvas still repaints itself via
-		// Painter.AnimationFrame, so a cheap 25fps rebuild is enough.
+		// The visualiser animates continuously, so the window repaints every
+		// frame; when nothing is playing a 25fps rebuild keeps the clock and
+		// the idle-breathing spectrum alive without spinning the CPU.
 		if a.IsPlaying() {
 			c.AnimationFrame()
 		} else {
 			c.After(40 * time.Millisecond)
 		}
-		// Space toggles playback while the window is focused.
 		if c.Shortcut(0, myui.KeySpace) {
 			a.TogglePlay()
 		}
 
-		// Row() centers its children on the cross axis by default; the
-		// three columns must stretch to the full window height instead.
-		myui.Row(c).Fill().AlignItems(myui.Stretch).Children(func() {
-			sidebar(c, a, skin)
-			myui.Column(c).Grow(1).FillHeight().Children(func() {
-				topBar(c, a, skin)
-				visualizerHost(c, a, skin)
-				transport(c, a, skin)
+		// The root is a plain Box filling the window, so the layers below can
+		// be positioned over the visualiser instead of beside it.
+		root := myui.Box(c).Fill()
+		trackPointer(root, c)
+		root.Children(func() {
+			// Layer 1: the visualiser, full bleed.
+			visualizerBackdrop(c, a, skin)
+
+			// Layer 2: the floating chrome over it.
+			myui.Box(c).Fill().Children(func() {
+				myui.Column(c).Fill().Children(func() {
+					topBar(c, a, skin)
+					myui.Box(c).Grow(1).Children(func() {
+						leftRail(c, a, skin)
+						rightRail(c, a, skin)
+					})
+					transport(c, a, skin)
+				})
 			})
-			rightPanel(c, a, skin)
 		})
 	}
 }
 
-// colOf parses a hex colour string into a ui.Color.
-func colOf(hex string) myui.Color { return myui.Hex(hex) }
-
-// skinTheme derives a dark theme from the active glassmorphism skin so the
-// whole window shares the player's palette.
-func skinTheme(s app.Skin) *myui.Theme {
-	t := myui.DarkTheme()
-	t.Background = colOf(s.BG)
-	t.Surface = colOf(s.Surface)
-	t.Text = colOf(s.Ink)
-	t.TextMuted = colOf(s.Ink).Mix(colOf(s.Surface), 0.45)
-	t.Accent = colOf(s.Primary)
-	t.AccentHover = colOf(s.Primary).Mix(myui.RGB(255, 255, 255), 0.18)
-	t.AccentText = colOf(s.VizInk)
-	t.Border = colOf(s.Surface).Mix(colOf(s.Ink), 0.18)
-	return t
-}
-
-// sidebar holds the brand, navigation and the import button.
-func sidebar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
-	t := c.Theme()
-	return myui.Column(c).Width(220).FillHeight().Background(t.Background).Padding(16, 12).Gap(6).Children(func() {
-		myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
-			myui.Box(c).Size(22, 22).Radius(11).Draw(func(p *myui.Painter, r myui.Rect) {
-				p.Fill(r, colOf(skin.Primary).Mix(colOf(skin.Accent), 0.5), 11)
-			})
-			myui.Text(c, "悠悠乐听").FontSize(18).Bold().TextColor(t.Text)
-		})
-		myui.Text(c, "原生音乐播放器").FontSize(11).TextColor(t.TextMuted).Margin(0, 0, 4, 0)
-		myui.Divider(c).Margin(6, 0, 8, 0)
-		navItem(c, a, "library", "音乐库")
-		navItem(c, a, "eq", "均衡器")
-		navItem(c, a, "lyrics", "歌词")
-		navItem(c, a, "skins", "外观")
-		navItem(c, a, "about", "关于")
-		myui.Box(c).Grow(1)
-		imp := myui.Button(c.Key("import"), "导入音乐…").Width(196)
-		imp.OnClick(func() { TriggerImport(a) })
-	})
-}
-
-// navItem is a clickable sidebar entry that selects the main panel.
-func navItem(c *myui.Context, a *app.App, id, label string) myui.Element {
-	t := c.Theme()
-	active := a.Panel == id
-	txt := t.Text
-	if active {
-		txt = t.Accent
-	}
-	e := myui.Box(c).Key(id).Padding(8, 10).Radius(8)
-	if active {
-		e = e.Background(t.Accent.Alpha(0.18))
-	}
-	e.Children(func() {
-		myui.Text(c, label).FontSize(14).TextColor(txt)
-	})
-	e.OnClick(func() { a.SetPanel(id) })
-	return e
-}
-
-// topBar shows the current track and the visualiser-mode selector.
-func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
-	t := c.Theme()
-	snap := a.Snapshot()
-	cur := snap.Current
-	return myui.Row(c).Height(92).Padding(16, 16).Gap(14).AlignItems(myui.Center).Children(func() {
-		coverArt(c, cur, skin)
-		myui.Column(c).Grow(1).Gap(6).Children(func() {
-			if cur == nil {
-				myui.Text(c, "尚未播放").FontSize(18).Bold().TextColor(t.Text)
-				myui.Text(c, "从右侧导入或选择音乐开始播放").FontSize(12).TextColor(t.TextMuted)
-			} else {
-				myui.Text(c, cur.Title).FontSize(18).Bold().TextColor(t.Text)
-				myui.Text(c, cur.Artist+" · "+cur.Album).FontSize(12).TextColor(t.TextMuted)
-			}
-			tabs := myui.Tabs(c, &a.VizMode, "频谱", "波形", "径向", "粒子", "极光", "瀑布").Gap(4)
-			if tabs.Changed() {
-				a.SetVisualization(app.VizOrder[a.VizMode])
-			}
-		})
-		// Errors are pushed to state by import and playback failures; without
-		// this the user clicks a track and nothing at all appears to happen.
-		if errs := a.State.Errors(); len(errs) > 0 {
-			last := errs[len(errs)-1]
-			myui.Box(c).MaxWidth(300).Padding(8, 10).Radius(8).Background(t.Danger.Alpha(0.16)).
-				Border(1, t.Danger.Alpha(0.4)).Radius(8).Children(func() {
-				myui.Text(c, "⚠ "+last).FontSize(11).TextColor(t.Text)
-			})
+// trackPointer feeds the idle-fold timer from the root element's pointer
+// position. The root fills the window, so "inside the root" is "inside the
+// window", and its own origin is the window origin.
+//
+// Comparing against the previous position matters: mygo reports the last
+// known pointer coordinates on every frame, so a stationary pointer would
+// otherwise keep resetting the timer and the columns would never fold.
+func trackPointer(root myui.Element, c *myui.Context) {
+	x, y, over := root.PointerPosition()
+	if !over {
+		// The pointer left the window: start the fold from now, so the
+		// columns do not stay open while the user is elsewhere.
+		if layout.hadPointer {
+			layout.lastMove = c.Now()
+			layout.hadPointer = false
 		}
-	})
+		return
+	}
+	if !layout.hadPointer || x != layout.lastX || y != layout.lastY {
+		layout.lastMove = c.Now()
+		layout.lastX, layout.lastY = x, y
+		layout.hadPointer = true
+	}
 }
 
-// coverArt is a gradient tile standing in for album art.
-func coverArt(c *myui.Context, cur *app.Track, skin app.Skin) myui.Element {
-	return myui.Box(c).Size(64, 64).Radius(12).Draw(func(p *myui.Painter, r myui.Rect) {
-		g := myui.LinearGradient{From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135}
-		p.FillGradient(r, g, 12)
-		p.Text(r.X+10, r.Y+40, "♪", 22, colOf(skin.VizInk).Alpha(0.85))
-	})
-}
-
-// visualizerHost is the central animated canvas.
-func visualizerHost(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
-	return myui.Box(c).Grow(1).Margin(16, 16, 0, 16).Radius(16).Draw(func(p *myui.Painter, r myui.Rect) {
-		bg := colOf(skin.BG).Mix(colOf(skin.Surface), 0.4)
-		p.Fill(r, bg, 16)
-		p.Clip(r, 16, func() {
+// visualizerBackdrop paints the audio visualiser behind the whole window.
+func visualizerBackdrop(c *myui.Context, a *app.App, skin app.Skin) {
+	myui.Box(c).Fill().Draw(func(p *myui.Painter, r myui.Rect) {
+		bg := colOf(skin.BG)
+		p.Fill(r, bg, 0)
+		p.Clip(r, 0, func() {
 			f := a.Frame()
-			// dt drives every stateful effect (peak fall, rotation,
-			// particle motion, waterfall scroll). Deriving it from the
-			// painter's clock keeps them frame-rate independent.
 			now := c.Now()
 			dt := float32(now.Sub(vizLast).Seconds())
 			if dt <= 0 || dt > 0.25 {
@@ -180,43 +133,236 @@ func visualizerHost(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 				drawWaterfall(p, r, f, skin, dt)
 			}
 		})
-		p.Stroke(r, colOf(skin.Primary).Alpha(0.25), 16, 1)
-		p.AnimationFrame()
 	})
 }
 
-// vizLast is when the previous visualiser frame ran, for computing dt.
-var vizLast time.Time
+// colOf parses a hex colour string into a ui.Color.
+func colOf(hex string) myui.Color { return myui.Hex(hex) }
 
-// transport holds the seek bar, play controls, time and volume.
+// skinTheme derives a dark theme from the active glassmorphism skin so the
+// whole window shares the player's palette.
+func skinTheme(s app.Skin) *myui.Theme {
+	t := myui.DarkTheme()
+	t.Background = colOf(s.BG)
+	t.Surface = colOf(s.Surface)
+	t.Text = colOf(s.Ink)
+	t.TextMuted = colOf(s.Ink).Mix(colOf(s.Surface), 0.45)
+	t.Accent = colOf(s.Primary)
+	t.AccentHover = colOf(s.Primary).Mix(myui.RGB(255, 255, 255), 0.18)
+	t.AccentText = colOf(s.VizInk)
+	t.Border = colOf(s.Surface).Mix(colOf(s.Ink), 0.18)
+	t.Danger = myui.RGB(239, 68, 68)
+	t.Success = myui.RGB(34, 197, 94)
+	return t
+}
+
+// idleFolded reports whether a column should fold: the pointer has been still
+// for the fold delay and the column is not pinned.
+func idleFolded(pinned bool) bool {
+	if pinned {
+		return false
+	}
+	if layout.lastMove.IsZero() {
+		return false
+	}
+	return time.Since(layout.lastMove) >= idleFold
+}
+
+// topBar is the floating toolbar across the top: the brand, the playlist
+// toggle on the left, and the feature-panel icons on the right.
+func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
+	t := c.Theme()
+	return myui.Row(c).Height(52).Padding(12, 14).Gap(10).AlignItems(myui.Center).Children(func() {
+		// Left: brand plus the playlist fold toggle.
+		myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
+			myui.Box(c).Size(22, 22).Radius(11).Draw(func(p *myui.Painter, r myui.Rect) {
+				p.FillGradient(r, myui.LinearGradient{
+					From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
+				}, 11)
+			})
+			myui.Text(c, "悠悠乐听").FontSize(16).Bold().TextColor(t.Text)
+
+			// Playlist toggle: folds the left column, or pins it open.
+			lb := myui.Button(c.Key("library-toggle"), "☰").Tooltip(playlistTip(a))
+			lb.Size(32, 32).Radius(8).OnClick(func() {
+				if a.LibraryPinned {
+					a.ToggleLibraryPin()
+					a.ToggleLibrary()
+					return
+				}
+				if a.LibraryOpen {
+					a.ToggleLibrary()
+				} else {
+					a.LibraryOpen = true
+					a.ToggleLibraryPin()
+				}
+			})
+		})
+
+		myui.Box(c).Grow(1)
+
+		// Right: the feature-panel icons, each toggling its panel.
+		for _, p := range app.SidePanels {
+			panel := p
+			label := sidePanelLabel(panel)
+			b := myui.Button(c.Key("panel-"+panel), sidePanelGlyph(panel)).Tooltip(label)
+			active := a.SidePanel == panel
+			if active {
+				b.Background(t.Accent.Alpha(0.22))
+			}
+			b.Size(32, 32).Radius(8).OnClick(func() { a.ToggleSidePanel(panel) })
+		}
+	})
+}
+
+func playlistTip(a *app.App) string {
+	switch {
+	case a.LibraryPinned:
+		return "播放列表已固定，点击取消固定"
+	case a.LibraryOpen:
+		return "收起播放列表"
+	default:
+		return "展开播放列表"
+	}
+}
+
+func sidePanelLabel(p string) string {
+	switch p {
+	case "eq":
+		return "均衡器"
+	case "lyrics":
+		return "歌词"
+	case "skins":
+		return "外观"
+	case "about":
+		return "关于"
+	}
+	return p
+}
+
+func sidePanelGlyph(p string) string {
+	switch p {
+	case "eq":
+		return "🎚"
+	case "lyrics":
+		return "🎤"
+	case "skins":
+		return "🎨"
+	case "about":
+		return "ℹ"
+	}
+	return "•"
+}
+
+// leftRail is the playlist column: a floating panel when open, a slim icon
+// rail when folded by the idle timer.
+func leftRail(c *myui.Context, a *app.App, skin app.Skin) {
+	folded := idleFolded(a.LibraryPinned) || !a.LibraryOpen
+	if folded {
+		// The rail keeps just the toggle, so the playlist is one click away.
+		myui.Box(c).Width(44).FillHeight().Padding(6, 6).Children(func() {
+			b := myui.Button(c.Key("rail-library"), "☰").Tooltip("展开播放列表")
+			b.Size(32, 32).Radius(8).OnClick(func() {
+				a.LibraryOpen = true
+				a.ToggleLibraryPin()
+			})
+		})
+		return
+	}
+	playlistPanel(c, a, skin)
+}
+
+// rightRail is the feature column: the open panel when expanded, otherwise
+// nothing but the top-bar icons (which live in topBar).
+func rightRail(c *myui.Context, a *app.App, skin app.Skin) {
+	if a.SidePanel == "" {
+		return
+	}
+	folded := idleFolded(a.SidePanelSticky())
+	if folded {
+		// Folded: the panel is not drawn at all; the top-bar icons remain.
+		return
+	}
+	sidePanel(c, a, skin)
+}
+
+// transport is the full-width bottom bar: cover art, track information, the
+// seek bar, the transport buttons and the volume controls.
 func transport(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	t := c.Theme()
 	pos := a.PositionMs()
 	dur := a.DurationMs()
-	return myui.Column(c).Height(96).Padding(10, 18).Gap(10).Children(func() {
+	snap := a.Snapshot()
+	cur := snap.Current
+
+	return myui.Column(c).Fill().Children(func() {
 		seekBar(c, a, skin, pos, dur)
-		myui.Row(c).Height(40).AlignItems(myui.Center).Justify(myui.Center).Gap(18).Children(func() {
-			ctrlBtn(c, "⏮", false, func() { a.Prev() })
-			if a.IsPlaying() {
-				ctrlBtn(c, "⏸", true, func() { a.TogglePlay() })
-			} else {
-				ctrlBtn(c, "▶", true, func() { a.TogglePlay() })
-			}
-			ctrlBtn(c, "⏭", false, func() { a.Next() })
-			myui.Text(c, fmt.Sprintf("%s / %s", app.FmtTime(pos), app.FmtTime(dur))).
-				FontSize(12).TextColor(t.TextMuted)
+		myui.Row(c).Height(64).Padding(10, 16).Gap(14).AlignItems(myui.Center).Children(func() {
+			transportNowPlaying(c, a, skin, cur)
 			myui.Box(c).Grow(1)
-			muteBtn(c, a, t)
-			vol := myui.Slider(c, &a.Volume, 0, 1).Width(120)
-			vol.OnChange(func() { a.SetVolume(a.Volume) })
+			transportButtons(c, a, skin, t)
+			myui.Box(c).Grow(1)
+			transportUtility(c, a, t)
 		})
 	})
 }
 
+// transportNowPlaying is the cover art plus title and artist.
+func transportNowPlaying(c *myui.Context, a *app.App, skin app.Skin, cur *app.Track) {
+	t := c.Theme()
+	myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
+		myui.Box(c).Size(48, 48).Radius(10).Draw(func(p *myui.Painter, r myui.Rect) {
+			p.FillGradient(r, myui.LinearGradient{
+				From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
+			}, 10)
+			p.Text(r.X+8, r.Y+30, "♪", 18, colOf(skin.VizInk).Alpha(0.85))
+		})
+		myui.Column(c).Gap(2).Children(func() {
+			if cur == nil {
+				myui.Text(c, "尚未播放").FontSize(14).Bold().TextColor(t.Text)
+				myui.Text(c, "从左侧播放列表选择音乐").FontSize(11).TextColor(t.TextMuted)
+				return
+			}
+			myui.Text(c, cur.Title).FontSize(14).Bold().TextColor(t.Text)
+			myui.Text(c, cur.Artist+" · "+cur.Album).FontSize(11).TextColor(t.TextMuted)
+		})
+	})
+}
+
+// transportButtons is the centred prev/play/next group.
+func transportButtons(c *myui.Context, a *app.App, skin app.Skin, t *myui.Theme) {
+	myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
+		prev := myui.Button(c.Key("prev"), "⏮").Tooltip("上一首")
+		prev.Size(38, 38).Radius(19).OnClick(func() { a.Prev() })
+
+		var play myui.Element
+		if a.IsPlaying() {
+			play = myui.PrimaryButton(c.Key("play"), "⏸").Tooltip("暂停")
+		} else {
+			play = myui.PrimaryButton(c.Key("play"), "▶").Tooltip("播放")
+		}
+		play.Size(46, 46).Radius(23).OnClick(func() { a.TogglePlay() })
+
+		next := myui.Button(c.Key("next"), "⏭").Tooltip("下一首")
+		next.Size(38, 38).Radius(19).OnClick(func() { a.Next() })
+	})
+}
+
+// transportUtility holds the clock, volume and mute on the right of the deck.
+func transportUtility(c *myui.Context, a *app.App, t *myui.Theme) {
+	pos := a.PositionMs()
+	dur := a.DurationMs()
+	myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
+		myui.Text(c, fmt.Sprintf("%s / %s", app.FmtTime(pos), app.FmtTime(dur))).
+			FontSize(12).TextColor(t.TextMuted)
+		muteBtn(c, a, t)
+		vol := myui.Slider(c, &a.Volume, 0, 1).Width(110)
+		vol.OnChange(func() { a.SetVolume(a.Volume) })
+	})
+}
+
 // muteBtn is the speaker button: one click toggles mute, and the glyph shows
-// the current state (muted, low, normal, loud) the way desktop players do.
-// A separate switch next to the slider was confusing, so the icon itself is
-// the control.
+// the current state the way desktop players do.
 func muteBtn(c *myui.Context, a *app.App, t *myui.Theme) myui.Element {
 	glyph, tip := speakerGlyph(a.Volume, a.Muted)
 	b := myui.Button(c.Key("mute"), glyph).Tooltip(tip)
@@ -238,151 +384,127 @@ func speakerGlyph(vol float64, muted bool) (glyph, tip string) {
 	}
 }
 
-// ctrlBtn is a round-ish transport button.
-func ctrlBtn(c *myui.Context, glyph string, primary bool, on func()) myui.Element {
-	var b myui.Element
-	if primary {
-		b = myui.PrimaryButton(c, glyph)
-	} else {
-		b = myui.Button(c, glyph)
-	}
-	b.Width(46).Height(40).OnClick(on)
-	return b
-}
-
-// seekBar is a click-to-seek progress bar with a larger hit area.
-func seekBar(c *myui.Context, a *app.App, skin app.Skin, pos, dur int64) myui.Element {
+// playlistPanel is the expanded left column: the library list.
+func playlistPanel(c *myui.Context, a *app.App, skin app.Skin) {
 	t := c.Theme()
-	frac := float32(0)
-	if dur > 0 {
-		frac = float32(pos) / float32(dur)
-	}
-	el := myui.Box(c).Height(20).Margin(2, 0, 2, 0).Draw(func(p *myui.Painter, r myui.Rect) {
-		rr := r
-		rr.Y += 5
-		rr.H -= 10
-		p.Fill(rr, t.Surface, 5)
-		fw := rr.W * frac
-		if fw > 0 {
-			pr := rr
-			pr.W = fw
-			p.Fill(pr, colOf(skin.Primary), 5)
-		}
-		tx := rr.X + fw
-		p.Fill(myui.Rect{X: tx - 6, Y: rr.Y - 3, W: 12, H: rr.H + 6}, colOf(skin.Accent), 6)
-		p.AnimationFrame()
-	})
-	el.OnClick(func() {
-		x, _, over := el.PointerPosition()
-		b := el.Bounds()
-		if !over || b.W <= 0 {
-			return
-		}
-		f := x / b.W
-		if f < 0 {
-			f = 0
-		}
-		if f > 1 {
-			f = 1
-		}
-		a.SeekMs(int64(f * float32(dur)))
-	})
-	return el
-}
-
-// rightPanel switches the side panel by the selected nav entry.
-func rightPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
-	t := c.Theme()
-	return myui.Column(c).Width(340).FillHeight().Background(t.Surface).Children(func() {
-		switch a.Panel {
-		case "eq":
-			eqPanel(c, a, skin)
-		case "lyrics":
-			lyricsPanel(c, a, skin)
-		case "skins":
-			skinsPanel(c, a, skin)
-		case "about":
-			aboutPanel(c, a, skin)
-		default:
-			libraryPanel(c, a, skin)
-		}
-	})
-}
-
-// headerRow is a section title with an optional right-aligned subtitle.
-func headerRow(c *myui.Context, title, sub string) myui.Element {
-	t := c.Theme()
-	return myui.Row(c).Padding(16, 14, 16, 10).AlignItems(myui.Center).Justify(myui.SpaceBetween).Children(func() {
-		myui.Text(c, title).FontSize(16).Bold().TextColor(t.Text)
-		if sub != "" {
-			myui.Text(c, sub).FontSize(11).TextColor(t.TextMuted)
-		}
-	})
-}
-
-// libraryPanel lists the imported tracks.
-func libraryPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	snap := a.Snapshot()
-	return myui.Column(c).Fill().Children(func() {
-		headerRow(c, "音乐库", fmt.Sprintf("%d 首", len(snap.Tracks)))
-		myui.Scroll(c).Fill().Children(func() {
-			if len(snap.Tracks) == 0 {
-				myui.Text(c, "还没有音乐。\n点击左侧“导入音乐…”选择文件或文件夹。").
-					FontSize(13).TextColor(c.Theme().TextMuted).Padding(16, 12)
-				return
-			}
-			for i, tr := range snap.Tracks {
-				trackRow(c, a, tr, snap.Current, i)
-			}
+	myui.Box(c).Width(300).FillHeight().Children(func() {
+		// Translucent so the visualiser reads through, the way the old
+		// build's floating panels did.
+		myui.Column(c).Fill().Background(t.Surface.Alpha(0.82)).Radius(0, 14, 14, 0).
+			Padding(12, 10).Gap(6).Children(func() {
+			myui.Row(c).AlignItems(myui.Center).Children(func() {
+				myui.Text(c, "播放列表").FontSize(14).Bold().TextColor(t.Text)
+				myui.Box(c).Grow(1)
+				myui.Text(c, fmt.Sprintf("%d 首", len(snap.Tracks))).FontSize(11).TextColor(t.TextMuted)
+				pin := myui.Button(c.Key("pin-library"), "📌").Tooltip(playlistTip(a))
+				pin.Size(26, 26).Radius(6).OnClick(func() { a.ToggleLibraryPin() })
+			})
+			myui.Row(c).Gap(6).Children(func() {
+				imp := myui.Button(c.Key("import"), "导入音乐…").Grow(1)
+				imp.OnClick(func() { TriggerImport(a) })
+			})
+			myui.Scroll(c).Fill().Children(func() {
+				if len(snap.Tracks) == 0 {
+					myui.Text(c, "还没有音乐。\n点击「导入音乐…」选择文件或文件夹。").
+						FontSize(12).TextColor(t.TextMuted).Padding(12, 10)
+					return
+				}
+				for i, tr := range snap.Tracks {
+					trackRow(c, a, tr, snap.Current, i)
+				}
+			})
 		})
 	})
 }
 
-// trackRow is one selectable track in the library list.
+// trackRow is one selectable track in the playlist.
 func trackRow(c *myui.Context, a *app.App, tr *app.Track, cur *app.Track, index int) myui.Element {
 	t := c.Theme()
 	active := cur != nil && cur.ID == tr.ID
-	// Unplayable tracks are shown dimmed with a marker; clicking explains why
-	// instead of silently doing nothing.
 	bad := tr.Status == app.TrackBad || tr.Status == app.TrackMissing
-	e := myui.Row(c).Key(tr.ID).Padding(8, 8).Gap(10).AlignItems(myui.Center).Radius(8)
+	e := myui.Row(c).Key(tr.ID).Padding(7, 8).Gap(10).AlignItems(myui.Center).Radius(8)
 	if active {
 		e = e.Background(t.Accent.Alpha(0.16))
 	}
 	e.Children(func() {
-		myui.Box(c).Size(36, 36).Radius(8).Background(t.Background).AlignItems(myui.Center).Justify(myui.Center).
-			Children(func() {
-				myui.Text(c, fmt.Sprintf("%d", index+1)).FontSize(12).TextColor(t.TextMuted)
-			})
-		myui.Column(c).Grow(1).Gap(2).Children(func() {
+		myui.Box(c).Size(30, 30).Radius(8).Background(t.Background.Alpha(0.6)).
+			AlignItems(myui.Center).Justify(myui.Center).Children(func() {
+			myui.Text(c, fmt.Sprintf("%d", index+1)).FontSize(11).TextColor(t.TextMuted)
+		})
+		myui.Column(c).Grow(1).Gap(1).Children(func() {
 			titleColor := t.Text
-			metaColor := t.TextMuted
 			if bad {
 				titleColor = t.TextMuted
 			}
 			myui.Text(c, tr.Title).FontSize(13).TextColor(titleColor)
-			artistLine := tr.Artist
+			line := tr.Artist
 			if tr.Status == app.TrackBad {
-				artistLine += " · 格式不支持"
+				line += " · 格式不支持"
 			} else if tr.Status == app.TrackMissing {
-				artistLine += " · 文件缺失"
+				line += " · 文件缺失"
 			}
-			myui.Text(c, artistLine).FontSize(11).TextColor(metaColor)
+			myui.Text(c, line).FontSize(11).TextColor(t.TextMuted)
 		})
 		myui.Text(c, app.FmtTime(tr.DurationMs)).FontSize(11).TextColor(t.TextMuted)
 	})
 	e.OnClick(func() {
-		if tr.Status == app.TrackBad {
+		switch tr.Status {
+		case app.TrackBad:
 			a.State.PushError("暂不支持 " + filepath.Ext(tr.FilePath) + " 格式（支持 WAV / MP3 / FLAC / OGG）")
-			return
-		}
-		if tr.Status == app.TrackMissing {
+		case app.TrackMissing:
 			a.State.PushError("文件不存在: " + tr.FilePath)
-			return
+		default:
+			a.PlayTrack(tr.ID)
 		}
-		a.PlayTrack(tr.ID)
 	})
 	return e
+}
+
+// sidePanel is the expanded right column.
+func sidePanel(c *myui.Context, a *app.App, skin app.Skin) {
+	t := c.Theme()
+	myui.Box(c).Width(320).FillHeight().Children(func() {
+		myui.Column(c).Fill().Background(t.Surface.Alpha(0.82)).
+			Padding(12, 12).Gap(8).Children(func() {
+			myui.Row(c).AlignItems(myui.Center).Children(func() {
+				myui.Text(c, sidePanelLabel(a.SidePanel)).FontSize(14).Bold().TextColor(t.Text)
+				myui.Box(c).Grow(1)
+				cl := myui.Button(c.Key("close-panel"), "✕").Tooltip("关闭")
+				cl.Size(26, 26).Radius(6).OnClick(func() { a.CloseSidePanel() })
+			})
+			myui.Scroll(c).Fill().Children(func() {
+				switch a.SidePanel {
+				case "eq":
+					eqPanel(c, a, skin)
+				case "lyrics":
+					lyricsPanel(c, a, skin)
+				case "skins":
+					skinsPanel(c, a, skin)
+				case "about":
+					aboutPanel(c, a)
+				}
+			})
+		})
+	})
+}
+
+// seekBar is the progress bar across the top of the transport.
+//
+// A Slider is used rather than a drawn bar because it brings dragging,
+// keyboard seeking and accessibility for free; the value it binds is a local
+// copy of the position, written back to the player on change so the bar does
+// not fight the playback clock between frames.
+func seekBar(c *myui.Context, a *app.App, skin app.Skin, pos, dur int64) myui.Element {
+	t := c.Theme()
+	seek := float64(pos)
+	if dur > 0 {
+		s := myui.Slider(c, &seek, 0, float64(dur)).Fill()
+		s.OnChange(func() { a.SeekMs(int64(seek)) })
+		return s
+	}
+	// Nothing loaded: show an inert, empty rail.
+	return myui.Box(c).Fill().Height(6).Radius(3).Background(t.Border.Alpha(0.4))
 }
 
 // eqPanel is the ten-band equaliser with presets and an enable switch.
@@ -393,16 +515,15 @@ func eqPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 		"flat": "平直", "rock": "摇滚", "pop": "流行", "classical": "古典",
 		"bass": "重低音", "vocal": "人声", "treble": "高音",
 	}
-	return myui.Scroll(c).Fill().Padding(16, 12).Gap(10).Children(func() {
-		headerRow(c, "均衡器", "")
-		myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
-			myui.Text(c, "启用").FontSize(14).TextColor(t.Text)
+	return myui.Column(c).Fill().Gap(8).Children(func() {
+		myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
+			myui.Text(c, "启用").FontSize(13).TextColor(t.Text)
 			en := myui.Switch(c, &a.EQEnabled)
 			if en.Changed() {
 				a.SetEQEnabled(a.EQEnabled)
 			}
 		})
-		myui.Row(c).Gap(6).Wrap().Children(func() {
+		myui.Row(c).Gap(5).Wrap().Children(func() {
 			for _, name := range a.EQPresets() {
 				label := name
 				if zh, ok := presetNames[name]; ok {
@@ -412,10 +533,10 @@ func eqPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 				b.OnClick(func() { a.SetEQPreset(name) })
 			}
 		})
-		myui.Divider(c).Margin(6, 0, 6, 0)
+		myui.Divider(c)
 		for i := 0; i < 10; i++ {
 			idx := i
-			myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
+			myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
 				myui.Text(c, freqs[i]).FontSize(11).TextColor(t.TextMuted).Width(34)
 				s := myui.Slider(c, &a.EQBands[idx], -12, 12).Grow(1)
 				s.OnChange(func() { a.SetEQBand(idx, a.EQBands[idx]) })
@@ -428,33 +549,23 @@ func eqPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 // lyricsPanel shows imported lyrics, or a placeholder.
 func lyricsPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	t := c.Theme()
-	snap := a.Snapshot()
-	return myui.Column(c).Fill().Gap(0).Children(func() {
-		headerRow(c, "歌词", "")
-		myui.Scroll(c).Fill().Padding(16, 8).Children(func() {
-			if snap.Current == nil {
-				myui.Text(c, "播放一首歌，歌词会显示在这里。").FontSize(13).TextColor(t.TextMuted)
-				return
-			}
-			if snap.Current.LyricsRef == "" {
-				myui.Text(c, "当前音频未包含内嵌歌词。").FontSize(13).TextColor(t.TextMuted)
-				return
-			}
-			myui.Text(c, snap.Current.Title+"\n\n"+"(内嵌歌词)").FontSize(14).TextColor(t.Text)
-		})
+	return myui.Column(c).Fill().Gap(8).Children(func() {
+		myui.Text(c, "歌词").FontSize(13).Bold().TextColor(t.Text)
+		myui.Text(c, "歌词文件（.lrc）与音乐文件同名同目录放置时会自动加载，\n也支持读取文件内嵌的歌词标签。").
+			FontSize(12).TextColor(t.TextMuted)
+		myui.Divider(c)
+		myui.Text(c, "播放带歌词的曲目后，这里会逐行高亮显示。").
+			FontSize(11).TextColor(t.TextMuted)
 	})
 }
 
-// skinsPanel lets the user pick a glassmorphism theme.
+// skinsPanel lists the selectable themes.
 func skinsPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
-	return myui.Column(c).Fill().Children(func() {
-		headerRow(c, "外观", "")
-		myui.Scroll(c).Fill().Padding(12, 8).Gap(8).Children(func() {
-			cur := a.CurrentSkin().ID
-			for _, s := range a.Skins() {
-				skinCard(c, a, s, cur)
-			}
-		})
+	cur := a.CurrentSkin().ID
+	return myui.Column(c).Fill().Gap(6).Children(func() {
+		for _, s := range a.Skins() {
+			skinCard(c, a, s, cur)
+		}
 	})
 }
 
@@ -462,24 +573,24 @@ func skinsPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 func skinCard(c *myui.Context, a *app.App, s app.Skin, cur string) myui.Element {
 	t := c.Theme()
 	active := s.ID == cur
-	e := myui.Row(c).Key(s.ID).Padding(10, 10).Gap(10).AlignItems(myui.Center).Radius(10)
+	e := myui.Row(c).Key(s.ID).Padding(9, 9).Gap(10).AlignItems(myui.Center).Radius(10)
 	if active {
 		e = e.Background(t.Accent.Alpha(0.16))
 	}
 	e.Children(func() {
 		myui.Row(c).Gap(4).Children(func() {
 			for _, hex := range []string{s.Primary, s.Accent, s.BG} {
-				myui.Box(c).Size(18, 18).Radius(6).Draw(func(p *myui.Painter, r myui.Rect) {
-					p.Fill(r, colOf(hex), 6)
+				myui.Box(c).Size(16, 16).Radius(5).Draw(func(p *myui.Painter, r myui.Rect) {
+					p.Fill(r, colOf(hex), 5)
 				})
 			}
 		})
-		myui.Column(c).Grow(1).Gap(2).Children(func() {
-			myui.Text(c, s.Name).FontSize(14).TextColor(t.Text)
+		myui.Column(c).Grow(1).Gap(1).Children(func() {
+			myui.Text(c, s.Name).FontSize(13).TextColor(t.Text)
 			myui.Text(c, "@"+s.Author).FontSize(11).TextColor(t.TextMuted)
 		})
 		if active {
-			myui.Text(c, "●").FontSize(12).TextColor(t.Accent)
+			myui.Text(c, "✓").FontSize(14).TextColor(t.Accent)
 		}
 	})
 	e.OnClick(func() { a.SetSkin(s.ID) })
@@ -487,16 +598,15 @@ func skinCard(c *myui.Context, a *app.App, s app.Skin, cur string) myui.Element 
 }
 
 // aboutPanel shows app information and the update controls.
-func aboutPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
+func aboutPanel(c *myui.Context, a *app.App) {
 	t := c.Theme()
-	return myui.Column(c).Fill().Gap(6).Padding(16, 12).Children(func() {
-		headerRow(c, "关于", "")
-		myui.Text(c, "悠悠乐听").FontSize(20).Bold().TextColor(t.Text)
-		myui.Text(c, "一个用 Go 与原生 UI 打造的音乐播放器。").FontSize(13).TextColor(t.TextMuted)
-		myui.Divider(c).Margin(8, 0, 8, 0)
+	myui.Column(c).Fill().Gap(6).Children(func() {
+		myui.Text(c, "悠悠乐听").FontSize(18).Bold().TextColor(t.Text)
+		myui.Text(c, "一个用 Go 与原生 UI 打造的音乐播放器。").FontSize(12).TextColor(t.TextMuted)
+		myui.Divider(c)
 		myui.Text(c, "· 6 种实时音频可视化\n· 10 段参数均衡器与预设\n· 玻璃拟态主题\n· 本地音乐库与全局快捷键\n· 原生 GPU 绘制，无 WebView\n· 支持 WAV / MP3 / FLAC / OGG").
-			FontSize(13).TextColor(t.Text)
-		myui.Divider(c).Margin(8, 0, 8, 0)
+			FontSize(12).TextColor(t.Text)
+		myui.Divider(c)
 		updateSection(c, a)
 	})
 }
@@ -510,21 +620,15 @@ func updateSection(c *myui.Context, a *app.App) {
 	myui.Text(c, "当前版本 "+mygo.App.Version()).FontSize(12).TextColor(t.TextMuted)
 
 	if !a.Updater.Enabled() {
-		// Development builds carry no update feed; saying so avoids the user
-		// hunting for a button that cannot work.
 		myui.Text(c, "此构建未启用自动更新（开发版）").FontSize(12).TextColor(t.TextMuted)
 		return
 	}
 
 	switch {
 	case st.Installing:
-		pct := int(st.Progress * 100)
-		if st.Progress < 0 {
-			pct = -1
-		}
 		label := "正在下载更新…"
-		if pct >= 0 {
-			label = fmt.Sprintf("正在下载更新… %d%%", pct)
+		if st.Progress >= 0 {
+			label = fmt.Sprintf("正在下载更新… %d%%", int(st.Progress*100))
 		}
 		myui.Text(c, label).FontSize(12).TextColor(t.Text)
 		if st.Progress >= 0 {
@@ -585,5 +689,7 @@ func TriggerImport(a *app.App) {
 			a.State.PushError(e.Error())
 		}
 	}
-	a.SetPanel("library")
 }
+
+// vizLast is when the previous visualiser frame ran, for computing dt.
+var vizLast time.Time

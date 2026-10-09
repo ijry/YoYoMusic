@@ -46,6 +46,19 @@ type App struct {
 	// EQBands mirrors the 10 EQ band sliders.
 	EQBands [10]float64
 
+	// LibraryOpen is whether the left playlist column is expanded. It folds
+	// to an icon rail after the pointer has been still for a while.
+	LibraryOpen bool
+	// LibraryPinned keeps the playlist column expanded regardless of the
+	// idle timer, the way pinning a sidebar works in every other player.
+	LibraryPinned bool
+	// SidePanel is the feature panel open on the right: eq, lyrics, skins,
+	// about, or "" when none is open.
+	SidePanel string
+	// SidePanelPinned keeps the right panel expanded regardless of the idle
+	// timer. Lyrics is the exception: it stays open until explicitly closed,
+	// because reading lyrics is not something you do with the mouse.
+	SidePanelPinned bool
 	// Updater drives the signed self-update flow.
 	Updater *Updater
 
@@ -75,6 +88,9 @@ func NewApp(dataDir string) *App {
 		Panel:   "library",
 		Volume:  st.playback.Volume,
 		Updater: NewUpdater(),
+		// The playlist starts expanded but unpinned, so it folds away once
+		// the pointer rests — the same idle behaviour as the feature rail.
+		LibraryOpen: true,
 	}
 	a.Muted = st.playback.Muted
 	a.EQEnabled = st.Settings().Equalizer.Enabled
@@ -325,7 +341,43 @@ func (a *App) SetSkin(id string) {
 }
 
 // SetPanel switches the main panel.
+// SetPanel selects the main panel. Kept for the migration path and the
+// command line; the new layout drives SidePanel instead.
 func (a *App) SetPanel(p string) { a.Panel = p }
+
+// SidePanels lists the panels the right-hand rail can show, in the order the
+// old build showed them.
+var SidePanels = []string{"eq", "lyrics", "skins", "about"}
+
+// ToggleSidePanel opens a panel, or closes it when it is already open. The
+// panel opens pinned, so it does not fold away the moment the pointer rests.
+func (a *App) ToggleSidePanel(p string) {
+	if a.SidePanel == p {
+		a.SidePanel = ""
+		a.SidePanelPinned = false
+		return
+	}
+	a.SidePanel = p
+	a.SidePanelPinned = true
+}
+
+// CloseSidePanel closes the right panel. Lyrics is the one panel the user
+// asks for explicitly and expects to stay, so it ignores the idle timer.
+func (a *App) CloseSidePanel() {
+	a.SidePanel = ""
+	a.SidePanelPinned = false
+}
+
+// SidePanelSticky reports whether the open panel survives the idle timer.
+func (a *App) SidePanelSticky() bool {
+	return a.SidePanelPinned || a.SidePanel == "lyrics"
+}
+
+// ToggleLibrary folds or expands the left playlist column.
+func (a *App) ToggleLibrary() { a.LibraryOpen = !a.LibraryOpen }
+
+// ToggleLibraryPin pins or unpins the playlist column.
+func (a *App) ToggleLibraryPin() { a.LibraryPinned = !a.LibraryPinned }
 
 // Frame returns the live (or idle) visualiser frame.
 func (a *App) Frame() audio.SignalFrame { return a.Player.Frame() }
