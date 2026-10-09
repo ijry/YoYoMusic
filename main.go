@@ -100,13 +100,31 @@ func main() {
 		// when the window is closed.
 
 		mygo.NewWindow(mygo.WindowOptions{
-			Title:     "悠悠乐听",
-			Width:     1100,
-			Height:    720,
-			MinWidth:  820,
-			MinHeight: 560,
-			Content:   myui.View(ui.View(a)),
+			Title:         "悠悠乐听",
+			Width:         1100,
+			Height:        720,
+			MinWidth:      820,
+			MinHeight:     560,
+			TitleBarStyle: mygo.TitleBarHidden,
+			Content:       myui.View(ui.View(a)),
 		})
+
+		// Desktop lyrics: a separate, transparent, always-on-top window that
+		// floats over the desktop like the Tauri build's. It is hidden until
+		// the user toggles it from the tray or the lyrics panel.
+		lw := mygo.NewWindow(mygo.WindowOptions{
+			Title:         "悠悠乐听 · 桌面歌词",
+			Width:         880,
+			Height:        110,
+			AlwaysOnTop:   true,
+			Frameless:     true,
+			Transparent:   true,
+			SkipTaskbar:   true,
+			TitleBarStyle: mygo.TitleBarHidden,
+			Hidden:        true,
+			Content:       myui.View(ui.DesktopLyricsView(a)),
+		})
+		ui.SetLyricWindow(lw)
 
 		// Persist user settings when the application is about to quit. On
 		// Windows the backend does not deliver a graceful quit, so the app
@@ -194,6 +212,7 @@ func buildTray(a *app.App) {
 		mygo.Separator(),
 		{Label: "均衡器", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("eq") }},
 		{Label: "歌词", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("lyrics") }},
+		{Label: "桌面歌词", Click: func(*mygo.MenuItem, *mygo.Window) { ui.ToggleDesktopLyrics() }},
 		{Label: "外观", Click: func(*mygo.MenuItem, *mygo.Window) { a.ToggleSidePanel("skins") }},
 		{Label: "关于与更新", Click: func(*mygo.MenuItem, *mygo.Window) {
 			a.ToggleSidePanel("about")

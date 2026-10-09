@@ -59,7 +59,7 @@ func View(a *app.App) func(c *myui.Context) {
 		// The root is a plain Box filling the window, so the layers below can
 		// be positioned over the visualiser instead of beside it.
 		root := myui.Box(c).Fill()
-		trackPointer(root, c)
+		trackPointer(root, c, a)
 		root.Children(func() {
 			// Layer 1: the visualiser, absolutely positioned so it fills the
 			// window without taking part in the column's flow. A second
@@ -98,7 +98,7 @@ func View(a *app.App) func(c *myui.Context) {
 // Comparing against the previous position matters: mygo reports the last
 // known pointer coordinates on every frame, so a stationary pointer would
 // otherwise keep resetting the timer and the columns would never fold.
-func trackPointer(root myui.Element, c *myui.Context) {
+func trackPointer(root myui.Element, c *myui.Context, a *app.App) {
 	x, y, over := root.PointerPosition()
 	if !over {
 		// The pointer left the window: start the fold from now, so the
@@ -106,6 +106,13 @@ func trackPointer(root myui.Element, c *myui.Context) {
 		if layout.hadPointer {
 			layout.lastMove = c.Now()
 			layout.hadPointer = false
+		}
+		// Hide the playlist when the pointer leaves the window unless the
+		// user pinned it open: a hover panel should not linger over the
+		// visualiser once the cursor is gone.
+		if !a.LibraryPinned && a.LibraryOpen {
+			a.LibraryOpen = false
+			a.LibraryPinned = false
 		}
 		return
 	}
@@ -188,7 +195,16 @@ func idleFolded(pinned bool) bool {
 // toggle on the left, and the feature-panel icons on the right.
 func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	t := c.Theme()
-	return myui.Row(c).Height(52).Padding(12, 14).Gap(10).AlignItems(myui.Center).Children(func() {
+	bar := c.TitleBar()
+	return myui.Row(c).Height(52).Padding(12, 14).Gap(10).AlignItems(myui.Center).
+		Background(t.Surface.Alpha(0.82)).DragWindow().Children(func() {
+		// Reserve the room the OS keeps for its window controls when the
+		// native title bar is hidden (traffic lights on macOS, the button
+		// cluster on Windows/Linux), so our icons never sit under them.
+		if bar.Left > 0 {
+			myui.Box(c).Width(float32(bar.Left))
+		}
+
 		// Left: brand plus the playlist fold toggle.
 		myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
 			myui.Box(c).Size(22, 22).Radius(11).Draw(func(p *myui.Painter, r myui.Rect) {
@@ -234,6 +250,9 @@ func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 			}
 			b.Size(32, 32).Radius(8).OnClick(func() { a.ToggleSidePanel(panel) })
 		}
+		if bar.Right > 0 {
+			myui.Box(c).Width(float32(bar.Right))
+		}
 	})
 }
 
@@ -249,8 +268,8 @@ func playlistTip(a *app.App) string {
 }
 
 // vizModePicker is the compact visualiser-mode row in the top bar. Each mode
-// is a button with a tooltip rather than a label: eight names would not fit,
-// and the active mode is highlighted instead of spelled out.
+// is an icon button with a tooltip carrying the full name: eight names would
+// not fit as labels, and the active mode is highlighted instead of spelled out.
 func vizModePicker(c *myui.Context, a *app.App) {
 	t := c.Theme()
 	myui.Row(c).Gap(3).AlignItems(myui.Center).Children(func() {
@@ -260,7 +279,7 @@ func vizModePicker(c *myui.Context, a *app.App) {
 			if label == "" {
 				label = string(mode)
 			}
-			b := myui.Button(c.Key("viz-"+string(mode)), modeShort(mode)).Tooltip(label)
+			b := iconButton(c, "viz-"+string(mode), vizIcon(mode), label)
 			if app.VizOrder[a.VizMode] == mode {
 				b.Background(t.Accent.Alpha(0.22))
 			}
@@ -269,28 +288,27 @@ func vizModePicker(c *myui.Context, a *app.App) {
 	})
 }
 
-// modeShort is the one- or two-character badge for a visualiser mode. Short
-// because the row holds all eight; the tooltip carries the full name.
-func modeShort(m app.VisualizationMode) string {
+// vizIcon maps a visualiser mode to its icon name.
+func vizIcon(m app.VisualizationMode) string {
 	switch m {
 	case app.VizSpectrum:
-		return "频"
+		return "viz-spectrum"
 	case app.VizWaveform:
-		return "波"
+		return "viz-waveform"
 	case app.VizRadial:
-		return "环"
+		return "viz-radial"
 	case app.VizAurora:
-		return "光"
+		return "viz-aurora"
 	case app.VizParticles:
-		return "粒"
+		return "viz-particles"
 	case app.VizWaterfall:
-		return "瀑"
+		return "viz-waterfall"
 	case app.VizGenerative:
-		return "生"
+		return "viz-generative"
 	case app.VizKaleido:
-		return "花"
+		return "viz-kaleido"
 	}
-	return "·"
+	return ""
 }
 
 func sidePanelLabel(p string) string {
@@ -334,7 +352,7 @@ const (
 // rail when folded. Absolutely positioned so it floats over the visualiser.
 func leftRail(c *myui.Context, a *app.App, skin app.Skin) {
 	panel := myui.Box(c).Absolute().Left(12).Top(topBarH + 8).
-		Bottom(transportH + 8).Width(300)
+		Bottom(transportH + 8).Width(268)
 	panel.Children(func() {
 		folded := idleFolded(a.LibraryPinned) || !a.LibraryOpen
 		if folded {
@@ -364,7 +382,7 @@ func rightRail(c *myui.Context, a *app.App, skin app.Skin) {
 		return
 	}
 	panel := myui.Box(c).Absolute().Right(12).Top(topBarH + 8).
-		Bottom(transportH + 8).Width(320)
+		Bottom(transportH + 8).Width(300)
 	panel.Children(func() { sidePanel(c, a, skin) })
 }
 
@@ -643,12 +661,39 @@ func eqPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 func lyricsPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	t := c.Theme()
 	return myui.Column(c).Fill().Gap(8).Children(func() {
-		myui.Text(c, "歌词").FontSize(13).Bold().TextColor(t.Text)
+		myui.Row(c).AlignItems(myui.Center).Children(func() {
+			myui.Text(c, "歌词").FontSize(13).Bold().TextColor(t.Text)
+			myui.Box(c).Grow(1)
+			dt := iconButton(c, "toggle-desktop-lyrics", "lyrics-screen", "桌面歌词：在桌面显示悬浮歌词")
+			dt.Size(28, 28).Radius(7).OnClick(func() { ToggleDesktopLyrics() })
+		})
 		myui.Text(c, "歌词文件（.lrc）与音乐文件同名同目录放置时会自动加载，\n也支持读取文件内嵌的歌词标签。").
 			FontSize(12).TextColor(t.TextMuted)
 		myui.Divider(c)
-		myui.Text(c, "播放带歌词的曲目后，这里会逐行高亮显示。").
-			FontSize(11).TextColor(t.TextMuted)
+
+		lines := a.Lyrics()
+		if len(lines) == 0 {
+			myui.Text(c, "播放带歌词的曲目后，这里会逐行高亮显示。").
+				FontSize(11).TextColor(t.TextMuted)
+			return
+		}
+		_, _, idx := a.CurrentLyric()
+		myui.Scroll(c).Fill().Children(func() {
+			for i, l := range lines {
+				if l.Text == "" {
+					myui.Box(c).Height(10)
+					continue
+				}
+				active := i == idx
+				col := t.TextMuted
+				size := float32(13)
+				if active {
+					col = t.Text
+					size = float32(15)
+				}
+				myui.Text(c, l.Text).FontSize(size).Bold().TextColor(col)
+			}
+		})
 	})
 }
 

@@ -44,6 +44,20 @@ var iconGlyphs = map[string]string{
 	// --- misc ---
 	"music": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>`,
 	"check": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>`,
+
+	// --- visualiser modes (used by the top-bar mode picker, replacing the
+	//     Chinese single-character badges so the strip reads as icons) ---
+	"viz-spectrum":   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19v-7M9 19V5M14 19v-9M19 19v-4"/></svg>`,
+	"viz-waveform":   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2-7 4-7 6 0s4 7 6 0 4-7 6 0"/></svg>`,
+	"viz-radial":     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg>`,
+	"viz-aurora":     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 9c3-5 7-5 10 0s7 5 10 0"/><path d="M2 15c3-5 7-5 10 0s7 5 10 0"/></svg>`,
+	"viz-particles":  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="6" cy="6" r="1.9"/><circle cx="17" cy="5" r="1.9"/><circle cx="12" cy="13" r="1.9"/><circle cx="6" cy="18" r="1.9"/><circle cx="18" cy="17" r="1.9"/></svg>`,
+	"viz-waterfall":  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3v18M12 3v18M19 3v18"/></svg>`,
+	"viz-generative": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><circle cx="6" cy="7" r="1.9" stroke="none"/><circle cx="17" cy="9" r="1.9" stroke="none"/><circle cx="12" cy="17" r="1.9" stroke="none"/><path d="M6 7l11 2M6 7l6 10M17 9l-5 8" fill="none"/></svg>`,
+	"viz-kaleido":    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg>`,
+
+	// --- desktop lyrics ---
+	"lyrics-screen": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 9h7M7 13h5"/></svg>`,
 }
 
 // icons caches the parsed SVGs. Parsing is cheap but the icons are drawn every
@@ -73,8 +87,15 @@ func iconButton(c *myui.Context, key, name, tip string) myui.Element {
 	b := myui.Button(c.Key(key), "").Tooltip(tip)
 	if svg := icon(name); svg != nil {
 		// Icon takes its colour from the surrounding TextColor, so it
-		// follows the theme without being told.
-		b.Children(func() { myui.Icon(c, svg) })
+		// follows the theme without being told. The icon is centred in a
+		// fill box at a fixed size: a bare Icon in a Button lands top-left
+		// of the button and overflows small buttons, which is why the old
+		// icons looked off-centre.
+		b.Children(func() {
+			myui.Box(c).Fill().AlignItems(myui.Center).Justify(myui.Center).Children(func() {
+				myui.Icon(c, svg).Size(18, 18)
+			})
+		})
 	}
 	return b
 }
