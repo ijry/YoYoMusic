@@ -1,0 +1,14 @@
+# Go sources must stay LF: gofmt (and the CI format check) rejects CRLF, and
+# a Windows runner with core.autocrlf=true would otherwise check every file
+# out with CRLF and fail the whole matrix.
+*.go text eol=lf
+
+# Everything else keeps the platform default, except the shell scripts the
+# release workflow runs through bash.
+*.sh text eol=lf
+.github/workflows/*.yml text eol=lf
+
+# Binary assets must never be touched by line-ending conversion.
+*.png binary
+*.ico binary
+*.icns binary
