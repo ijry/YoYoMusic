@@ -1,5 +1,5 @@
 {
-  "name": "悠悠乐听",
+  "name": "YoYoMusic",
   "identifier": "net.lingyun.yoyomusic",
   "version": "1.0.0",
   "icon": "resources/icon.png",
@@ -9,5 +9,6 @@
     "tagPrefix": "go-v",
     "deltas": 3,
     "changelog": "CHANGELOG.md"
-  }
+  },
+  "copyright": "Copyright © 2026 xyito. Licensed under AGPL-3.0-or-later."
 }

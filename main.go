@@ -31,12 +31,17 @@ var cliArgs struct {
 func parseFlags() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	fs.BoolVar(&cliArgs.play, "play", false, "start playback of the imported files")
-	fs.Parse(os.Args[1:])
+	// flag.ContinueOnError prints usage and returns ErrHelp for -h/--help;
+	// exit instead of starting a GUI nobody asked for. This also gives CI a
+	// cheap way to check the binary runs.
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		os.Exit(2)
+	}
 	cliArgs.imports = fs.Args()
 }
 
 func main() {
-	mygo.App.SetName("YoYoMusic")
+	mygo.App.SetName("悠悠乐听")
 	mygo.App.SetVersion("1.0.0")
 	parseFlags()
 
@@ -85,7 +90,7 @@ func main() {
 		mygo.App.SetMenu(buildMenu(a))
 
 		mygo.NewWindow(mygo.WindowOptions{
-			Title:     "YoYoMusic",
+			Title:     "悠悠乐听",
 			Width:     1100,
 			Height:    720,
 			MinWidth:  820,
@@ -207,8 +212,8 @@ func buildTray(a *app.App) {
 	})
 	if _, err := mygo.NewTray(mygo.TrayOptions{
 		Icon:    trayIcon(),
-		Title:   "YoYoMusic",
-		ToolTip: "YoYoMusic · 原生音乐播放器",
+		Title:   "悠悠乐听",
+		ToolTip: "悠悠乐听 · 原生音乐播放器",
 		Menu:    menu,
 	}); err != nil {
 		log.Printf("tray: %v", err)

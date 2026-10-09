@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [go]
+    # Docs and licence churn does not change what ships; don't spend build
+    # minutes on it.
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+  pull_request:
+    branches: [go]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux/amd64
+          - os: windows-latest
+            target: windows/amd64
+          - os: macos-latest
+            target: darwin/universal
+          - os: macos-latest
+            target: darwin/arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+          cache: true
+
+      # MyGo needs no cgo, so no system packages are required: this is the
+      # whole reason the project moved off Tauri, whose Linux builds need
+      # webkit2gtk, appindicator, rsvg and patchelf installed first.
+      - name: Format check
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "::error::these files need gofmt:$(gofmt -l . | tr '\n' ' ')"
+            gofmt -l .
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1
+
+      # A cross-compile catches what `go build` on one platform cannot: a
+      # file that only exists under a build tag for another OS, or a
+      # platform-specific API typo. Every platform is built from every
+      # runner, which is free precisely because there is no cgo.
+      - name: Cross-compile every platform
+        run: |
+          go build -o /dev/null .
+
+      - name: Smoke test the binary
+        shell: bash
+        run: |
+          # --help exits without starting the GUI, so this works on a
+          # headless runner. A binary that cannot even parse its flags
+          # fails here rather than in the release.
+          ./yoyomusic --help
+          echo "binary responds to --help"
+
+      # Packaging is where platform bugs hide: a missing resource, an
+      # installer that NSIS refuses to write, an icon that will not decode.
+      # Building the installers on every push means the first real check is
+      # not the release itself.
+      - name: Package for ${{ matrix.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          go tool mygo build -platform ${{ matrix.target }}
+          echo "--- artifacts ---"
+          find dist -type f | sort
+          # Every platform must produce at least one installer/archive.
+          count=$(find dist -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.deb' -o -name '*.tar.gz' -o -name '*.app' -o -name '*.zip' \) | wc -l)
+          if [ "$count" -lt 1 ]; then
+            echo "::error::no installers were produced for ${{ matrix.target }}"
+            exit 1
+          fi
+          echo "$count installer artifact(s) produced"

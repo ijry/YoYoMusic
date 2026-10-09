@@ -38,6 +38,21 @@ GOOS=linux   GOARCH=amd64 go build -o yoyomusic .
 go tool mygo build -upload
 ```
 
+打 tag 后由 GitHub Actions 自动发布三个平台的安装包：
+
+```bash
+git tag -a go-v1.0.1 -m "## 1.0.1
+
+- 修了某个问题
+"
+git push origin go-v1.0.1
+```
+
+> **`mygo.json` 的 `name` 必须是 ASCII。** 它会被用作可执行文件名、安装目录名和
+> 快捷方式名，而 NSIS 无法处理绝对路径中的非 ASCII 文件名（实测
+> `File "…\悠悠乐听.exe"` 报 `no files found`）。中文名写在 `main.go` 的
+> `mygo.App.SetName` 与窗口标题里——用户看到中文，落盘是 ASCII，两者互不影响。
+
 ## 开发
 
 ```bash
@@ -67,11 +82,34 @@ go test ./...                # 运行测试
 
 旧版中已不存在的皮肤会回退到内置主题；曲库中文件已丢失的条目会被跳过。
 
+## CI 与发布
+
+两个工作流，都由 GitHub Actions 运行：
+
+| 工作流 | 触发 | 内容 |
+|---|---|---|
+| `ci.yml` | push / PR 到 `go` | gofmt、vet、测试；**四个目标**（linux/amd64、windows/amd64、darwin/universal、darwin/arm64）各自编译 + 冒烟 + 打包 |
+| `release.yml` | push `go-v*.*.*` tag，或手动 | 校验 tag 与版本号一致、签名密钥在位 → 三平台构建并上传为草稿 Release → 发布 |
+
+因为不用 cgo，任何平台都能在任意 runner 上交叉编译，所以 CI 矩阵不需要
+Linux 的 webkit/appindicator/rsvg/patchelf 那一整套系统依赖——这是相对
+Tauri 版最省事的一点。
+
+发布需要的 secret：
+
+- `MYGO_UPDATER_PRIVATE_KEY` — `go tool mygo keygen` 生成的私钥内容
+  （公钥已写在 `mygo.json` 的 `updates.publicKey`）
+
+`mygo build -upload` 会把安装包和 `update-<target>.json` 传到该版本的
+Release（草稿状态），`publish` job 再把它转为正式发布，已安装的应用这才
+会看到更新。
+
 ## 代码结构
 
 ```
 main.go                      窗口、菜单、托盘、快捷键装配
-internal/app/                应用状态、播放控制、设置持久化
+.github/workflows/           CI 与发布流水线
+internal/app/                应用状态、播放控制、设置持久化、自动更新、旧版数据迁移
   audio/                     解码（WAV/MP3/FLAC/OGG）、播放引擎、FFT 分析、10 段均衡器
   ui/                        原生 UI 布局与 6 种可视化绘制
 ```

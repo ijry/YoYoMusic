@@ -73,7 +73,7 @@ func sidebar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 			myui.Box(c).Size(22, 22).Radius(11).Draw(func(p *myui.Painter, r myui.Rect) {
 				p.Fill(r, colOf(skin.Primary).Mix(colOf(skin.Accent), 0.5), 11)
 			})
-			myui.Text(c, "YoYoMusic").FontSize(18).Bold().TextColor(t.Text)
+			myui.Text(c, "悠悠乐听").FontSize(18).Bold().TextColor(t.Text)
 		})
 		myui.Text(c, "原生音乐播放器").FontSize(11).TextColor(t.TextMuted).Margin(0, 0, 4, 0)
 		myui.Divider(c).Margin(6, 0, 8, 0)
@@ -491,7 +491,7 @@ func aboutPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	t := c.Theme()
 	return myui.Column(c).Fill().Gap(6).Padding(16, 12).Children(func() {
 		headerRow(c, "关于", "")
-		myui.Text(c, "YoYoMusic").FontSize(20).Bold().TextColor(t.Text)
+		myui.Text(c, "悠悠乐听").FontSize(20).Bold().TextColor(t.Text)
 		myui.Text(c, "一个用 Go 与原生 UI 打造的音乐播放器。").FontSize(13).TextColor(t.TextMuted)
 		myui.Divider(c).Margin(8, 0, 8, 0)
 		myui.Text(c, "· 6 种实时音频可视化\n· 10 段参数均衡器与预设\n· 玻璃拟态主题\n· 本地音乐库与全局快捷键\n· 原生 GPU 绘制，无 WebView\n· 支持 WAV / MP3 / FLAC / OGG").

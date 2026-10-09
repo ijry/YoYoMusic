@@ -1,0 +1,242 @@
+name: Release
+
+on:
+  push:
+    tags:
+      # mygo derives the release tag from updates.tagPrefix + version in
+      # mygo.json. The prefix keeps Go releases apart from the Tauri
+      # releases this repository also carries, which use a bare "v".
+      - "go-v*.*.*"
+  # Build-only dry run: everything runs except the publish, so the three
+  # platform builds can be verified without shipping a release. Without
+  # this, the first real check of a Linux or macOS build is the release
+  # itself.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # The tag-vs-branch check needs real history, not a shallow clone.
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+          cache: true
+
+      # A tag that disagrees with mygo.json would ship installers whose
+      # filename, About box and updater metadata all report a different
+      # release — and, worse, the updater would compare against the wrong
+      # version and never offer the update.
+      - name: Validate the tag against mygo.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#go-v}"
+          json_version="$(node -p "require('./mygo.json').version")"
+          if [[ "$tag_version" != "$json_version" ]]; then
+            echo "::error file=mygo.json::declares ${json_version}, but the tag is ${GITHUB_REF_NAME}."
+            exit 1
+          fi
+          echo "mygo.json agrees with ${GITHUB_REF_NAME}."
+
+      - name: Ensure the tag is on the default branch
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$DEFAULT_BRANCH"
+          tag_commit="$(git rev-list -n 1 "$GITHUB_REF_NAME")"
+          if ! git merge-base --is-ancestor "$tag_commit" "origin/$DEFAULT_BRANCH"; then
+            echo "::error::Tag ${GITHUB_REF_NAME} is not based on ${DEFAULT_BRANCH}."
+            exit 1
+          fi
+
+      # Checked before anything is built: a missing key would otherwise
+      # surface only after three platforms have built and signed nothing.
+      - name: Ensure the updater signing key is available
+        env:
+          SIGNING_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$SIGNING_KEY" ]]; then
+            echo "::error::MYGO_UPDATER_PRIVATE_KEY is not set. mygo build -upload would produce no signed updates, so installed apps could never update."
+            exit 1
+          fi
+
+      - name: Format check
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "::error::these files need gofmt:$(gofmt -l . | tr '\n' ' ')"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1
+
+  build:
+    name: Build ${{ matrix.label }}
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Windows
+            os: windows-latest
+            target: windows/amd64
+          - label: macOS
+            os: macos-latest
+            # universal ships both architectures in one app, which is what
+            # an Intel and an Apple-silicon Mac both download.
+            target: darwin/universal
+          - label: Linux
+            os: ubuntu-latest
+            target: linux/amd64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+          cache: true
+
+      - name: Install NSIS
+        if: runner.os == 'Windows'
+        # mygo build writes the Windows installer with NSIS and downloads it
+        # itself when missing, but doing it here keeps the build reproducible
+        # and avoids a surprise download in the middle of a release.
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          choco install nsis -y --no-progress
+          $nsis = "${env:ProgramFiles(x86)}\NSIS"
+          if (Test-Path $nsis) { echo "$nsis" >> $env:GITHUB_PATH }
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        # Only for building the .deb. No webkit, no appindicator, no rsvg:
+        # there is no webview to embed.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-deb
+
+      - name: Build and upload
+        env:
+          MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # -upload needs gh, which the runner already has and GH_TOKEN
+        # authenticates. It creates the release as a draft, so nothing is
+        # visible to installed apps until the publish job flips it.
+        run: go tool mygo build -platform ${{ matrix.target }} -upload
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/artifacts"
+          # dist holds the installers, update archives and update-<target>.json
+          find dist -type f ! -name '*.sha256' -print0 \
+            | xargs -0 -I{} cp {} "$RUNNER_TEMP/artifacts/"
+          echo "--- artifacts ---"
+          ls -la "$RUNNER_TEMP/artifacts"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.target }}
+          path: ${{ runner.temp }}/artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [verify, build]
+    # Only a tag publishes; a dry run builds and stops.
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: build-*
+          merge-multiple: true
+
+      - name: List assets
+        run: |
+          echo "--- assets to publish ---"
+          find release-assets -type f | sort
+
+      - name: Collect release notes from the tag
+        run: |
+          set -euo pipefail
+          # The annotated tag message is the changelog. `git log -1` would
+          # return the commit message instead — the last fix commit — so
+          # read the tag object itself.
+          git fetch --force --tags origin
+          git cat-file -p "refs/tags/${GITHUB_REF_NAME}" | sed '1,/^$/d' > release-notes.md
+          if [[ ! -s release-notes.md ]]; then
+            git log -1 --format=%B "$GITHUB_SHA" > release-notes.md
+          fi
+          if [[ ! -s release-notes.md ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} carries no message; the release would have no notes."
+            exit 1
+          fi
+          # The in-app update dialog shows the notes without the footer: the
+          # download table and install tips are release-page furniture.
+          cp release-notes.md release-body.md
+          if [[ -f .github/release-footer.md ]]; then
+            cat .github/release-footer.md >> release-body.md
+          fi
+          echo "release-body.md: $(wc -l < release-body.md) lines"
+
+      - name: Publish the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # mygo build -upload already created the release as a draft with the
+        # installers and update manifests attached; this only flips it to
+        # published, which is what makes installed apps see the update.
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$tag" --repo "$GITHUB_REPOSITORY" \
+              --title "$tag" --notes-file release-body.md --latest --draft=false
+          else
+            # A dry run (workflow_dispatch) has no upload step, so there is
+            # no draft to flip; create the release outright.
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" \
+              --title "$tag" --notes-file release-body.md --latest
+          fi
+          echo "published $tag"
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,url,tagName
