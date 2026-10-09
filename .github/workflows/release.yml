@@ -238,17 +238,25 @@ jobs:
         # mygo build -upload already created the release as a draft with the
         # installers and update manifests attached; this only flips it to
         # published, which is what makes installed apps see the update.
+        #
+        # --latest=false is deliberate and must stay. The repository also
+        # hosts the Tauri releases (v0.0.x), whose updater resolves its
+        # manifest through /releases/latest/download/latest.json. Marking a
+        # go-v release as "latest" makes that 404 and breaks updating for
+        # every installed 0.0.2 client. The Go build does not need the flag:
+        # mygo resolves its feed through the GitHub API filtered by
+        # updates.tagPrefix, so it finds go-v0.0.3 regardless.
         run: |
           set -euo pipefail
           tag="${GITHUB_REF_NAME}"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release edit "$tag" --repo "$GITHUB_REPOSITORY" \
-              --title "$tag" --notes-file release-body.md --latest --draft=false
+              --title "$tag" --notes-file release-body.md --latest=false --draft=false
           else
             # A dry run (workflow_dispatch) has no upload step, so there is
             # no draft to flip; create the release outright.
             gh release create "$tag" --repo "$GITHUB_REPOSITORY" \
-              --title "$tag" --notes-file release-body.md --latest
+              --title "$tag" --notes-file release-body.md --latest=false
           fi
           echo "published $tag"
-          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,url,tagName
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,isLatest,url,tagName
