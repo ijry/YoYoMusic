@@ -46,6 +46,19 @@ go run . -play some.wav      # 启动并播放指定文件
 go test ./...                # 运行测试
 ```
 
+## 图标资源
+
+`resources/` 下的图标与 Tauri 版保持一致，`mygo build` 会基于 `icon.png` 自动生成各平台格式：
+
+| 文件 | 尺寸 | 用途 |
+|---|---|---|
+| `icon.png` | 512×512 | 打包主图标（macOS .icns / Windows / Linux 均由此生成） |
+| `icon-32.png` | 32×32 | 系统托盘（托盘本身会缩放，直接用原生小图最清晰） |
+| `icon-128.png` | 128×128 | 中等尺寸备用 |
+| `icon-256.png` | 256×256 | 高分屏 |
+| `icon.ico` | 16–256 多尺寸 | Windows 原始多尺寸图标 |
+| `icon.icns` | 多尺寸 | macOS 原始图标 |
+
 ## 从旧版升级
 
 旧版（Tauri）的设置保存在 `%APPDATA%/com.xyito.yoyomusic/settings.json`。

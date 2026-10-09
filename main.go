@@ -215,17 +215,20 @@ func buildTray(a *app.App) {
 	}
 }
 
-// trayIcon loads resources/icon.png for the tray. The file is 1024x1024,
-// which every platform's tray scales down; when it is missing a small solid
-// glyph is generated so the tray still shows something.
+// trayIcon loads the app icon for the tray. The 32x32 variant is preferred
+// since every platform scales the tray image down anyway; the full-size
+// icon.png is the fallback, and a generated glyph the last resort so the
+// tray still shows something when the assets are missing.
 func trayIcon() []byte {
-	if data, err := os.ReadFile(filepath.Join("resources", "icon.png")); err == nil {
-		return data
-	}
-	// Also look next to the executable, for an installed layout.
+	dirs := []string{"resources"}
 	if exe, err := os.Executable(); err == nil {
-		if data, err := os.ReadFile(filepath.Join(filepath.Dir(exe), "resources", "icon.png")); err == nil {
-			return data
+		dirs = append(dirs, filepath.Join(filepath.Dir(exe), "resources"))
+	}
+	for _, dir := range dirs {
+		for _, name := range []string{"icon-32.png", "icon.png"} {
+			if data, err := os.ReadFile(filepath.Join(dir, name)); err == nil {
+				return data
+			}
 		}
 	}
 	const s = 32

@@ -2,6 +2,7 @@
   "name": "悠悠乐听",
   "identifier": "net.lingyun.yoyomusic",
   "version": "1.0.0",
+  "icon": "resources/icon.png",
   "updates": {
     "publicKey": "mjeFVaJQcfXLgxDrq3wNQrA0uERR35kirRui/ULlbTU=",
     "github": "ijry/YoYoMusic",
