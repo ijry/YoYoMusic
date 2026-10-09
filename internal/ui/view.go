@@ -61,20 +61,28 @@ func View(a *app.App) func(c *myui.Context) {
 		root := myui.Box(c).Fill()
 		trackPointer(root, c)
 		root.Children(func() {
-			// Layer 1: the visualiser, full bleed.
-			visualizerBackdrop(c, a, skin)
+			// Layer 1: the visualiser, absolutely positioned so it fills the
+			// window without taking part in the column's flow. A second
+			// Fill() child here would split the column's height between the
+			// two layers — measured at 227px each in a 681px window — and
+			// push the whole chrome into the middle of the screen.
+			backdrop := myui.Box(c).Absolute().Left(0).Top(0).Right(0).Bottom(0)
+			backdrop.Children(func() { visualizerBackdrop(c, a, skin) })
 
-			// Layer 2: the floating chrome over it.
-			myui.Box(c).Fill().Children(func() {
-				myui.Column(c).Fill().Children(func() {
-					topBar(c, a, skin)
-					myui.Box(c).Grow(1).Children(func() {
-						leftRail(c, a, skin)
-						rightRail(c, a, skin)
-					})
-					transport(c, a, skin)
-				})
+			// Layer 2: the chrome, in normal flow over the backdrop. The
+			// middle band is a plain Grow(1) spacer, so the toolbar pins to
+			// the top and the transport to the bottom.
+			myui.Column(c).Fill().Children(func() {
+				topBar(c, a, skin)
+				myui.Box(c).Grow(1)
+				transport(c, a, skin)
 			})
+
+			// Layer 3: the two side panels, absolutely positioned so they
+			// float over the visualiser rather than squeezing it. They sit
+			// below the toolbar and above the transport by inset.
+			leftRail(c, a, skin)
+			rightRail(c, a, skin)
 		})
 	}
 }
@@ -310,36 +318,50 @@ func sidePanelIcon(p string) string {
 	return ""
 }
 
+// Layout insets, in DIPs. The rails float between the toolbar and the
+// transport, so they are inset by those two heights rather than by the
+// layout's flow.
+const (
+	topBarH    = 52
+	transportH = 118 // seek bar plus the deck
+)
+
 // leftRail is the playlist column: a floating panel when open, a slim icon
-// rail when folded by the idle timer.
+// rail when folded. Absolutely positioned so it floats over the visualiser.
 func leftRail(c *myui.Context, a *app.App, skin app.Skin) {
-	folded := idleFolded(a.LibraryPinned) || !a.LibraryOpen
-	if folded {
-		// The rail keeps just the toggle, so the playlist is one click away.
-		myui.Box(c).Width(44).FillHeight().Padding(6, 6).Children(func() {
-			b := iconButton(c, "rail-library", "playlist", "展开播放列表")
-			b.Size(32, 32).Radius(8).OnClick(func() {
-				a.LibraryOpen = true
-				a.ToggleLibraryPin()
+	panel := myui.Box(c).Absolute().Left(12).Top(topBarH + 8).
+		Bottom(transportH + 8).Width(300)
+	panel.Children(func() {
+		folded := idleFolded(a.LibraryPinned) || !a.LibraryOpen
+		if folded {
+			// The rail keeps just the toggle, so the playlist is one click away.
+			myui.Box(c).Fill().Children(func() {
+				b := iconButton(c, "rail-library", "playlist", "展开播放列表")
+				b.Size(32, 32).Radius(8).OnClick(func() {
+					a.LibraryOpen = true
+					a.ToggleLibraryPin()
+				})
 			})
-		})
-		return
-	}
-	playlistPanel(c, a, skin)
+			return
+		}
+		playlistPanel(c, a, skin)
+	})
 }
 
 // rightRail is the feature column: the open panel when expanded, otherwise
-// nothing but the top-bar icons (which live in topBar).
+// nothing at all — the top-bar icons are the only affordance. Also absolutely
+// positioned, floating over the visualiser.
 func rightRail(c *myui.Context, a *app.App, skin app.Skin) {
 	if a.SidePanel == "" {
 		return
 	}
-	folded := idleFolded(a.SidePanelSticky())
-	if folded {
-		// Folded: the panel is not drawn at all; the top-bar icons remain.
+	if idleFolded(a.SidePanelSticky()) {
+		// Folded: the panel is not drawn; the top-bar icons remain.
 		return
 	}
-	sidePanel(c, a, skin)
+	panel := myui.Box(c).Absolute().Right(12).Top(topBarH + 8).
+		Bottom(transportH + 8).Width(320)
+	panel.Children(func() { sidePanel(c, a, skin) })
 }
 
 // transport is the full-width bottom bar: cover art, track information, the
@@ -351,7 +373,10 @@ func transport(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	snap := a.Snapshot()
 	cur := snap.Current
 
-	return myui.Column(c).Fill().Children(func() {
+	// Fixed height, not Fill(): Fill would let the seek slider's own stretch
+	// claim the whole window, which is how the transport ended up 629px tall
+	// and swallowed the visualiser.
+	return myui.Column(c).Height(transportH).Children(func() {
 		seekBar(c, a, skin, pos, dur)
 		myui.Row(c).Height(64).Padding(10, 16).Gap(14).AlignItems(myui.Center).Children(func() {
 			transportNowPlaying(c, a, skin, cur)
@@ -451,32 +476,29 @@ func speakerIcon(vol float64, muted bool) (name, tip string) {
 func playlistPanel(c *myui.Context, a *app.App, skin app.Skin) {
 	t := c.Theme()
 	snap := a.Snapshot()
-	myui.Box(c).Width(300).FillHeight().Children(func() {
-		// Translucent so the visualiser reads through, the way the old
-		// build's floating panels did.
-		myui.Column(c).Fill().Background(t.Surface.Alpha(0.82)).Radius(0, 14, 14, 0).
-			Padding(12, 10).Gap(6).Children(func() {
-			myui.Row(c).AlignItems(myui.Center).Children(func() {
-				myui.Text(c, "播放列表").FontSize(14).Bold().TextColor(t.Text)
-				myui.Box(c).Grow(1)
-				myui.Text(c, fmt.Sprintf("%d 首", len(snap.Tracks))).FontSize(11).TextColor(t.TextMuted)
-				pin := iconButton(c, "pin-library", "pin", playlistTip(a))
-				pin.Size(26, 26).Radius(6).OnClick(func() { a.ToggleLibraryPin() })
-			})
-			myui.Row(c).Gap(6).Children(func() {
-				imp := myui.Button(c.Key("import"), "导入音乐…").Grow(1)
-				imp.OnClick(func() { TriggerImport(a) })
-			})
-			myui.Scroll(c).Fill().Children(func() {
-				if len(snap.Tracks) == 0 {
-					myui.Text(c, "还没有音乐。\n点击「导入音乐…」选择文件或文件夹。").
-						FontSize(12).TextColor(t.TextMuted).Padding(12, 10)
-					return
-				}
-				for i, tr := range snap.Tracks {
-					trackRow(c, a, tr, snap.Current, i)
-				}
-			})
+	// The caller (leftRail) sizes and positions this; here it just fills.
+	myui.Column(c).Fill().Background(t.Surface.Alpha(0.82)).Radius(0, 14, 14, 0).
+		Padding(12, 10).Gap(6).Children(func() {
+		myui.Row(c).AlignItems(myui.Center).Children(func() {
+			myui.Text(c, "播放列表").FontSize(14).Bold().TextColor(t.Text)
+			myui.Box(c).Grow(1)
+			myui.Text(c, fmt.Sprintf("%d 首", len(snap.Tracks))).FontSize(11).TextColor(t.TextMuted)
+			pin := iconButton(c, "pin-library", "pin", playlistTip(a))
+			pin.Size(26, 26).Radius(6).OnClick(func() { a.ToggleLibraryPin() })
+		})
+		myui.Row(c).Gap(6).Children(func() {
+			imp := myui.Button(c.Key("import"), "导入音乐…").Grow(1)
+			imp.OnClick(func() { TriggerImport(a) })
+		})
+		myui.Scroll(c).Fill().Children(func() {
+			if len(snap.Tracks) == 0 {
+				myui.Text(c, "还没有音乐。\n点击「导入音乐…」选择文件或文件夹。").
+					FontSize(12).TextColor(t.TextMuted).Padding(12, 10)
+				return
+			}
+			for i, tr := range snap.Tracks {
+				trackRow(c, a, tr, snap.Current, i)
+			}
 		})
 	})
 }
@@ -524,30 +546,29 @@ func trackRow(c *myui.Context, a *app.App, tr *app.Track, cur *app.Track, index 
 	return e
 }
 
-// sidePanel is the expanded right column.
+// sidePanel is the expanded right column. The caller (rightRail) sizes and
+// positions it; here it just fills.
 func sidePanel(c *myui.Context, a *app.App, skin app.Skin) {
 	t := c.Theme()
-	myui.Box(c).Width(320).FillHeight().Children(func() {
-		myui.Column(c).Fill().Background(t.Surface.Alpha(0.82)).
-			Padding(12, 12).Gap(8).Children(func() {
-			myui.Row(c).AlignItems(myui.Center).Children(func() {
-				myui.Text(c, sidePanelLabel(a.SidePanel)).FontSize(14).Bold().TextColor(t.Text)
-				myui.Box(c).Grow(1)
-				cl := iconButton(c, "close-panel", "close", "关闭")
-				cl.Size(26, 26).Radius(6).OnClick(func() { a.CloseSidePanel() })
-			})
-			myui.Scroll(c).Fill().Children(func() {
-				switch a.SidePanel {
-				case "eq":
-					eqPanel(c, a, skin)
-				case "lyrics":
-					lyricsPanel(c, a, skin)
-				case "skins":
-					skinsPanel(c, a, skin)
-				case "about":
-					aboutPanel(c, a)
-				}
-			})
+	myui.Column(c).Fill().Background(t.Surface.Alpha(0.82)).
+		Padding(12, 12).Gap(8).Children(func() {
+		myui.Row(c).AlignItems(myui.Center).Children(func() {
+			myui.Text(c, sidePanelLabel(a.SidePanel)).FontSize(14).Bold().TextColor(t.Text)
+			myui.Box(c).Grow(1)
+			cl := iconButton(c, "close-panel", "close", "关闭")
+			cl.Size(26, 26).Radius(6).OnClick(func() { a.CloseSidePanel() })
+		})
+		myui.Scroll(c).Fill().Children(func() {
+			switch a.SidePanel {
+			case "eq":
+				eqPanel(c, a, skin)
+			case "lyrics":
+				lyricsPanel(c, a, skin)
+			case "skins":
+				skinsPanel(c, a, skin)
+			case "about":
+				aboutPanel(c, a)
+			}
 		})
 	})
 }
@@ -562,12 +583,17 @@ func seekBar(c *myui.Context, a *app.App, skin app.Skin, pos, dur int64) myui.El
 	t := c.Theme()
 	seek := float64(pos)
 	if dur > 0 {
-		s := myui.Slider(c, &seek, 0, float64(dur)).Fill()
-		s.OnChange(func() { a.SeekMs(int64(seek)) })
-		return s
+		// A fixed height and a padded row, so the slider cannot stretch
+		// vertically and claim space the transport deck needs.
+		return myui.Box(c).Height(24).Padding(9, 16).Children(func() {
+			s := myui.Slider(c, &seek, 0, float64(dur)).Fill()
+			s.OnChange(func() { a.SeekMs(int64(seek)) })
+		})
 	}
 	// Nothing loaded: show an inert, empty rail.
-	return myui.Box(c).Fill().Height(6).Radius(3).Background(t.Border.Alpha(0.4))
+	return myui.Box(c).Height(24).Padding(9, 16).Children(func() {
+		myui.Box(c).Fill().Height(6).Radius(3).Background(t.Border.Alpha(0.4))
+	})
 }
 
 // eqPanel is the ten-band equaliser with presets and an enable switch.
