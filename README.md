@@ -38,14 +38,15 @@ GOOS=linux   GOARCH=amd64 go build -o yoyomusic .
 go tool mygo build -upload
 ```
 
-打 tag 后由 GitHub Actions 自动发布三个平台的安装包：
+打 tag 后由 GitHub Actions 自动发布三个平台的安装包。版本号接续 Tauri 时代的
+序列（0.0.1 → 0.0.2 → 0.0.3 …），Go 版用 `go-v` 前缀与旧版区分：
 
 ```bash
-git tag -a go-v1.0.1 -m "## 1.0.1
+git tag -a go-v0.0.3 -m "## 0.0.3
 
 - 修了某个问题
 "
-git push origin go-v1.0.1
+git push origin go-v0.0.3
 ```
 
 > **`mygo.json` 的 `name` 必须是 ASCII。** 它会被用作可执行文件名、安装目录名和

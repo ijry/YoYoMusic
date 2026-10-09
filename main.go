@@ -47,7 +47,7 @@ func parseFlags() {
 
 func main() {
 	mygo.App.SetName("悠悠乐听")
-	mygo.App.SetVersion("1.0.0")
+	mygo.App.SetVersion("0.0.3")
 	parseFlags()
 
 	mygo.App.WhenReady(func() {
