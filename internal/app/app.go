@@ -67,6 +67,20 @@ type App struct {
 	saveMu     sync.Mutex
 	saveTimer  *time.Timer
 	saveQueued bool
+
+	// libTimer debounces library writes the same way as settings.
+	libTimer *time.Timer
+
+	// loadedID is the track currently decoded in the player; it differs
+	// from playback.TrackID only transiently, but tracking it lets TogglePlay
+	// know whether to resume an already-loaded track or load a new one (the
+	// session-restore case).
+	loadedID string
+
+	// pendingResumeID/pos carry the session-restored track so PlayTrack can
+	// seek to the remembered position exactly once, then clear them.
+	pendingResumeID string
+	pendingResumeMs int64
 }
 
 // VizOrder lists the visualisers in the same order as the Tabs labels, which
@@ -89,7 +103,8 @@ var VizLabels = map[VisualizationMode]string{
 	VizKaleido:    "万花筒",
 }
 
-// NewApp builds the orchestrator, loading persisted settings when present.
+// NewApp builds the orchestrator, loading persisted settings and library
+// when present.
 func NewApp(dataDir string) *App {
 	st := NewAppState()
 	if loaded, err := LoadSettings(dataDir); err == nil {
@@ -116,9 +131,62 @@ func NewApp(dataDir string) *App {
 	if st.Settings().Equalizer.Enabled {
 		a.Player.SetEQ(a.EQBands, true)
 	}
-	a.Player.SetOnEnd(func() { a.Next() })
+
+	// Restore the saved library (tracks, playlist, resume, history) so the
+	// user's collection and recent plays survive a restart.
+	var ls *LibraryState
+	if l, err := LoadLibrary(dataDir); err == nil {
+		ls = l
+	}
+	if ls != nil {
+		st.RestoreLibrary(ls)
+	}
+	// Resume the session track (paused at its last position) when enabled.
+	a.restoreSession(ls)
+
+	a.Player.SetOnEnd(func() {
+		if cur := a.State.Current(); cur != nil {
+			a.State.ClearResume(cur.ID)
+		}
+		a.Next()
+		a.autosaveLibrary()
+	})
 	a.Player.Start()
+	// Keep the resume position fresh on disk while something is playing.
+	go a.positionTicker()
 	return a
+}
+
+// restoreSession points playback at the saved track, paused at its last
+// position, when RestoreSession is on. It does not decode audio — the player
+// stays idle until the user presses play, at which point PlayTrack seeks to
+// the remembered spot.
+func (a *App) restoreSession(ls *LibraryState) {
+	if ls == nil || !a.State.Settings().RestoreSession {
+		return
+	}
+	a.State.mu.Lock()
+	idx := a.State.playlist.CurrentIndex
+	var id string
+	if idx >= 0 && idx < len(a.State.playlist.TrackIDs) {
+		id = a.State.playlist.TrackIDs[idx]
+	}
+	a.State.mu.Unlock()
+	if id == "" {
+		return
+	}
+	pos := a.State.Resume(id)
+	if pos <= 0 {
+		return
+	}
+	a.State.mu.Lock()
+	a.State.playback.TrackID = id
+	a.State.playback.PositionMs = pos
+	a.State.playback.IsPlaying = false
+	a.State.playback.DurationMs = 0
+	a.State.mu.Unlock()
+	a.pendingResumeID = id
+	a.pendingResumeMs = pos
 }
 
 // SaveSettings writes the live settings to disk.
@@ -146,8 +214,11 @@ func (a *App) autosave() {
 	})
 }
 
-// Flush writes any pending settings immediately.
+// Flush writes any pending settings and library immediately.
 func (a *App) Flush() {
+	// Capture the live playhead before persisting, so a graceful quit keeps
+	// the exact resume point rather than the last debounced save.
+	a.recordPosition()
 	a.saveMu.Lock()
 	if !a.saveQueued {
 		a.saveMu.Unlock()
@@ -161,6 +232,11 @@ func (a *App) Flush() {
 	a.saveMu.Unlock()
 	if err := a.SaveSettings(); err != nil {
 		log.Printf("flush settings: %v", err)
+	}
+	// Persist the library on the way out too — the last playhead and any
+	// freshly imported tracks must not be lost when the process is killed.
+	if err := a.SaveLibrary(); err != nil {
+		log.Printf("flush library: %v", err)
 	}
 }
 
@@ -194,6 +270,8 @@ func (a *App) ImportPaths(paths []string) []error {
 	tracks, errs := ImportPaths(paths)
 	if len(tracks) > 0 {
 		a.State.AddTracks(tracks)
+		// New files should persist even if the app is closed immediately.
+		a.autosaveLibrary()
 	}
 	return errs
 }
@@ -211,27 +289,50 @@ func (a *App) PlayTrack(id string) {
 	}
 	if err := a.Player.Load(dec); err != nil {
 	}
+	a.loadedID = id
+	// Resume from memory if this is the session-restored track.
+	if id == a.pendingResumeID {
+		a.Player.SeekMs(a.pendingResumeMs)
+		a.State.mu.Lock()
+		a.State.playback.PositionMs = a.pendingResumeMs
+		a.State.mu.Unlock()
+		a.pendingResumeID = ""
+	}
 	a.Player.Play()
 	a.State.SelectTrack(id)
 	a.State.mu.Lock()
 	a.State.playback.DurationMs = dec.DurationMs
 	a.State.playback.IsPlaying = true
 	a.State.mu.Unlock()
+	a.State.AddHistory(id)
+	a.recordPosition()
+	a.autosaveLibrary()
 }
 
-// TogglePlay flips between playing and paused for the current track.
+// TogglePlay flips between playing and paused for the current track. If the
+// track is not yet loaded into the player (the session-restore case), it
+// loads and plays it instead of toggling a silent, empty player.
 func (a *App) TogglePlay() {
-	if a.State.Current() == nil {
+	cur := a.State.Current()
+	if cur == nil {
+		return
+	}
+	if a.loadedID != cur.ID {
+		a.PlayTrack(cur.ID)
 		return
 	}
 	a.Player.TogglePlay()
 	a.State.mu.Lock()
 	a.State.playback.IsPlaying = a.Player.IsPlaying()
 	a.State.mu.Unlock()
+	a.recordPosition()
+	a.autosaveLibrary()
 }
 
 // Stop halts playback and rewinds.
 func (a *App) Stop() {
+	a.recordPosition()
+	a.autosaveLibrary()
 	a.Player.Stop()
 	a.State.mu.Lock()
 	a.State.playback.IsPlaying = false
@@ -241,6 +342,8 @@ func (a *App) Stop() {
 
 // Next advances to the following track and plays it.
 func (a *App) Next() {
+	a.recordPosition()
+	a.autosaveLibrary()
 	id, ok := a.State.AdvanceIndex(1)
 	if !ok {
 		a.Stop()
@@ -253,8 +356,12 @@ func (a *App) Next() {
 func (a *App) Prev() {
 	if a.Player.PositionMs() > 3000 {
 		a.Player.SeekMs(0)
+		a.recordPosition()
+		a.autosaveLibrary()
 		return
 	}
+	a.recordPosition()
+	a.autosaveLibrary()
 	id, ok := a.State.AdvanceIndex(-1)
 	if !ok {
 		a.Player.SeekMs(0)
@@ -264,7 +371,62 @@ func (a *App) Prev() {
 }
 
 // SeekMs moves the playhead.
-func (a *App) SeekMs(ms int64) { a.Player.SeekMs(ms) }
+func (a *App) SeekMs(ms int64) {
+	a.Player.SeekMs(ms)
+	a.State.mu.Lock()
+	a.State.playback.PositionMs = ms
+	a.State.mu.Unlock()
+	a.recordPosition()
+	a.autosaveLibrary()
+}
+
+// recordPosition snapshots the current playhead into the resume map so it can
+// be restored later.
+func (a *App) recordPosition() {
+	cur := a.State.Current()
+	if cur == nil {
+		return
+	}
+	pos := a.Player.PositionMs()
+	dur := a.Player.DurationMs()
+	a.State.SetResume(cur.ID, pos, dur)
+}
+
+// SaveLibrary writes the live library (tracks, playlist, history, resume) to
+// disk.
+func (a *App) SaveLibrary() error {
+	return SaveLibrary(a.dataDir, a.State.BuildLibrary())
+}
+
+// autosaveLibrary schedules a debounced library write. Like settings, the
+// Windows backend gives no graceful quit, so persisting on change is the only
+// reliable way to keep the library and resume points current.
+func (a *App) autosaveLibrary() {
+	a.saveMu.Lock()
+	defer a.saveMu.Unlock()
+	if a.libTimer != nil {
+		a.libTimer.Stop()
+	}
+	a.libTimer = time.AfterFunc(1500*time.Millisecond, func() {
+		if err := a.SaveLibrary(); err != nil {
+			log.Printf("autosave library: %v", err)
+		}
+	})
+}
+
+// positionTicker flushes the resume position to disk every few seconds while
+// something is playing, so a crash or forced quit loses at most a few seconds
+// of progress.
+func (a *App) positionTicker() {
+	t := time.NewTicker(5 * time.Second)
+	defer t.Stop()
+	for range t.C {
+		if a.Player.IsPlaying() {
+			a.recordPosition()
+			a.autosaveLibrary()
+		}
+	}
+}
 
 // SetVolume sets the linear volume and updates the engine.
 func (a *App) SetVolume(v float64) {
@@ -355,6 +517,21 @@ func (a *App) SetSkin(id string) {
 	a.autosave()
 }
 
+// SetDesktopLyricScale adjusts the desktop-lyrics font scale and persists it.
+// Clamped to a sane range so the text never collapses or overflows the window.
+func (a *App) SetDesktopLyricScale(scale float64) {
+	if scale < 0.6 {
+		scale = 0.6
+	}
+	if scale > 3 {
+		scale = 3
+	}
+	a.State.mu.Lock()
+	a.State.settings.DesktopLyrics.FontScale = scale
+	a.State.mu.Unlock()
+	a.autosave()
+}
+
 // SetPanel switches the main panel.
 // SetPanel selects the main panel. Kept for the migration path and the
 // command line; the new layout drives SidePanel instead.
@@ -362,7 +539,7 @@ func (a *App) SetPanel(p string) { a.Panel = p }
 
 // SidePanels lists the panels the right-hand rail can show, in the order the
 // old build showed them.
-var SidePanels = []string{"eq", "lyrics", "skins", "about"}
+var SidePanels = []string{"eq", "lyrics", "history", "skins", "about"}
 
 // ToggleSidePanel opens a panel, or closes it when it is already open. The
 // panel opens pinned, so it does not fold away the moment the pointer rests.

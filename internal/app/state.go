@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 // PlayMode mirrors the original YoYoMusic play modes.
@@ -181,6 +182,12 @@ type AppState struct {
 	libraryOpen bool
 	errors      []string
 	seq         int
+
+	// resume remembers the last playhead per track (ms), so playback can
+	// continue where it left off. Keyed by the track id (its absolute path).
+	resume map[string]int64
+	// history is the recent-plays log, newest first.
+	history []HistoryEntry
 }
 
 // NewAppState builds the initial state with defaults.
@@ -201,6 +208,7 @@ func NewAppState() *AppState {
 		skins:       builtInSkins(),
 		activePanel: "",
 		libraryOpen: true,
+		resume:      map[string]int64{},
 	}
 }
 
@@ -214,6 +222,7 @@ type Snapshot struct {
 	Current     *Track
 	ActivePanel string
 	LibraryOpen bool
+	History     []HistoryEntry
 }
 
 func (s *AppState) Snapshot() Snapshot {
@@ -240,6 +249,11 @@ func (s *AppState) snapshotLocked() Snapshot {
 	}
 	skins := append([]Skin{}, s.skins...)
 	skins = append(skins, s.imported...)
+	// Copy the history inline rather than calling s.History(): that method
+	// takes the lock itself, and snapshotLocked already runs while the caller
+	// holds it — re-locking here deadlocks (RWMutex is not reentrant).
+	hist := make([]HistoryEntry, len(s.history))
+	copy(hist, s.history)
 	return Snapshot{
 		Tracks:      tracks,
 		Playlist:    s.playlist,
@@ -249,6 +263,7 @@ func (s *AppState) snapshotLocked() Snapshot {
 		Current:     cur,
 		ActivePanel: s.activePanel,
 		LibraryOpen: s.libraryOpen,
+		History:     hist,
 	}
 }
 
@@ -468,6 +483,148 @@ func indexOf(s []string, v string) int {
 		}
 	}
 	return -1
+}
+
+// --- resume / history ---
+
+// SetResume records the last played position for a track (ms). Positions at
+// the very start (<=5s) or within the final 2s are ignored, so resuming
+// never drops the user at 0:00 or a dead end they cannot tell apart from a
+// finished track.
+func (s *AppState) SetResume(id string, ms, durationMs int64) {
+	if id == "" {
+		return
+	}
+	if ms <= 5000 || (durationMs > 0 && ms >= durationMs-2000) {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.resume == nil {
+		s.resume = map[string]int64{}
+	}
+	s.resume[id] = ms
+}
+
+// ClearResume forgets a track's resume point — used when a track plays all
+// the way through, so the next play starts fresh rather than re-opening at
+// the end.
+func (s *AppState) ClearResume(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.resume, id)
+}
+
+// Resume returns the saved position for a track, or 0.
+func (s *AppState) Resume(id string) int64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.resume[id]
+}
+
+// AddHistory records a play at the head of the history, de-duping repeats of
+// the same track and capping the log at 200 entries.
+func (s *AppState) AddHistory(id string) {
+	if id == "" {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now().UnixMilli()
+	if len(s.history) > 0 && s.history[0].TrackID == id {
+		s.history[0].PlayedAt = now
+		return
+	}
+	s.history = append([]HistoryEntry{{TrackID: id, PlayedAt: now}}, s.history...)
+	if len(s.history) > 200 {
+		s.history = s.history[:200]
+	}
+}
+
+// History returns a copy of the play history, newest first.
+func (s *AppState) History() []HistoryEntry {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := make([]HistoryEntry, len(s.history))
+	copy(out, s.history)
+	return out
+}
+
+// BuildLibrary assembles the persistence payload from the live state.
+func (s *AppState) BuildLibrary() *LibraryState {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	tracks := make([]*Track, 0, len(s.tracks))
+	for _, id := range s.playlist.TrackIDs {
+		if t, ok := s.tracks[id]; ok {
+			cp := *t
+			tracks = append(tracks, &cp)
+		}
+	}
+	resume := make(map[string]int64, len(s.resume))
+	for k, v := range s.resume {
+		resume[k] = v
+	}
+	hist := make([]HistoryEntry, len(s.history))
+	copy(hist, s.history)
+	pl := s.playlist
+	return &LibraryState{
+		Tracks:   tracks,
+		Playlist: pl,
+		History:  hist,
+		Resume:   resume,
+	}
+}
+
+// RestoreLibrary loads a previously saved library into the live state. Tracks
+// are merged by id (absolute path) so nothing is duplicated; the saved
+// playlist order, cursor and play mode replace the (empty) defaults, and the
+// resume map and history are merged in.
+func (s *AppState) RestoreLibrary(ls *LibraryState) {
+	if ls == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, t := range ls.Tracks {
+		if t == nil {
+			continue
+		}
+		if _, ok := s.tracks[t.ID]; !ok {
+			s.tracks[t.ID] = t
+		}
+	}
+	if len(ls.Playlist.TrackIDs) > 0 {
+		for _, id := range ls.Playlist.TrackIDs {
+			if _, ok := s.tracks[id]; !ok {
+				continue
+			}
+			if indexOf(s.playlist.TrackIDs, id) < 0 {
+				s.playlist.TrackIDs = append(s.playlist.TrackIDs, id)
+			}
+		}
+		if ls.Playlist.CurrentIndex >= 0 && ls.Playlist.CurrentIndex < len(s.playlist.TrackIDs) {
+			s.playlist.CurrentIndex = ls.Playlist.CurrentIndex
+		}
+		if ls.Playlist.PlayMode != "" {
+			s.playlist.PlayMode = ls.Playlist.PlayMode
+			s.playback.PlayMode = ls.Playlist.PlayMode
+		}
+	}
+	if len(ls.Resume) > 0 {
+		if s.resume == nil {
+			s.resume = map[string]int64{}
+		}
+		for k, v := range ls.Resume {
+			s.resume[k] = v
+		}
+	}
+	if len(ls.History) > 0 {
+		s.history = append(s.history, ls.History...)
+		if len(s.history) > 200 {
+			s.history = s.history[:200]
+		}
+	}
 }
 
 // DefaultSkin returns the active skin id.

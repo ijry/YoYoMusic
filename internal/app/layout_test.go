@@ -107,10 +107,11 @@ func TestCloseSidePanel(t *testing.T) {
 	}
 }
 
-// TestSidePanelsList guards the rail's contents: the four panels the layout
-// promises are exactly what it renders.
+// TestSidePanelsList guards the rail's contents: the panels the layout
+// promises (equaliser, lyrics, history, skins, about) are exactly what it
+// renders.
 func TestSidePanelsList(t *testing.T) {
-	want := map[string]bool{"eq": true, "lyrics": true, "skins": true, "about": true}
+	want := map[string]bool{"eq": true, "lyrics": true, "history": true, "skins": true, "about": true}
 	if len(SidePanels) != len(want) {
 		t.Fatalf("SidePanels = %v, want %d entries", SidePanels, len(want))
 	}

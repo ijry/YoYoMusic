@@ -55,6 +55,7 @@ type vizState struct {
 
 	rotation   float64 // radial ring rotation
 	kaleidoRot float64 // kaleidoscope rotation
+	kaleidoT   float64 // kaleidoscope wall-clock, for the idle animation
 	parts      []vizParticle
 	partClk    float64
 
@@ -516,11 +517,20 @@ func drawKaleidoscope(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin ap
 	colB := colOf(skin.VizB)
 	ink := colOf(skin.VizInk)
 
-	viz.kaleidoRot += float64(dt) * (0.16 + float64(f.Level)*0.9)
+	// The whole flower rotates continuously — a faster base rate so it is
+	// visibly turning even when the music is quiet, plus the audio level.
+	viz.kaleidoT += float64(dt)
+	viz.kaleidoRot += float64(dt) * (0.5 + float64(f.Level)*1.6)
 
 	sectorAngle := 2 * math.Pi / kaleidoSectors
 	innerR := scale * 0.1
 	span := scale * 0.34
+
+	// When the audio is quiet the real spectrum nearly vanishes and the
+	// flower would freeze. Blend in a slow, time-driven synthetic spectrum
+	// (idleW scales it) so the kaleidoscope keeps shimmering and reshaping.
+	// Loud music still wins, because the real band simply overrides it.
+	idleW := 1 - math.Min(1, float64(f.Level)/0.1)
 
 	for sector := 0; sector < kaleidoSectors; sector++ {
 		// The sector's own rotation, plus the mirror for odd sectors.
@@ -528,14 +538,23 @@ func drawKaleidoscope(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin ap
 		flip := sector%2 == 1
 
 		for band := 0; band < audio.BandCount; band++ {
-			v := f.Bands[band]
-			if v <= 0.012 {
+			v := float64(f.Bands[band])
+			if idleW > 0 {
+				tt := float64(band) / float64(audio.BandCount)
+				synth := 0.05 +
+					0.05*math.Sin(viz.kaleidoT*1.7+tt*9) +
+					0.035*math.Sin(viz.kaleidoT*0.8+tt*4+float64(sector))
+				v = math.Max(v, synth*idleW)
+			}
+			if v <= 0.006 {
 				continue
 			}
 			tt := float64(band) / float64(audio.BandCount)
 			radius := float64(innerR) + tt*float64(span)
-			// The arm fans out as it goes.
-			angle := tt*sectorAngle*0.85 + base
+			// The arm fans out as it goes, and the fan angle breathes with
+			// time so the petals open and close as the flower turns.
+			fan := tt*sectorAngle*0.85 + 0.12*math.Sin(viz.kaleidoT*0.6+tt*6)
+			angle := fan + base
 			size := float32((1.2 + float64(v)*13) * (0.5 + tt*0.9))
 
 			// Point in the sector's frame.
@@ -558,7 +577,7 @@ func drawKaleidoscope(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin ap
 				c = colA
 			}
 			p.Fill(myui.Rect{X: x - size, Y: y - size, W: size * 2, H: size * 2},
-				c.Alpha(0.18+v*0.72), size)
+				c.Alpha(float32(0.18+v*0.72)), size)
 		}
 	}
 

@@ -317,6 +317,8 @@ func sidePanelLabel(p string) string {
 		return "均衡器"
 	case "lyrics":
 		return "歌词"
+	case "history":
+		return "最近播放"
 	case "skins":
 		return "外观"
 	case "about":
@@ -332,6 +334,8 @@ func sidePanelIcon(p string) string {
 		return "eq"
 	case "lyrics":
 		return "lyrics"
+	case "history":
+		return "history"
 	case "skins":
 		return "skins"
 	case "about":
@@ -345,27 +349,20 @@ func sidePanelIcon(p string) string {
 // layout's flow.
 const (
 	topBarH    = 52
-	transportH = 118 // seek bar plus the deck
+	transportH = 92 // seek bar plus the deck
 )
 
 // leftRail is the playlist column: a floating panel when open, a slim icon
 // rail when folded. Absolutely positioned so it floats over the visualiser.
 func leftRail(c *myui.Context, a *app.App, skin app.Skin) {
+	// The playlist toggle already lives in the top bar, so the folded rail
+	// would only duplicate it — draw nothing when the column is not open.
+	if idleFolded(a.LibraryPinned) || !a.LibraryOpen {
+		return
+	}
 	panel := myui.Box(c).Absolute().Left(12).Top(topBarH + 8).
 		Bottom(transportH + 8).Width(268)
 	panel.Children(func() {
-		folded := idleFolded(a.LibraryPinned) || !a.LibraryOpen
-		if folded {
-			// The rail keeps just the toggle, so the playlist is one click away.
-			myui.Box(c).Fill().Children(func() {
-				b := iconButton(c, "rail-library", "playlist", "展开播放列表")
-				b.Size(32, 32).Radius(8).OnClick(func() {
-					a.LibraryOpen = true
-					a.ToggleLibraryPin()
-				})
-			})
-			return
-		}
 		playlistPanel(c, a, skin)
 	})
 }
@@ -400,7 +397,7 @@ func transport(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	// and swallowed the visualiser.
 	return myui.Column(c).Height(transportH).Children(func() {
 		seekBar(c, a, skin, pos, dur)
-		myui.Row(c).Height(64).Padding(10, 16).Gap(14).AlignItems(myui.Center).Children(func() {
+		myui.Row(c).Grow(1).Padding(10, 16).Gap(14).AlignItems(myui.Center).Children(func() {
 			transportNowPlaying(c, a, skin, cur)
 			myui.Box(c).Grow(1)
 			transportButtons(c, a, skin, t)
@@ -511,10 +508,12 @@ func playlistPanel(c *myui.Context, a *app.App, skin app.Skin) {
 		myui.Row(c).Gap(6).Children(func() {
 			imp := myui.Button(c.Key("import"), "导入音乐…").Grow(1)
 			imp.OnClick(func() { TriggerImport(a) })
+			fld := myui.Button(c.Key("import-folder"), "打开文件夹")
+			fld.OnClick(func() { TriggerImportFolder(a) })
 		})
 		myui.Scroll(c).Fill().Children(func() {
 			if len(snap.Tracks) == 0 {
-				myui.Text(c, "还没有音乐。\n点击「导入音乐…」选择文件或文件夹。").
+				myui.Text(c, "还没有音乐。\n点击「导入音乐…」选择文件，或「打开文件夹」批量导入。").
 					FontSize(12).TextColor(t.TextMuted).Padding(12, 10)
 				return
 			}
@@ -586,6 +585,8 @@ func sidePanel(c *myui.Context, a *app.App, skin app.Skin) {
 				eqPanel(c, a, skin)
 			case "lyrics":
 				lyricsPanel(c, a, skin)
+			case "history":
+				historyPanel(c, a, skin)
 			case "skins":
 				skinsPanel(c, a, skin)
 			case "about":
@@ -593,6 +594,78 @@ func sidePanel(c *myui.Context, a *app.App, skin app.Skin) {
 			}
 		})
 	})
+}
+
+// historyPanel lists the recently played tracks (newest first). Clicking an
+// entry jumps straight to that track, so the play history doubles as a quick
+// launcher for things the user was just listening to.
+func historyPanel(c *myui.Context, a *app.App, skin app.Skin) {
+	t := c.Theme()
+	snap := a.Snapshot()
+	byID := make(map[string]*app.Track, len(snap.Tracks))
+	for _, tr := range snap.Tracks {
+		byID[tr.ID] = tr
+	}
+	hist := snap.History
+	if len(hist) == 0 {
+		myui.Text(c, "还没有播放记录。\n播放过的歌曲会显示在这里。").
+			FontSize(12).TextColor(t.TextMuted).Padding(10, 8)
+		return
+	}
+	for i, h := range hist {
+		tr, ok := byID[h.TrackID]
+		if !ok {
+			// The track is no longer in the library (file moved/deleted);
+			// keep the history entry from breaking the list, just skip it.
+			continue
+		}
+		entry := tr
+		idx := i
+		row := myui.Row(c).Key("hist-"+entry.ID+"-"+fmt.Sprintf("%d", idx)).
+			Padding(8, 9).Gap(10).AlignItems(myui.Center).Radius(8).
+			OnClick(func() { a.PlayTrack(entry.ID) })
+		if snap.Current != nil && snap.Current.ID == entry.ID {
+			row = row.Background(t.Accent.Alpha(0.16))
+		}
+		row.Children(func() {
+			myui.Box(c).Size(30, 30).Radius(8).Background(t.Background.Alpha(0.6)).
+				AlignItems(myui.Center).Justify(myui.Center).Children(func() {
+				myui.Icon(c, icon("music")).Size(16, 16).TextColor(colOf(skin.VizInk).Alpha(0.8))
+			})
+			myui.Column(c).Grow(1).Gap(1).Children(func() {
+				myui.Text(c, entry.Title).FontSize(13).Bold().
+					TextColor(t.Text).MaxLines(1)
+				myui.Text(c, entry.Artist+" · "+entry.Album).FontSize(11).
+					TextColor(t.TextMuted).MaxLines(1)
+			})
+			myui.Text(c, relTime(h.PlayedAt)).FontSize(11).TextColor(t.TextMuted)
+		})
+	}
+}
+
+// relTime renders a unix-millisecond timestamp as a short Chinese relative
+// time: 刚刚 / N分钟前 / N小时前 / N天前 / date.
+func relTime(ms int64) string {
+	if ms <= 0 {
+		return ""
+	}
+	d := time.Now().UnixMilli() - ms
+	if d < 0 {
+		d = 0
+	}
+	m := d / 60000
+	switch {
+	case m < 1:
+		return "刚刚"
+	case m < 60:
+		return fmt.Sprintf("%d分钟前", m)
+	case m < 1440:
+		return fmt.Sprintf("%d小时前", m/60)
+	case m < 43200: // ~30 days
+		return fmt.Sprintf("%d天前", m/1440)
+	}
+	tm := time.UnixMilli(ms)
+	return tm.Format("01-02")
 }
 
 // seekBar is the progress bar across the top of the transport.
@@ -823,6 +896,27 @@ func TriggerImport(a *app.App) {
 		return
 	}
 	if errs := a.ImportPaths(paths); len(errs) > 0 {
+		for _, e := range errs {
+			a.State.PushError(e.Error())
+		}
+	}
+}
+
+// TriggerImportFolder opens a native folder dialog and recursively imports
+// every audio file beneath the chosen directory. Safe on the main thread.
+func TriggerImportFolder(a *app.App) {
+	path, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
+		Title:     "打开文件夹",
+		Directory: true,
+	})
+	if err != nil {
+		a.State.PushError("打开文件夹失败: " + err.Error())
+		return
+	}
+	if len(path) == 0 {
+		return
+	}
+	if errs := a.ImportPaths(path); len(errs) > 0 {
 		for _, e := range errs {
 			a.State.PushError(e.Error())
 		}
