@@ -68,6 +68,8 @@ type vizState struct {
 	genFlash    float64
 	genLastSeed float64
 	genNodes    []genNode
+	genPts      []genPt
+	genGrid     []genGridPt
 	genFlow     [][2]float32
 }
 
@@ -88,6 +90,19 @@ type genNode struct {
 	band           int
 	size           float64
 	tone           float64
+}
+
+// genPt is a node's resolved screen position for one frame.
+type genPt struct {
+	x, y  float32
+	level float32
+	tone  float64
+}
+
+// genGridPt is one lattice point's displaced position and energy.
+type genGridPt struct {
+	x, y   float32
+	energy float32
 }
 
 // bandAt reads the spectrum at a normalised position 0..1.
@@ -671,12 +686,14 @@ func drawConstellation(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin a
 		viz.genNodes[rand.Intn(len(viz.genNodes))] = randomNode()
 	}
 
-	type pt struct {
-		x, y  float32
-		level float32
-		tone  float64
+	// genPt is a node's resolved screen position for one frame.
+	type pt = genPt
+	// Reused across frames: this scene runs every frame and a fresh slice
+	// each time is exactly the churn that keeps RSS high.
+	if cap(viz.genPts) < len(viz.genNodes) {
+		viz.genPts = make([]genPt, len(viz.genNodes))
 	}
-	pts := make([]pt, len(viz.genNodes))
+	pts := viz.genPts[:len(viz.genNodes)]
 	for i, nd := range viz.genNodes {
 		angle := viz.genClock*nd.speed + nd.phase
 		level := f.Bands[nd.band]
@@ -783,11 +800,13 @@ func drawLattice(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Ski
 	stepX := r.W / float32(cols-1)
 	stepY := r.H / float32(rows-1)
 
-	type gp struct {
-		x, y   float32
-		energy float32
+	// gp is one lattice point's displaced position and energy.
+	type gp = genGridPt
+	// Reused across frames, same reason as the constellation's point slice.
+	if cap(viz.genGrid) < cols*rows {
+		viz.genGrid = make([]gp, cols*rows)
 	}
-	grid := make([]gp, cols*rows)
+	grid := viz.genGrid[:cols*rows]
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
 			energy := bandAt(f, float64(col)/float64(cols-1))

@@ -133,7 +133,13 @@ func (o *winOutput) open(sampleRate, channels int) error {
 }
 
 // reaper recycles buffers whose playback has finished.
+// reaper recycles buffers whose playback has finished. One reusable ticker
+// drives the cadence: time.After here would allocate a Timer and a channel
+// five times a second for the life of the process, which cannot be reclaimed
+// until it fires.
 func (o *winOutput) reaper() {
+	tick := time.NewTicker(5 * time.Millisecond)
+	defer tick.Stop()
 	for {
 		o.mu.Lock()
 		if o.closed {
@@ -159,7 +165,7 @@ func (o *winOutput) reaper() {
 		select {
 		case <-o.reaperDone:
 			return
-		case <-time.After(5 * time.Millisecond):
+		case <-tick.C:
 		}
 	}
 }

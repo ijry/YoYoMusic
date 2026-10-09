@@ -46,6 +46,10 @@ type Player struct {
 
 	// win is the reusable window buffer analyseAt fills each tick.
 	win []float32
+	// fbuf/obuf are the reusable PCM conversion buffers feedTo fills each
+	// tick; sized for the track's channel count on first use.
+	fbuf []float32
+	obuf []int16
 	// lastAnalyse is when the previous analysis ran, giving the analyser a
 	// real dt for its attack/release and peak decay.
 	lastAnalyse time.Time
@@ -348,7 +352,20 @@ func (p *Player) Frame() SignalFrame {
 	return p.lastFrame
 }
 
+// loop drives playback. It uses one reusable ticker per cadence rather than
+// time.After in the select: time.After allocates a Timer and a channel every
+// iteration and they cannot be reclaimed until they fire, which measured as
+// the single largest allocation source in the whole app (92% of allocs).
 func (p *Player) loop() {
+	const (
+		idleTick = 30 * time.Millisecond
+		playTick = 16 * time.Millisecond
+	)
+	idle := time.NewTicker(idleTick)
+	play := time.NewTicker(playTick)
+	defer idle.Stop()
+	defer play.Stop()
+
 	for {
 		p.mu.Lock()
 		playing := p.playing
@@ -357,7 +374,7 @@ func (p *Player) loop() {
 			select {
 			case <-p.closeCh:
 				return
-			case <-time.After(30 * time.Millisecond):
+			case <-idle.C:
 				continue
 			}
 		}
@@ -365,7 +382,7 @@ func (p *Player) loop() {
 		select {
 		case <-p.closeCh:
 			return
-		case <-time.After(16 * time.Millisecond):
+		case <-play.C:
 		}
 	}
 }
@@ -420,6 +437,10 @@ func (p *Player) tick() {
 
 // feedTo writes interleaved PCM from lastWritten up to `upTo`, applying
 // volume, muting and the equaliser.
+//
+// The scratch buffers live on the Player, not here: feedTo runs 60 times a
+// second, and allocating them per call measured at 6 MB/s — 21 GB an hour of
+// garbage, which is what kept RSS in the hundreds of MB.
 func (p *Player) feedTo(out audioOutput, dec *Decoded, eq *EQ, vol float64, muted bool, ch int, upTo int64) {
 	p.mu.Lock()
 	start := p.lastWritten
@@ -431,10 +452,12 @@ func (p *Player) feedTo(out audioOutput, dec *Decoded, eq *EQ, vol float64, mute
 		vol = 0
 	}
 	const maxChunk = 8192 // samples per channel per iteration
-	// Reused scratch buffers: feeding happens every ~16ms and allocating
-	// three slices per chunk starved the device (audible gaps).
-	fbuf := make([]float32, maxChunk*ch)
-	buf := make([]int16, maxChunk*ch)
+	// Grown to fit this track's channel count, then reused for every chunk.
+	if cap(p.fbuf) < maxChunk*ch {
+		p.fbuf = make([]float32, maxChunk*ch)
+		p.obuf = make([]int16, maxChunk*ch)
+	}
+	fbuf, buf := p.fbuf[:maxChunk*ch], p.obuf[:maxChunk*ch]
 	for start < upTo {
 		end := upTo
 		if end-start > maxChunk {
