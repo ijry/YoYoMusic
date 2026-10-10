@@ -47,7 +47,7 @@ func parseFlags() {
 
 func main() {
 	mygo.App.SetName("悠悠乐听")
-	mygo.App.SetVersion("0.0.3")
+	mygo.App.SetVersion("0.0.4")
 
 	// Every skin is dark, so declare the appearance instead of following the
 	// system. Windows otherwise paints the native minimise, maximise and
