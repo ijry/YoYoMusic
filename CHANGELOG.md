@@ -3,6 +3,27 @@
 本文件同时作为应用内「检查更新」显示的发行说明来源。
 版本号沿用 Tauri 时代的序列（0.0.1 → 0.0.2 → **0.0.3**），换引擎不重新起算。
 
+## 0.1.0
+
+### 新增
+- **macOS 播放声音**：此前 macOS 走的是空的输出后端（`output_posix.go` 的 `noopOutput`，
+  `open`/`write` 都是空操作），进度条走时钟、可视化照跑，但**永远没有声音**——只有
+  Windows 有真实输出（Win32 waveOut）。现新增 macOS 输出后端，基于
+  [oto](https://github.com/ebitengine/oto) v3：oto 在 macOS 上用 purego 运行时加载
+  AudioToolbox（AudioQueue）驱动 CoreAudio，**不需要 cgo**，与本项目「纯 Go、禁 cgo」
+  的约束一致。音量/静音/EQ 由既有 `feedTo` 统一烘进 PCM 流，后端不再二次处理
+- 依赖新增 `github.com/ebitengine/oto/v3`（仅 macOS 编译时引入；其传递依赖 purego 已是
+  mygo 的间接依赖）
+
+### 变更
+- **macOS 音频统一到 48 kHz 立体声**：oto 的 Context 全进程唯一且采样率/声道固定，
+  故在 `Load` 时把解码结果线性重采样到 48 kHz/2ch（`normalizeDecoded`），使分析器、
+  可视化与音频输出速率一致。Windows 与其他平台保持原生采样率，行为不变
+
+### 修复
+- 音频喂给 oto 的读取器在整首喂完前不会返回 EOF（oto 视 EOF 为流结束并永久停止读取），
+  曲目中途数据暂空时阻塞等待，杜绝断流
+
 ## 0.0.9
 
 ### 修复

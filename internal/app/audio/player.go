@@ -81,6 +81,12 @@ func NewPlayer() *Player {
 // backend. A backend that fails to open is treated as silent: the
 // visualiser keeps working from the clock.
 func (p *Player) Load(dec *Decoded) error {
+	// Match the decoded track to whatever the platform output needs before
+	// any of it is read below: on macOS the single oto.Context is fixed at
+	// 48 kHz/stereo, so the clip is resampled here and every later
+	// computation (sample rate, channel count, total, EQ, analyser) uses the
+	// normalised values. A no-op on Windows and other platforms.
+	normalizeDecoded(dec)
 	p.mu.Lock()
 	if p.out != nil {
 		p.out.close()

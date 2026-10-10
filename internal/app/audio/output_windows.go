@@ -289,3 +289,8 @@ func (o *winOutput) played() int64 {
 	}
 	return int64(mt.sample)
 }
+
+// normalizeDecoded is a no-op on Windows: the waveOut backend opens its
+// device at the track's native rate, so there is no fixed-rate context to
+// match and no resampling is needed.
+func normalizeDecoded(*Decoded) {}

@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build !windows && !darwin
 
 package audio
 
@@ -15,3 +15,7 @@ func (o *noopOutput) pause()                              {}
 func (o *noopOutput) resume()                             {}
 func (o *noopOutput) reset()                              {}
 func (o *noopOutput) close()                              {}
+
+// normalizeDecoded is a no-op here: there is no output device to match a
+// fixed rate against, so tracks keep their native sample rate.
+func normalizeDecoded(*Decoded) {}
