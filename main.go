@@ -272,11 +272,22 @@ func buildTray(a *app.App) {
 		mygo.Separator(),
 		{Label: "退出", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})
+	// The macOS menu bar wants a flat template image it can recolour, not the
+	// colourful app icon — that sits as an opaque square that ignores the
+	// menu bar's colour and its inverted state. Fall back to the app icon if
+	// the template could not be rendered (or on a platform without the
+	// concept, where the flag is simply ignored).
+	iconBytes := ui.TrayTemplateIcon()
+	template := iconBytes != nil
+	if !template {
+		iconBytes = trayIcon()
+	}
 	if _, err := mygo.NewTray(mygo.TrayOptions{
-		Icon:    trayIcon(),
-		Title:   "悠悠乐听",
-		ToolTip: "悠悠乐听 · 原生音乐播放器",
-		Menu:    menu,
+		Icon:           iconBytes,
+		IconIsTemplate: template,
+		Title:          "悠悠乐听",
+		ToolTip:        "悠悠乐听 · 原生音乐播放器",
+		Menu:           menu,
 	}); err != nil {
 		log.Printf("tray: %v", err)
 	}

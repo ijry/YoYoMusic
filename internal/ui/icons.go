@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"bytes"
+	"image/png"
+
 	myui "github.com/egoist/mygo/ui"
 )
 
@@ -153,4 +156,30 @@ func iconButton(c *myui.Context, key, name, tip string) myui.Element {
 		})
 	})
 	return b
+}
+
+// TrayTemplateIcon renders the music-note glyph as a black-on-transparent PNG
+// for the macOS menu bar, which expects a template image: macOS recolours it
+// to match the menu bar and its inverted state. The colourful app icon is the
+// wrong thing there — it sits as an opaque square that ignores the theme — so
+// the tray gets this flat silhouette instead.
+//
+// A 2x image is rendered so it stays crisp on Retina displays, which macOS
+// scales down to its menu bar slot. It returns nil if rendering fails, and the
+// caller falls back to the app icon.
+func TrayTemplateIcon() []byte {
+	const size, scale = 22, 2
+	img := myui.Render(func(c *myui.Context) {
+		myui.Box(c).Fill().Draw(func(p *myui.Painter, r myui.Rect) {
+			p.Icon(icon("music"), r, myui.RGB(0, 0, 0))
+		})
+	}, size, size, scale)
+	if img == nil {
+		return nil
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		return nil
+	}
+	return buf.Bytes()
 }

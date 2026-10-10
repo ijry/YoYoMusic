@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"yoyomusic/internal/app"
@@ -21,9 +22,16 @@ import (
 	myui "github.com/egoist/mygo/ui"
 )
 
-// idleFold is how long the pointer must stay still before a side column
-// folds back to its rail.
+// idleFold is how long the pointer must be still before a side column
+// folds back to its rail. This drives the right-hand feature column; the
+// left playlist column uses its own, shorter libraryFold below.
 const idleFold = 10 * time.Second
+
+// libraryFold is how long the left playlist column stays open after the
+// pointer leaves it, unless the user pinned it. It is short because the
+// column floats over the visualiser: leaving it uncovered is the signal that
+// it is in the way.
+const libraryFold = 3 * time.Second
 
 // layoutState holds the per-window layout bookkeeping the view function
 // cannot keep on the stack, because it is rebuilt every frame.
@@ -35,6 +43,11 @@ type layoutState struct {
 	lastX, lastY float32
 	// hadPointer is whether the pointer has ever been inside the window.
 	hadPointer bool
+	// libOver is whether the pointer is currently over the left playlist
+	// column, and libIdleSince when it last was. Together they drive the
+	// column folding a few seconds after the pointer leaves it.
+	libOver      bool
+	libIdleSince time.Time
 }
 
 var layout = &layoutState{}
@@ -234,11 +247,13 @@ func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 		}
 
 		if mac {
-			// Left: only the playlist toggle, beside the traffic lights.
+			// Left: only the playlist toggle, beside the traffic lights. A
+			// little breathing room keeps it off the window controls.
+			myui.Box(c).Width(6)
 			libraryToggleButton(c, a)
 		} else {
 			// Left: brand plus the playlist fold toggle.
-			myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
+			myui.Row(c).Gap(10).AlignItems(myui.Center).Children(func() {
 				brandBadge(c, skin, t)
 				libraryToggleButton(c, a)
 			})
@@ -278,9 +293,16 @@ func brandBadge(c *myui.Context, skin app.Skin, t *myui.Theme) {
 	})
 }
 
-// libraryToggleButton is the playlist fold/unpin toggle.
+// libraryToggleButton is the playlist fold/unpin toggle in the top bar.
 func libraryToggleButton(c *myui.Context, a *app.App) {
+	t := c.Theme()
 	lb := iconButton(c, "library-toggle", "playlist", playlistTip(a))
+	// Light the button while the column is showing or pinned. Without this it
+	// was a permanently flat glyph — indistinguishable from a disabled or
+	// broken control, with nothing to say whether the toggle had taken.
+	if a.LibraryOpen || a.LibraryPinned {
+		lb.Background(t.Accent.Alpha(0.22))
+	}
 	lb.Size(32, 32).Radius(8).OnClick(func() {
 		if a.LibraryPinned {
 			a.ToggleLibraryPin()
@@ -445,20 +467,46 @@ const (
 	// bottom. It is less than the transport height on purpose: the seek bar
 	// occupies the top of the transport, so the spectrum may run down into
 	// the deck's padding and still clear the bar. Insetting by the whole
-	// transport height would leave a dead band between the two.
-	vizDeckInset = 34
+	// transport height would leave a dead band between the two. It was 34,
+	// which left the floor noticeably far from the seek bar; halving it
+	// brings the two together.
+	vizDeckInset = 17
 )
 
-// leftRail is the playlist column: a floating panel when open, a slim icon
-// rail when folded. Absolutely positioned so it floats over the visualiser.
+// leftRail is the playlist column: a floating panel when open, nothing when
+// folded. Absolutely positioned so it floats over the visualiser.
 func leftRail(c *myui.Context, a *app.App, skin app.Skin) {
 	// The playlist toggle already lives in the top bar, so the folded rail
 	// would only duplicate it — draw nothing when the column is not open.
-	if idleFolded(a.LibraryPinned) || !a.LibraryOpen {
+	if !a.LibraryOpen {
 		return
 	}
+	// Unpinned, the column folds a few seconds after the pointer leaves it:
+	// it floats over the visualiser, so an uncovered panel is in the way.
+	// Pinned, it stays whatever the pointer does.
+	if !a.LibraryPinned {
+		now := c.Now()
+		if layout.libIdleSince.IsZero() {
+			layout.libIdleSince = now
+		} else if now.Sub(layout.libIdleSince) >= libraryFold && !layout.libOver {
+			a.LibraryOpen = false
+			layout.libIdleSince = time.Time{}
+			layout.libOver = false
+			return
+		}
+	} else {
+		layout.libIdleSince = time.Time{}
+		layout.libOver = false
+	}
+
 	panel := myui.Box(c).Absolute().Left(12).Top(topBarH + 8).
 		Bottom(transportH + 8).Width(268)
+	// Hovered reads the hit test of the panel as it was laid out, so it is
+	// valid here even before its children are built.
+	layout.libOver = panel.Hovered()
+	if layout.libOver {
+		layout.libIdleSince = time.Time{}
+	}
 	panel.Children(func() {
 		playlistPanel(c, a, skin)
 	})
@@ -612,37 +660,75 @@ func speakerIcon(vol float64, muted bool) (name, tip string) {
 	}
 }
 
-// playlistPanel is the expanded left column: the library list.
+// playlistPanel is the expanded left column: the library list and the play
+// history, switched by a segmented control and filtered by the search field.
 func playlistPanel(c *myui.Context, a *app.App, skin app.Skin) {
 	t := c.Theme()
 	snap := a.Snapshot()
+	query := strings.TrimSpace(a.LibraryQuery)
 	// The caller (leftRail) sizes and positions this; here it just fills.
 	myui.Column(c).Fill().Background(t.Surface.Alpha(0.82)).Radius(0, 14, 14, 0).
-		Padding(12, 10).Gap(6).Children(func() {
-		myui.Row(c).AlignItems(myui.Center).Children(func() {
-			myui.Text(c, "播放列表").FontSize(14).Bold().TextColor(t.Text)
-			myui.Box(c).Grow(1)
-			myui.Text(c, fmt.Sprintf("%d 首", len(snap.Tracks))).FontSize(11).TextColor(t.TextMuted)
+		Padding(12, 10).Gap(8).Children(func() {
+		myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
+			// The play history lives here beside the list it refers to,
+			// switched by a segmented control, rather than in a panel of its
+			// own on the far side of the window.
+			seg := myui.Segmented(c, &a.LibraryTab, "列表", "历史")
+			seg.Grow(1)
+			// One + button opens a menu of the two ways to add music,
+			// instead of two half-width text buttons crowding the header.
+			plus := iconButton(c, "library-add", "plus", "添加音乐")
+			plus.Size(28, 28).Radius(7).
+				Menu(func(m *myui.Menu) {
+					if m.Item("导入音乐…").Chosen() {
+						TriggerImport(a)
+					}
+					if m.Item("打开文件夹…").Chosen() {
+						TriggerImportFolder(a)
+					}
+				})
 			pin := iconButton(c, "pin-library", "pin", playlistTip(a))
-			pin.Size(26, 26).Radius(6).OnClick(func() { a.ToggleLibraryPin() })
+			pin.Size(28, 28).Radius(7).OnClick(func() { a.ToggleLibraryPin() })
 		})
-		myui.Row(c).Gap(6).Children(func() {
-			imp := myui.Button(c.Key("import"), "导入音乐…").Grow(1)
-			imp.OnClick(func() { TriggerImport(a) })
-			fld := myui.Button(c.Key("import-folder"), "打开文件夹")
-			fld.OnClick(func() { TriggerImportFolder(a) })
-		})
+		// One search field filters whichever tab is showing.
+		myui.SearchField(c, &a.LibraryQuery)
 		myui.Scroll(c).Fill().Children(func() {
+			if a.LibraryTab == 1 {
+				historyPanel(c, a, skin, query)
+				return
+			}
 			if len(snap.Tracks) == 0 {
-				myui.Text(c, "还没有音乐。\n点击「导入音乐…」选择文件，或「打开文件夹」批量导入。").
+				myui.Text(c, "还没有音乐。\n点右上角的 + 导入音乐或文件夹。").
 					FontSize(12).TextColor(t.TextMuted).Padding(12, 10)
 				return
 			}
+			shown := 0
 			for i, tr := range snap.Tracks {
+				if !trackMatches(tr, query) {
+					continue
+				}
 				trackRow(c, a, tr, snap.Current, i)
+				shown++
+			}
+			if shown == 0 {
+				myui.Text(c, "没有匹配「"+query+"」的歌曲。").
+					FontSize(12).TextColor(t.TextMuted).Padding(12, 10)
 			}
 		})
 	})
+}
+
+// trackMatches reports whether a track passes the library search: an empty
+// query matches everything, otherwise the title, artist or album must contain
+// it, case-insensitively.
+func trackMatches(tr *app.Track, query string) bool {
+	if query == "" {
+		return true
+	}
+	q := strings.ToLower(query)
+	return strings.Contains(strings.ToLower(tr.Title), q) ||
+		strings.Contains(strings.ToLower(tr.Artist), q) ||
+		strings.Contains(strings.ToLower(tr.Album), q)
 }
 
 // trackRow is one selectable track in the playlist.
@@ -706,8 +792,6 @@ func sidePanel(c *myui.Context, a *app.App, skin app.Skin) {
 				eqPanel(c, a, skin)
 			case "lyrics":
 				lyricsPanel(c, a, skin)
-			case "history":
-				historyPanel(c, a, skin)
 			case "skins":
 				skinsPanel(c, a, skin)
 			case "about":
@@ -719,8 +803,9 @@ func sidePanel(c *myui.Context, a *app.App, skin app.Skin) {
 
 // historyPanel lists the recently played tracks (newest first). Clicking an
 // entry jumps straight to that track, so the play history doubles as a quick
-// launcher for things the user was just listening to.
-func historyPanel(c *myui.Context, a *app.App, skin app.Skin) {
+// launcher for things the user was just listening to. query filters the list
+// by the same title/artist/album match the library tab uses.
+func historyPanel(c *myui.Context, a *app.App, skin app.Skin, query string) {
 	t := c.Theme()
 	snap := a.Snapshot()
 	byID := make(map[string]*app.Track, len(snap.Tracks))
@@ -733,6 +818,7 @@ func historyPanel(c *myui.Context, a *app.App, skin app.Skin) {
 			FontSize(12).TextColor(t.TextMuted).Padding(10, 8)
 		return
 	}
+	shown := 0
 	for i, h := range hist {
 		tr, ok := byID[h.TrackID]
 		if !ok {
@@ -740,6 +826,10 @@ func historyPanel(c *myui.Context, a *app.App, skin app.Skin) {
 			// keep the history entry from breaking the list, just skip it.
 			continue
 		}
+		if !trackMatches(tr, query) {
+			continue
+		}
+		shown++
 		entry := tr
 		idx := i
 		row := myui.Row(c).Key("hist-"+entry.ID+"-"+fmt.Sprintf("%d", idx)).
@@ -761,6 +851,10 @@ func historyPanel(c *myui.Context, a *app.App, skin app.Skin) {
 			})
 			myui.Text(c, relTime(h.PlayedAt)).FontSize(11).TextColor(t.TextMuted)
 		})
+	}
+	if shown == 0 {
+		myui.Text(c, "没有匹配「"+query+"」的播放记录。").
+			FontSize(12).TextColor(t.TextMuted).Padding(10, 8)
 	}
 }
 

@@ -62,6 +62,14 @@ type App struct {
 	// LibraryPinned keeps the playlist column expanded regardless of the
 	// idle timer, the way pinning a sidebar works in every other player.
 	LibraryPinned bool
+	// LibraryTab selects which view the left playlist column shows:
+	// 0 is the playlist, 1 the play history. A segmented control switches
+	// between them, so the history lives next to the list it refers to
+	// instead of in a panel of its own on the far side of the window.
+	LibraryTab int
+	// LibraryQuery filters both views of the left column by title, artist or
+	// album. Empty means no filter.
+	LibraryQuery string
 	// SidePanel is the feature panel open on the right: eq, lyrics, skins,
 	// about, or "" when none is open.
 	SidePanel string
@@ -661,8 +669,10 @@ func (a *App) SetDesktopLyricScale(scale float64) {
 func (a *App) SetPanel(p string) { a.Panel = p }
 
 // SidePanels lists the panels the right-hand rail can show, in the order the
-// old build showed them.
-var SidePanels = []string{"eq", "lyrics", "history", "skins", "about"}
+// old build showed them. The play history is not among them: it is a tab of
+// the left playlist column now (see App.LibraryTab), so it sits beside the
+// list it refers to rather than across the window.
+var SidePanels = []string{"eq", "lyrics", "skins", "about"}
 
 // ToggleSidePanel opens a panel, or closes it when it is already open. The
 // panel opens pinned, so it does not fold away the moment the pointer rests.

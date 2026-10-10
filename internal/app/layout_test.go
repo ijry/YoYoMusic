@@ -108,10 +108,11 @@ func TestCloseSidePanel(t *testing.T) {
 }
 
 // TestSidePanelsList guards the rail's contents: the panels the layout
-// promises (equaliser, lyrics, history, skins, about) are exactly what it
-// renders.
+// promises (equaliser, lyrics, skins, about) are exactly what it renders.
+// The play history is deliberately absent — it is a tab of the left playlist
+// column now, not a right-rail panel.
 func TestSidePanelsList(t *testing.T) {
-	want := map[string]bool{"eq": true, "lyrics": true, "history": true, "skins": true, "about": true}
+	want := map[string]bool{"eq": true, "lyrics": true, "skins": true, "about": true}
 	if len(SidePanels) != len(want) {
 		t.Fatalf("SidePanels = %v, want %d entries", SidePanels, len(want))
 	}
@@ -123,5 +124,10 @@ func TestSidePanelsList(t *testing.T) {
 	}
 	for p := range want {
 		t.Errorf("panel %q is missing from the rail", p)
+	}
+	for _, p := range SidePanels {
+		if p == "history" {
+			t.Error("history moved into the left column; it must not be a right-rail panel")
+		}
 	}
 }
