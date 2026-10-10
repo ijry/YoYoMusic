@@ -107,7 +107,7 @@ func main() {
 		// deliberately not called; the tray keeps the same actions reachable
 		// when the window is closed.
 
-		mygo.NewWindow(mygo.WindowOptions{
+		mw := mygo.NewWindow(mygo.WindowOptions{
 			Title:         "悠悠乐听",
 			Width:         1100,
 			Height:        720,
@@ -116,6 +116,7 @@ func main() {
 			TitleBarStyle: mygo.TitleBarHidden,
 			Content:       myui.View(ui.View(a)),
 		})
+		ui.SetMainWindow(mw)
 
 		// Desktop lyrics: a separate, transparent, always-on-top window that
 		// floats over the desktop like the Tauri build's. It is hidden until

@@ -1088,10 +1088,21 @@ func updateSection(c *myui.Context, a *app.App) {
 	}
 }
 
+// mainWindow is the primary OS window. We keep a handle so native dialogs can
+// attach as a sheet to it. On macOS a sheet (beginSheetModalForWindow:) is far
+// more reliable than the app-modal runModal path mygo takes when Parent is
+// nil; the latter can silently fail to present from a webview callback.
+var mainWindow *mygo.Window
+
+// SetMainWindow hands the primary window handle to this package. Called once
+// at startup from main.
+func SetMainWindow(w *mygo.Window) { mainWindow = w }
+
 // TriggerImport opens a native file dialog and adds the chosen audio to the
 // library. Safe to call from the UI or a menu click on the main thread.
 func TriggerImport(a *app.App) {
 	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
+		Parent:   mainWindow,
 		Title:    "导入音乐",
 		Multiple: true,
 		Filters: []mygo.FileFilter{
@@ -1121,6 +1132,7 @@ func TriggerImport(a *app.App) {
 // every audio file beneath the chosen directory. Safe on the main thread.
 func TriggerImportFolder(a *app.App) {
 	path, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
+		Parent:    mainWindow,
 		Title:     "打开文件夹",
 		Directory: true,
 	})
