@@ -13,6 +13,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 
 	"yoyomusic/internal/app"
 	"yoyomusic/internal/ui"
@@ -92,20 +94,31 @@ func main() {
 		// Files named on the command line are imported at startup, which
 		// also lets the player be scripted and tested headlessly.
 		if len(cliArgs.imports) > 0 {
-			if errs := a.ImportPaths(cliArgs.imports); len(errs) > 0 {
-				for _, e := range errs {
-					log.Printf("import: %v", e)
-				}
-			}
-			if cliArgs.play {
-				snap := a.Snapshot()
-				if len(snap.Tracks) > 0 {
-					a.PlayTrack(snap.Tracks[0].ID)
-				}
-			} else {
-				a.SetPanel("library")
-			}
+			openPaths(a, cliArgs.imports, cliArgs.play)
 		}
+
+		// Files opened from the file manager (Finder double-click, the Dock,
+		// the desktop file manager) reach OnOpenFile. mygo dispatches them
+		// with postMain(launchArgs) after every WhenReady callback has run
+		// (see mygo app.go handleReady), so registering here is early enough
+		// to still catch the ones the app was launched with, and `a` is
+		// already built by the time any of them fires.
+		mygo.App.OnOpenFile(func(path string) {
+			openPaths(a, []string{path}, true)
+		})
+		// A folder dropped on the dock icon arrives as its own path.
+		mygo.App.OnOpenURL(func(u string) {
+			// Only file:// URLs reach here in practice; anything else is a
+			// link this app has no meaning for.
+			if !strings.HasPrefix(u, "file://") {
+				return
+			}
+			p := u[len("file://"):]
+			if runtime.GOOS == "windows" && len(p) > 2 && p[0] == '/' && p[2] == ':' {
+				p = p[1:]
+			}
+			openPaths(a, []string{p}, true)
+		})
 
 		registerShortcuts(a)
 		buildTray(a)
@@ -213,6 +226,26 @@ func registerShortcuts(a *app.App) {
 			log.Printf("shortcut %s: %q was taken, using %q", s.id, s.prefer[0], registered)
 		}
 	}
+}
+
+// openPaths imports the given files/directories and, when play is set, starts
+// the first track that landed in the library; otherwise it reveals the library
+// panel so the freshly added music is visible. It backs both the command line
+// and the files opened from the file manager, so opening a song from Finder
+// behaves the same as passing it on the command line.
+func openPaths(a *app.App, paths []string, play bool) {
+	if errs := a.ImportPaths(paths); len(errs) > 0 {
+		for _, e := range errs {
+			log.Printf("import: %v", e)
+		}
+	}
+	if play {
+		if snap := a.Snapshot(); len(snap.Tracks) > 0 {
+			a.PlayTrack(snap.Tracks[0].ID)
+		}
+		return
+	}
+	a.SetPanel("library")
 }
 
 // buildMenu assembles the application menu bar (macOS) or window menu

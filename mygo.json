@@ -1,8 +1,11 @@
 {
   "name": "YoYoMusic",
   "identifier": "net.lingyun.yoyomusic",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "icon": "resources/icon.png",
+  "fileAssociations": [
+    { "ext": ["wav", "mp3", "flac", "ogg"], "name": "音频文件", "role": "Viewer" }
+  ],
   "updates": {
     "publicKey": "mjeFVaJQcfXLgxDrq3wNQrA0uERR35kirRui/ULlbTU=",
     "github": "ijry/YoYoMusic",

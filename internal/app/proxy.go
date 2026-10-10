@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,7 +9,12 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
+
+// proxyLookupTimeout bounds each system-proxy probe. These helpers answer in
+// milliseconds normally; the cap only matters if one wedges the system.
+const proxyLookupTimeout = 2 * time.Second
 
 // ApplySystemProxy makes the updater — and any net/http call that goes
 // through http.DefaultClient / ProxyFromEnvironment — route through the
@@ -62,6 +68,18 @@ func alreadyProxied() bool {
 	return false
 }
 
+// runWithTimeout runs a proxy-lookup helper and returns its stdout, giving up
+// after proxyLookupTimeout. The helpers (scutil, reg query, gsettings) normally
+// answer in milliseconds, but they run synchronously on the main thread during
+// startup, so one of them hanging on a wedged system would freeze the app
+// before its window appears. A timeout just means "no system proxy found",
+// which is the same as a machine without one.
+func runWithTimeout(name string, args ...string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), proxyLookupTimeout)
+	defer cancel()
+	return exec.CommandContext(ctx, name, args...).Output()
+}
+
 // detectSystemProxy returns the host, port and proxy scheme of the system
 // HTTP/HTTPS proxy. It returns empty strings when none is configured or the
 // lookup fails, which is not an error: the app simply connects directly.
@@ -83,7 +101,7 @@ func detectSystemProxy() (host string, port int, scheme string) {
 // configuration dynamic store via `scutil --proxy`, which prints a small
 // dictionary we can parse line by line.
 func parseDarwinProxy() (string, int, string) {
-	out, err := exec.Command("scutil", "--proxy").Output()
+	out, err := runWithTimeout("scutil", "--proxy")
 	if err != nil {
 		return "", 0, ""
 	}
@@ -111,7 +129,7 @@ func parseDarwinProxy() (string, int, string) {
 func parseWindowsProxy() (string, int, string) {
 	const key = `HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings`
 
-	out, err := exec.Command("reg", "query", key, "/v", "ProxyEnable").Output()
+	out, err := runWithTimeout("reg", "query", key, "/v", "ProxyEnable")
 	if err != nil {
 		return "", 0, ""
 	}
@@ -119,7 +137,7 @@ func parseWindowsProxy() (string, int, string) {
 		return "", 0, ""
 	}
 
-	out, err = exec.Command("reg", "query", key, "/v", "ProxyServer").Output()
+	out, err = runWithTimeout("reg", "query", key, "/v", "ProxyServer")
 	if err != nil {
 		return "", 0, ""
 	}
@@ -130,15 +148,15 @@ func parseWindowsProxy() (string, int, string) {
 // parseGSettingsProxy handles GNOME-based Linux desktops that configure a
 // manual proxy through gsettings.
 func parseGSettingsProxy() (string, int, string) {
-	out, err := exec.Command("gsettings", "get", "org.gnome.system.proxy", "mode").Output()
+	out, err := runWithTimeout("gsettings", "get", "org.gnome.system.proxy", "mode")
 	if err != nil || !strings.Contains(string(out), "'manual'") {
 		return "", 0, ""
 	}
-	hostOut, err := exec.Command("gsettings", "get", "org.gnome.system.proxy.https", "host").Output()
+	hostOut, err := runWithTimeout("gsettings", "get", "org.gnome.system.proxy.https", "host")
 	if err != nil {
 		return "", 0, ""
 	}
-	portOut, err := exec.Command("gsettings", "get", "org.gnome.system.proxy.https", "port").Output()
+	portOut, err := runWithTimeout("gsettings", "get", "org.gnome.system.proxy.https", "port")
 	if err != nil {
 		return "", 0, ""
 	}
