@@ -1,7 +1,7 @@
 {
   "name": "YoYoMusic",
   "identifier": "net.lingyun.yoyomusic",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "icon": "resources/icon.png",
   "fileAssociations": [
     { "ext": ["wav", "mp3", "flac", "ogg"], "name": "音频文件", "role": "Viewer" }

@@ -334,31 +334,38 @@ const (
 // leave, which made the row change shape under the pointer and left ten icons
 // crowded into the top bar; a menu keeps the bar's layout constant and gives
 // the modes room to be named instead of just iconed.
+//
+// The button sits in a fixed-width slot rather than being placed absolutely:
+// Absolute positions against its parent, and its parent is the whole top bar,
+// so Left(0) would put it under the brand badge. The slot also keeps the two
+// Grow() spacers around it from re-centring the button as its width changes.
 func vizModePicker(c *myui.Context, a *app.App) {
 	t := c.Theme()
 	active := app.VizOrder[a.VizMode]
 
-	face := iconButton(c, "viz-face", vizIcon(active), vizLabel(active))
-	face.Absolute().Top(0).Left(0).
-		Size(vizItemSize, vizItemSize).Radius(7).
-		Background(t.Accent.Alpha(0.22)).
-		OnClick(func() { a.SetVisualization(active) }).
-		Menu(func(m *myui.Menu) {
-			for _, mode := range app.VizOrder {
-				mode := mode
-				if m.Item(vizLabel(mode)).Checked(mode == active).Chosen() {
-					a.SetVisualization(mode)
+	myui.Box(c).Width(vizItemSize).Height(vizItemSize).Children(func() {
+		face := iconButton(c, "viz-face", vizIcon(active), vizLabel(active))
+		face.Fill().
+			Size(vizItemSize, vizItemSize).Radius(7).
+			Background(t.Accent.Alpha(0.22)).
+			OnClick(func() { a.SetVisualization(active) }).
+			Menu(func(m *myui.Menu) {
+				for _, mode := range app.VizOrder {
+					mode := mode
+					if m.Item(vizLabel(mode)).Checked(mode == active).Chosen() {
+						a.SetVisualization(mode)
+					}
 				}
-			}
-			m.Separator()
-			tip := "随机切换可视化：关"
-			if a.VizRandom {
-				tip = "随机切换可视化：开"
-			}
-			if m.Item(tip).Checked(a.VizRandom).Chosen() {
-				a.SetVizRandom(!a.VizRandom)
-			}
-		})
+				m.Separator()
+				tip := "随机切换可视化：关"
+				if a.VizRandom {
+					tip = "随机切换可视化：开"
+				}
+				if m.Item(tip).Checked(a.VizRandom).Chosen() {
+					a.SetVizRandom(!a.VizRandom)
+				}
+			})
+	})
 }
 
 // vizLabel is the display name of a visualiser mode, or its id if it has none.
