@@ -2,14 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [go]
+    # main is the Go build's branch — the repository's default — after the
+    # rename that made room for the Tauri sources on tauri. go is kept so a
+    # stale clone or a tag pushed from it still runs.
+    branches: [main, go]
     # Docs and licence churn does not change what ships; don't spend build
     # minutes on it.
     paths-ignore:
       - "**/*.md"
       - "LICENSE"
   pull_request:
-    branches: [go]
+    branches: [main, go]
   workflow_dispatch:
 
 permissions:
