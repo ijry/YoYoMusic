@@ -876,7 +876,7 @@ func eqPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 		"flat": "平直", "rock": "摇滚", "pop": "流行", "classical": "古典",
 		"bass": "重低音", "vocal": "人声", "treble": "高音",
 	}
-	return myui.Column(c).Fill().Gap(8).Children(func() {
+	return myui.Column(c).Gap(8).Children(func() {
 		myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
 			myui.Text(c, "启用").FontSize(13).TextColor(t.Text)
 			en := myui.Switch(c, &a.EQEnabled)
@@ -950,7 +950,7 @@ func lyricsPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 // skinsPanel lists the selectable themes.
 func skinsPanel(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	cur := a.CurrentSkin().ID
-	return myui.Column(c).Fill().Gap(6).Children(func() {
+	return myui.Column(c).Gap(6).Children(func() {
 		for _, s := range a.Skins() {
 			skinCard(c, a, s, cur)
 		}
@@ -988,7 +988,7 @@ func skinCard(c *myui.Context, a *app.App, s app.Skin, cur string) myui.Element 
 // aboutPanel shows app information and the update controls.
 func aboutPanel(c *myui.Context, a *app.App) {
 	t := c.Theme()
-	myui.Column(c).Fill().Gap(6).Children(func() {
+	myui.Column(c).Gap(6).Children(func() {
 		myui.Text(c, "悠悠乐听").FontSize(18).Bold().TextColor(t.Text)
 		myui.Text(c, "一个用 Go 与原生 UI 打造的音乐播放器。").FontSize(12).TextColor(t.TextMuted)
 		myui.Divider(c)
@@ -1031,7 +1031,9 @@ func updateSection(c *myui.Context, a *app.App) {
 	case st.Available != nil:
 		myui.Text(c, "发现新版本 "+st.Available.Version).FontSize(13).Bold().TextColor(t.Text)
 		if st.Available.Notes != "" {
-			myui.Text(c, st.Available.Notes).FontSize(11).TextColor(t.TextMuted)
+			myui.Scroll(c).MaxHeight(220).Children(func() {
+				myui.Text(c, st.Available.Notes).FontSize(11).TextColor(t.TextMuted)
+			})
 		}
 		btn := myui.PrimaryButton(c.Key("install-update"), "下载并安装")
 		btn.OnClick(func() { a.Updater.InstallAsync() })
