@@ -64,8 +64,8 @@ type vizState struct {
 	// attack and slow release so a key visibly depresses and lifts. 14 white
 	// keys across the two octaves, then 10 black keys.
 	pianoT float64
-	pianoW [14]float32
-	pianoB [10]float32
+	pianoW [whiteKeys]float32
+	pianoB [blackKeys]float32
 
 	// Generative scene rotation.
 	genScene    string // scene on screen
@@ -221,10 +221,15 @@ func drawSpectrum(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Sk
 		}
 
 		// Reflection under the floor keeps the deck feeling like glass. The
-		// ramp's colour at the floor is colB, so that is what reflects.
+		// ramp's colour at the floor is colB, so that is what reflects. It
+		// starts clearly visible right under the floor and fades out as it
+		// runs down — the steeper, longer fade reads as a reflection on glass
+		// rather than a smudge, where the short, already-faint one before this
+		// was easy to miss entirely.
 		if h > 2 {
-			p.FillGradient(myui.Rect{X: x, Y: floor + 2, W: barW, H: h * 0.35},
-				myui.LinearGradient{From: colB.Alpha(0.16), To: colB.Alpha(0), Angle: 180},
+			reflH := h * 0.5
+			p.FillGradient(myui.Rect{X: x, Y: floor + 2, W: barW, H: reflH},
+				myui.LinearGradient{From: colB.Alpha(0.34), To: colB.Alpha(0), Angle: 180},
 				float32(math.Min(float64(barW)/2, 3)))
 		}
 
@@ -643,62 +648,359 @@ func drawKaleidoscope(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin ap
 
 // --- piano ------------------------------------------------------------------
 
-// drawPiano renders a two-octave keyboard along the bottom that plays itself:
-// each key tracks the spectrum band at its position, depresses by how hard that
-// band hits, and glows in the skin accent. Lowest keys read the bass, highest
-// the treble, so as a track plays the keys light and dip in sequence like a
-// ghost at the keys. A beat dips every key a touch, and a gentle idle shimmer
-// keeps the keyboard breathing when nothing is playing.
-func drawPiano(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Skin, dt float32) {
-	const whites = 14
-	const blacks = 10
-	// Which white key each black key sits after. Two octaves of the pattern
-	// 0,1,3,4,5 (the gap after the 3rd and 7th whites has no black).
-	blackAfter := [blacks]int{0, 1, 3, 4, 5, 7, 8, 10, 11, 12}
+// The keyboard's proportions, in the terms a piano is measured in. v is the
+// position along a key: 0 at the far end, under the fallboard, and 1 at the
+// near end facing the viewer.
+const (
+	kbPersp  = 0.16  // how much further from the eye a key's far end is, which foreshortens it
+	kbBackV  = 0.17  // where the fallboard covers the keys
+	kbBlackV = 0.76  // where the black keys end, well short of the white noses
+	kbNarrow = 0.18  // how much narrower a white key is at its far end, where the black keys sit
+	kbBlackW = 0.52  // a black key's width, of a white key's
+	kbLift   = 0.125 // how far a black key stands above the white keys, of the keyboard's height
+	kbGap    = 1.8   // the gap between two white keys, in DIPs
+	kbSlice  = 0.7   // the largest step a tapered edge may take between slices
 
-	kbH := float32(math.Min(float64(r.H)*0.26, 130))
-	kbTop := r.Y + r.H - kbH
-	whiteW := r.W / float32(whites)
+	whiteKeys = 14 // two octaves
+	blackKeys = 10
+)
+
+// The palette of the instrument itself, which no skin changes: a keyboard is
+// made of white and black plastic, so only the light it catches follows the
+// skin.
+var (
+	pianoWhiteBack = myui.RGB(112, 118, 142) // at the far end, in the case's shadow
+	pianoWhiteLit  = myui.RGB(241, 244, 250) // where the light lands, at the nose
+	pianoBlackDim  = myui.RGB(13, 14, 20)
+	pianoBlackLit  = myui.RGB(58, 61, 74)
+	pianoCase      = myui.RGB(26, 27, 36) // the cabinet behind the keys
+)
+
+// pianoGeom projects the keyboard onto the canvas. The eye sits a little above
+// and in front of the keyboard, so equal steps of depth bunch up towards the
+// back, and a white key narrows along its far half, where the black keys sit
+// beside it.
+type pianoGeom struct {
+	top, h    float32 // canvas y of the far end, and the drawn height of the top surfaces
+	whiteW    float32 // a white key's width at its near end
+	lift      float32 // how far a black key stands above the white keys
+	lipH      float32 // drawn height of a white key's front face
+	whiteDrop float32 // how far a white key's near end sinks when fully pressed
+	blackDrop float32 // the same for a black key, which sinks further
+	persp     float32
+}
+
+// scale is how large the keyboard draws at depth v: 1 at the near end.
+func (g pianoGeom) scale(v float32) float32 { return 1 / (1 + g.persp*(1-v)) }
+
+// yAt is how far down the keyboard's height depth v sits. Equal steps of depth
+// bunch up towards the back, which is what makes the keyboard read as receding
+// instead of as lying flat on the canvas.
+func (g pianoGeom) yAt(v float32) float32 {
+	far := 1 / (1 + g.persp)
+	return (g.scale(v) - far) / (1 - far)
+}
+
+// sink is how much of its drop a point at depth v gets: a key pivots about its
+// far end, so its near end sinks and its far end stays put.
+func (g pianoGeom) sink(v float32) float32 {
+	s := (v - kbBackV) / (1 - kbBackV)
+	if s < 0 {
+		return 0
+	}
+	return s
+}
+
+// y is the canvas y of depth v of a key sunk by press, 0 to 1.
+func (g pianoGeom) y(v, press, drop float32) float32 {
+	return g.top + g.h*g.yAt(v) + drop*press*g.sink(v)*g.scale(v)
+}
+
+// whiteHalf is half a white key's drawn width at depth v, less half the gap
+// that separates it from its neighbours.
+func (g pianoGeom) whiteHalf(v float32) float32 {
+	return max(g.whiteW/2*(1-kbNarrow*(1-v))-kbGap/2, 0.5)
+}
+
+// blackHalf is half a black key's drawn width at depth v. A black key is
+// wedge-shaped in section, wide where it meets the keybed and narrow along its
+// top, so its flanks show as wedges down each side.
+func (g pianoGeom) blackHalf(v float32) float32 {
+	return max(g.whiteW*kbBlackW/2*(1-kbNarrow*0.9*(1-v)), 0.5)
+}
+
+// liftAt is how far above the white keys a black key's surface draws at depth
+// v: raised things stand higher up the canvas.
+func (g pianoGeom) liftAt(v float32) float32 { return g.lift * g.scale(v) }
+
+// pianoLayout lays the keyboard out in r: the keyboard fills the bottom of the
+// canvas with the keys' top surfaces, the front faces below them, and the key
+// slip in front, behind which a pressed key disappears. It is apart from
+// drawPiano so that the tests can ask where the layout lands rather than guess
+// at rows.
+func pianoLayout(r myui.Rect) pianoGeom {
+	total := float32(math.Min(float64(r.H)*0.30, 168))
+	lipH := float32(math.Min(math.Max(float64(total)*0.125, 10), 22))
+	whiteDrop := float32(math.Min(math.Max(float64(total)*0.065, 5), 11))
+	slipH := lipH*0.55 + whiteDrop
+	return pianoGeom{
+		top: r.Y + r.H - total, h: total - lipH - slipH, whiteW: r.W / whiteKeys,
+		lift: (total - lipH - slipH) * kbLift, lipH: lipH,
+		whiteDrop: whiteDrop, blackDrop: whiteDrop * 1.9,
+		persp: kbPersp,
+	}
+}
+
+// whiteShade is the colour of a white key's top surface at depth v, playing at
+// level lv in glow: dim under the fallboard, brightest at the nose, and dimmed
+// and tinted as the key sinks out of the light.
+func whiteShade(v, lv float32, glow myui.Color) myui.Color {
+	t := (v - kbBackV) / (1 - kbBackV)
+	c := pianoWhiteBack.Mix(pianoWhiteLit, smoothstep(t*1.5))
+	// A key the music is on takes only a hint of the accent: a keyboard stays
+	// white and black, and the light around it is what carries the colour.
+	c = c.Mix(glow, 0.03+0.13*lv)
+	// A key that has sunk is out of the light along its near half, and leaves
+	// a dark line of keybed along its far end, where it has dropped away from
+	// the fallboard.
+	c = dim(c, 1-0.26*lv*t-0.45*lv*smoothstep(1-t*3.5))
+	if t > 0.90 {
+		// The nose of a key is rounded, so it catches a rim of light — more
+		// of it as the key tips up into it.
+		c = c.Mix(myui.RGB(255, 255, 255), (t-0.90)/0.10*(0.45+0.35*lv))
+	}
+	return c
+}
+
+// blackShade is the same for a black key, over the shorter run it has to the
+// nose, with the bright specular a glossy black key carries along it.
+func blackShade(v, lv float32, glow myui.Color) myui.Color {
+	t := (v - kbBackV) / (kbBlackV - kbBackV)
+	c := pianoBlackDim.Mix(pianoBlackLit, smoothstep(t*0.9))
+	c = c.Mix(glow, 0.03+0.10*lv)
+	if t > 0.95 {
+		// The specular along the nose, in the accent while the key is
+		// sounding: a line, not a wash.
+		c = c.Mix(glow.Mix(myui.RGB(255, 255, 255), 0.65), (t-0.95)/0.05*(0.35+0.45*lv))
+	}
+	return c
+}
+
+// drawPiano renders a two-octave keyboard as a solid instrument seen from a
+// little above and in front, rather than as a flat strip of rectangles:
+//
+//   - equal steps of depth bunch up towards the back, and a white key narrows
+//     along its far half, so the keyboard recedes instead of lying flat;
+//   - every key is a body with a top surface, a front face below it, a lit rim
+//     where the two meet, and a shadow it throws on its neighbours;
+//   - a key being played pivots about its far end, so its near end sinks
+//     towards the key slip — behind which it disappears — while its far end
+//     stays put, and its surface tilts out of the light as it goes.
+//
+// Each key tracks the spectrum band at its position, lows on the left and highs
+// on the right, so as a track plays the keys light and dip in sequence like a
+// ghost at the keys. A beat dips them all a touch, and a slow shimmer keeps the
+// keyboard breathing while nothing is playing.
+//
+// The tapered sides of a key are drawn as a stack of slices, because mygo
+// caches a vector path's mask by where it lands on the pixel grid, not by its
+// shape: a path that moves every frame would ask for a new mask per key per
+// frame and quietly run the atlas out.
+func drawPiano(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Skin, dt float32) {
+	// Which white key each black key sits after: two octaves of the pattern
+	// 0,1,3,4,5 (the gap after the 3rd and 7th whites has no black).
+	blackAfter := [blackKeys]int{0, 1, 3, 4, 5, 7, 8, 10, 11, 12}
+
+	g := pianoLayout(r)
+	yFall := g.y(kbBackV, 0, 0)
+	yRail := g.y(1, 0, 0) + g.lipH
+	bottom := r.Y + r.H
+
+	// How many slices a key's top surface is drawn in: enough that its taper
+	// reads as a straight edge rather than as a flight of steps.
+	slices := func(slant float32) int {
+		n := int(slant/kbSlice) + 1
+		return max(5, min(n, 20))
+	}
+	whiteSlices := slices(g.whiteW * kbNarrow / 2)
+	blackSlices := slices(g.whiteW * kbBlackW * kbNarrow * 0.9 / 2)
+
 	colA := colOf(skin.VizA)
 	colB := colOf(skin.VizB)
-	whiteBase := myui.RGB(228, 229, 238)
-	blackBase := myui.RGB(16, 17, 23)
+
+	// The cabinet, which is what shows between and behind the keys.
+	p.FillGradient(myui.Rect{X: r.X, Y: g.top, W: r.W, H: bottom - g.top},
+		myui.LinearGradient{From: pianoCase, To: myui.RGB(11, 12, 17), Angle: 180}, 0)
 
 	viz.pianoT += float64(dt)
 	idleW := 1 - math.Min(1, float64(f.Level)/0.15)
-
-	// White keys first, so the black keys draw on top.
-	for i := 0; i < whites; i++ {
-		lv := pressLevel(&viz.pianoW[i], bandAt(f, float64(i)/float64(whites)),
+	var wPress [whiteKeys]float32
+	var bPress [blackKeys]float32
+	for i := range wPress {
+		wPress[i] = pressLevel(&viz.pianoW[i], bandAt(f, float64(i)/float64(whiteKeys)),
 			viz.pianoT, float64(i)*0.9, idleW, dt)
-		depth := lv*8 + f.Beat*1.5
-		x := r.X + float32(i)*whiteW
-		y := kbTop + depth
-		h := kbH - depth
-		p.Fill(myui.Rect{X: x + 1, Y: y, W: whiteW - 2, H: h}, whiteBase, 3)
-		if lv > 0.04 {
-			g := colA.Mix(colB, float32(i)/float32(whites))
-			p.Fill(myui.Rect{X: x + 1, Y: y, W: whiteW - 2, H: h}, g.Alpha(lv*0.7), 3)
-		}
+	}
+	for j := range bPress {
+		wk := blackAfter[j]
+		bPress[j] = pressLevel(&viz.pianoB[j], bandAt(f, float64(wk+1)/float64(whiteKeys)),
+			viz.pianoT, float64(wk)*1.1, idleW, dt)
+	}
+	// A beat dips every key a little, the way a hand leaning into a chord
+	// would.
+	for i := range wPress {
+		wPress[i] = min(1, wPress[i]+f.Beat*0.10)
+	}
+	for j := range bPress {
+		bPress[j] = min(1, bPress[j]+f.Beat*0.08)
 	}
 
-	// Black keys.
-	for j := 0; j < blacks; j++ {
-		wk := blackAfter[j]
-		lv := pressLevel(&viz.pianoB[j], bandAt(f, float64(wk+1)/float64(whites)),
-			viz.pianoT, float64(wk)*1.1, idleW, dt)
-		depth := lv*7 + f.Beat*1.2
-		bw := whiteW * 0.62
-		bh := kbH * 0.62
-		x := r.X + float32(wk+1)*whiteW - bw/2
-		y := kbTop + depth
-		h := bh - depth
-		p.Fill(myui.Rect{X: x, Y: y, W: bw, H: h}, blackBase, 2)
-		if lv > 0.04 {
-			g := colB.Mix(colA, float32(j)/float32(blacks))
-			p.Fill(myui.Rect{X: x, Y: y, W: bw, H: h}, g.Alpha(lv*0.85), 2)
+	// Light off the keys that are sounding: a soft shaft over each struck key,
+	// so the keyboard reads as the thing making the music.
+	beamTop := max(r.Y, yFall-g.h*0.62)
+
+	for i := 0; i < whiteKeys; i++ {
+		lv := wPress[i]
+		glow := colA.Mix(colB, float32(i)/float32(whiteKeys-1))
+		xc := r.X + (float32(i)+0.5)*g.whiteW
+
+		if lv > 0.04 && beamTop < yFall {
+			hw := g.whiteHalf(kbBackV)
+			p.FillGradient(myui.Rect{X: xc - hw, Y: beamTop, W: hw * 2, H: yFall - beamTop},
+				myui.LinearGradient{From: glow.Alpha(0), To: glow.Alpha(0.30 * lv), Angle: 180},
+				min(hw/2, 8))
 		}
+
+		// Top surface, drawn as slices from the back forwards.
+		for k := 0; k < whiteSlices; k++ {
+			v0 := kbBackV + (1-kbBackV)*float32(k)/float32(whiteSlices)
+			v1 := kbBackV + (1-kbBackV)*float32(k+1)/float32(whiteSlices)
+			y0 := g.y(v0, lv, g.whiteDrop)
+			y1 := g.y(v1, lv, g.whiteDrop)
+			hw := g.whiteHalf((v0 + v1) / 2)
+			// The slice runs a hair into the next, so that snapping the two
+			// to whole pixels cannot open a seam between them.
+			p.FillGradient(myui.Rect{X: xc - hw, Y: y0, W: hw * 2, H: y1 - y0 + 0.75},
+				myui.LinearGradient{From: whiteShade(v0, lv, glow), To: whiteShade(v1, lv, glow), Angle: 180}, 0)
+			// The flanks of a key: its left side lies in the shadow of the
+			// gap beside it and its right side turns into the light, which is
+			// what rounds a key off rather than leaving it a flat card.
+			sl := min(hw*0.4, 4.5)
+			p.FillGradient(myui.Rect{X: xc - hw, Y: y0, W: sl, H: y1 - y0 + 0.75},
+				myui.LinearGradient{From: myui.RGB(0, 0, 0).Alpha(0.30), To: myui.RGB(0, 0, 0).Alpha(0), Angle: 90}, 0)
+			p.FillGradient(myui.Rect{X: xc + hw - 2.5, Y: y0, W: 2.5, H: y1 - y0 + 0.75},
+				myui.LinearGradient{From: myui.RGB(0, 0, 0).Alpha(0), To: myui.RGB(255, 255, 255).Alpha(0.17), Angle: 90}, 0)
+		}
+
+		// Front face, which stands below the nose and goes with it: it is
+		// turned away from the light, so it runs darker than the top.
+		yf := g.y(1, lv, g.whiteDrop)
+		hw := g.whiteHalf(1)
+		lipTop := dim(pianoWhiteLit.Mix(glow, 0.05+0.26*lv), 0.88-0.20*lv)
+		lipBot := dim(pianoWhiteBack.Mix(glow, 0.05+0.22*lv), 0.58-0.20*lv)
+		p.FillGradient(myui.Rect{X: xc - hw, Y: yf - 0.5, W: hw * 2, H: g.lipH + 0.5},
+			myui.LinearGradient{From: lipTop, To: lipBot, Angle: 180}, 0)
 	}
+
+	for j := 0; j < blackKeys; j++ {
+		lv := bPress[j]
+		wk := blackAfter[j]
+		glow := colB.Mix(colA, float32(j)/float32(blackKeys-1))
+		xc := r.X + float32(wk+1)*g.whiteW
+
+		// What the block throws on the white keys beside it and in front of
+		// it, offset down and to the right as the light comes from above and
+		// the left.
+		hb := g.blackHalf(kbBlackV)
+		yNose := g.y(kbBlackV, lv, g.blackDrop) - g.liftAt(kbBlackV)
+		yBase := g.y(kbBlackV, 0, 0)
+		p.Shadow(myui.Rect{X: xc - hb, Y: max(yFall, yNose), W: hb * 2, H: yBase - max(yFall, yNose)},
+			1, 2.5, 2, 4, 0, myui.RGB(0, 0, 0).Alpha(0.5))
+
+		// The body: everything of the key between its top surface and the
+		// white keys it stands over. The flanks go down first — the wedges
+		// the key's section opens on each side — and the top surface last,
+		// over them, so that what stands below its edges is left showing.
+		p.Clip(myui.Rect{X: r.X, Y: yFall, W: r.W, H: bottom - yFall}, 0, func() {
+			flank := dim(pianoBlackLit.Mix(glow, 0.06+0.16*lv), 0.42)
+			for k := 0; k < blackSlices; k++ {
+				v0 := kbBackV + (kbBlackV-kbBackV)*float32(k)/float32(blackSlices)
+				v1 := kbBackV + (kbBlackV-kbBackV)*float32(k+1)/float32(blackSlices)
+				vm := (v0 + v1) / 2
+				yt, yb := g.y(vm, lv, g.blackDrop)-g.liftAt(vm), g.y(vm, 0, 0)
+				hl0, hl1 := g.blackHalf(v0), g.blackHalf(v1)
+				p.Fill(myui.Rect{X: xc - hl1, Y: yt, W: hl1 - hl0, H: yb - yt + 0.5}, flank, 0)
+				p.Fill(myui.Rect{X: xc + hl0, Y: yt, W: hl1 - hl0, H: yb - yt + 0.5}, flank, 0)
+			}
+			// The front face, standing on the white keys: it is the part of
+			// the body the light reaches, and the part that shortens as the
+			// key goes down.
+			nf := g.blackHalf(kbBlackV)
+			if fh := g.y(kbBlackV, 0, 0) - yNose; fh > 0.5 {
+				p.FillGradient(myui.Rect{X: xc - nf, Y: yNose, W: nf * 2, H: fh},
+					myui.LinearGradient{From: dim(pianoBlackLit.Mix(glow, 0.08+0.22*lv), 0.60), To: myui.RGB(2, 2, 5), Angle: 180}, 0)
+			}
+			// Top surface over the lot.
+			for k := 0; k < blackSlices; k++ {
+				v0 := kbBackV + (kbBlackV-kbBackV)*float32(k)/float32(blackSlices)
+				v1 := kbBackV + (kbBlackV-kbBackV)*float32(k+1)/float32(blackSlices)
+				hw := g.blackHalf((v0 + v1) / 2)
+				y0 := g.y(v0, lv, g.blackDrop) - g.liftAt(v0)
+				y1 := g.y(v1, lv, g.blackDrop) - g.liftAt(v1)
+				p.FillGradient(myui.Rect{X: xc - hw, Y: y0, W: hw * 2, H: y1 - y0 + 0.75},
+					myui.LinearGradient{From: blackShade(v0, lv, glow), To: blackShade(v1, lv, glow), Angle: 180}, 0)
+			}
+		})
+	}
+
+	// The fallboard, and the shadow it throws down over the keys: what makes
+	// them look recessed into the case rather than pasted on it.
+	p.FillGradient(myui.Rect{X: r.X, Y: g.top - 2, W: r.W, H: yFall - g.top + 3},
+		myui.LinearGradient{From: pianoCase, To: myui.RGB(8, 9, 13), Angle: 180}, 0)
+	p.FillGradient(myui.Rect{X: r.X, Y: yFall, W: r.W, H: 24},
+		myui.LinearGradient{From: myui.RGB(0, 0, 0).Alpha(0.52), To: myui.RGB(0, 0, 0).Alpha(0), Angle: 180}, 0)
+
+	// The key slip in front, which a pressed key sinks behind.
+	p.FillGradient(myui.Rect{X: r.X, Y: yRail, W: r.W, H: bottom - yRail},
+		myui.LinearGradient{From: myui.RGB(62, 65, 79), To: myui.RGB(11, 12, 17), Angle: 180}, 0)
+	p.Fill(myui.Rect{X: r.X, Y: yRail, W: r.W, H: 1}, myui.RGB(132, 136, 152).Alpha(0.45), 0)
+
+	// A key that has gone down into the slip opens a dark slot between its
+	// nose and the rail, which is what makes the press read as the key
+	// sinking rather than as its front simply ending higher up.
+	for i := 0; i < whiteKeys; i++ {
+		lv := wPress[i]
+		if lv <= 0.05 {
+			continue
+		}
+		hw := g.whiteHalf(1)
+		xc := r.X + (float32(i)+0.5)*g.whiteW
+		p.FillGradient(myui.Rect{X: xc - hw, Y: yRail, W: hw * 2, H: 7},
+			myui.LinearGradient{From: myui.RGB(0, 0, 0).Alpha(0.55 * lv), To: myui.RGB(0, 0, 0).Alpha(0), Angle: 180}, 0)
+	}
+}
+
+// dim scales a colour's channels, keeping its alpha: how much of the light a
+// surface catches.
+func dim(c myui.Color, k float32) myui.Color {
+	return myui.Color{R: chan8(c.R, k), G: chan8(c.G, k), B: chan8(c.B, k), A: c.A}
+}
+
+func chan8(v uint8, k float32) uint8 {
+	x := float32(v) * k
+	if x < 0 {
+		return 0
+	}
+	if x > 255 {
+		return 255
+	}
+	return uint8(x + 0.5)
+}
+
+// smoothstep eases t, which clamp01 holds to 0..1, so a colour ramp leaves its
+// dark end gently instead of starting abruptly.
+func smoothstep(t float32) float32 {
+	t = clamp01(t)
+	return t * t * (3 - 2*t)
 }
 
 // pressLevel advances a key's smoothed press (0..1): the live band drives it, a
