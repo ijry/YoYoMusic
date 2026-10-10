@@ -1008,7 +1008,11 @@ func updateSection(c *myui.Context, a *app.App) {
 
 	default:
 		if st.Error != "" {
-			myui.Text(c, "检查失败: "+st.Error).FontSize(11).TextColor(t.Danger)
+			// Selectable so the message can be dragged over, double-clicked
+			// or Cmd+C'd into a bug report; a network failure is the kind of
+			// thing a user needs to hand to someone else verbatim.
+			myui.Text(c, "检查失败: "+st.Error).Selectable().
+				FontSize(11).TextColor(t.Danger)
 		} else if !st.LastChecked.IsZero() {
 			myui.Text(c, "已是最新版本").FontSize(12).TextColor(t.TextMuted)
 		}
