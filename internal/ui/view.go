@@ -281,15 +281,30 @@ func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 	})
 }
 
-// brandBadge is the gradient mark plus the app name.
+// brandBadge is the app's mark plus the app name.
 func brandBadge(c *myui.Context, skin app.Skin, t *myui.Theme) {
 	myui.Row(c).Gap(8).AlignItems(myui.Center).Children(func() {
-		myui.Box(c).Size(22, 22).Radius(11).Draw(func(p *myui.Painter, r myui.Rect) {
-			p.FillGradient(r, myui.LinearGradient{
-				From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
-			}, 11)
-		})
+		brandMark(c, skin)
 		myui.Text(c, "悠悠乐听").FontSize(16).Bold().TextColor(t.Text)
+	})
+}
+
+// brandMark is the app's own mark: its icon where the packaged assets are
+// beside it, and a gradient in the skin's colours where they are not, so that
+// there is never a hole where the mark goes. It used to be nothing but that
+// gradient, which is not the logo.
+func brandMark(c *myui.Context, skin app.Skin) {
+	if bmp := appLogo(); bmp != nil {
+		// Sized explicitly: an Image otherwise lays itself out at the
+		// bitmap's own size in DIPs, which for a 256 pixel icon is the whole
+		// width of the bar.
+		myui.Image(c, bmp).Size(22, 22)
+		return
+	}
+	myui.Box(c).Size(22, 22).Radius(11).Draw(func(p *myui.Painter, r myui.Rect) {
+		p.FillGradient(r, myui.LinearGradient{
+			From: colOf(skin.Primary), To: colOf(skin.Accent), Angle: 135,
+		}, 11)
 	})
 }
 

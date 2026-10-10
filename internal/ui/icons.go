@@ -3,6 +3,11 @@ package ui
 import (
 	"bytes"
 	"image/png"
+	"os"
+	"path/filepath"
+	"sync"
+
+	"yoyomusic/internal/app"
 
 	myui "github.com/egoist/mygo/ui"
 )
@@ -156,6 +161,32 @@ func iconButton(c *myui.Context, key, name, tip string) myui.Element {
 		})
 	})
 	return b
+}
+
+// appLogo is the app's own mark, decoded once and kept: converting a bitmap
+// is not free, and the badge asks for it every frame.
+//
+// The largest packaged icon serves it, since the mark is drawn small but on
+// displays that are not — a 32 pixel source would be scaled up into a blur on
+// a HiDPI screen. It is nil when the assets are not installed beside the app,
+// and every caller draws something of its own in that case.
+var appLogo = sync.OnceValue(func() *myui.Bitmap {
+	return loadAppLogo(app.ResourceDirs())
+})
+
+func loadAppLogo(dirs []string) *myui.Bitmap {
+	for _, dir := range dirs {
+		for _, name := range []string{"icon-256.png", "icon-128.png", "icon.png"} {
+			data, err := os.ReadFile(filepath.Join(dir, name))
+			if err != nil {
+				continue
+			}
+			if bmp, err := myui.DecodeBitmap(data); err == nil && bmp != nil {
+				return bmp
+			}
+		}
+	}
+	return nil
 }
 
 // TrayTemplateIcon renders the music-note glyph as a black-on-transparent PNG

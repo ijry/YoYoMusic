@@ -298,11 +298,7 @@ func buildTray(a *app.App) {
 // icon.png is the fallback, and a generated glyph the last resort so the
 // tray still shows something when the assets are missing.
 func trayIcon() []byte {
-	dirs := []string{"resources"}
-	if exe, err := os.Executable(); err == nil {
-		dirs = append(dirs, filepath.Join(filepath.Dir(exe), "resources"))
-	}
-	for _, dir := range dirs {
+	for _, dir := range app.ResourceDirs() {
 		for _, name := range []string{"icon-32.png", "icon.png"} {
 			if data, err := os.ReadFile(filepath.Join(dir, name)); err == nil {
 				return data
