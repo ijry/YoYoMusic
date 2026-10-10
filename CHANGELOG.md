@@ -170,3 +170,10 @@
 ### 已知限制
 - AAC / M4A / Opus 暂不支持：没有可用的纯 Go 解码器（现有实现均通过 cgo 绑定 fdk-aac 等 C 库）
 - Windows 上 MP3 由纯 Go 解码器处理，极少数非标准码流可能解码失败
+- **自动更新依赖 GitHub 可达性**：更新清单与安装包都托管在 GitHub
+  （`github.com` 及其下载 CDN）。检查更新时先经 `api.github.com` 解析最新
+  `go-v` 发布，再下载清单与安装包——这一步无法绕过，因为同仓库还托管 Tauri
+  旧版（`v0.0.x`，且 `v0.0.2` 被标记为 Latest），免 API 的
+  `releases/latest/download/` 会被 Tauri 发布占用而 404。若所在网络无法连接
+  GitHub 下载主机（表现为 `dial tcp …:443: … failed to respond` 这类连接超时），
+  自动更新将不可用，请前往 GitHub Releases 或国内镜像手动下载新版。
