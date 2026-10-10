@@ -47,7 +47,16 @@ func parseFlags() {
 
 func main() {
 	mygo.App.SetName("悠悠乐听")
-	mygo.App.SetVersion("0.0.4")
+	// Do NOT hardcode the version here: mygo injects the packaged version
+	// (from mygo.json) at build time and App.Version() reports it. A stale
+	// literal made released binaries misreport as an old version and always
+	// offer a "newer" build. Let the build metadata be the single source.
+
+	// Route outbound HTTP (the updater's download host, album-art lookups)
+	// through the OS system proxy when one is configured. Go's net/http
+	// only reads the HTTPS_PROXY/HTTP_PROXY env vars, so we copy the system
+	// proxy into them before any network use. Must run before AutoCheck().
+	app.ApplySystemProxy()
 
 	// Every skin is dark, so declare the appearance instead of following the
 	// system. Windows otherwise paints the native minimise, maximise and

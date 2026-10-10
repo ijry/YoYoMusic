@@ -54,18 +54,22 @@ func (u *Updater) Enabled() bool { return mygo.Updater.Enabled() }
 // CheckAsync looks for an update in the background, updating state as it
 // goes. The UI polls State() to render the result.
 //
-// Known limitation: the update feed and the artifacts it points to both
-// live on GitHub. The check first calls the GitHub REST API (api.github.com)
-// to find the newest release tagged with updates.tagPrefix ("go-v") — that
-// step is unavoidable here because this repository also hosts the older
-// Tauri releases (v0.0.x) and the api-free "releases/latest/download/"
-// path would resolve to the Tauri release (its v0.0.2 is marked "Latest")
-// and 404. The manifest and the installer are then downloaded from
-// github.com / its release CDN. Networks that cannot reach GitHub's download
-// hosts (some regions behind restrictive proxies block the CDN while still
-// allowing the API) therefore cannot update automatically: the check itself
-// times out connecting to github.com. In that case download the new version
-// manually from the project's GitHub Releases page (or a reachable mirror).
+// The update feed and the artifacts it points to both live on GitHub. The
+// check first calls the GitHub REST API (api.github.com) to find the newest
+// release tagged with updates.tagPrefix ("go-v") — that step is unavoidable
+// here because this repository also hosts the older Tauri releases (v0.0.x)
+// and the api-free "releases/latest/download/" path would resolve to the
+// Tauri release (its v0.0.2 is marked "Latest") and 404. The manifest and
+// the installer are then downloaded from github.com / its release CDN.
+//
+// Networking: app startup now copies the operating system's configured
+// proxy into the HTTPS_PROXY / HTTP_PROXY environment variables (see
+// ApplySystemProxy), so a desktop proxy (Clash, V2Ray, Surge, …) is used
+// automatically — Go's net/http would otherwise ignore it and the check
+// would time out on github.com. A remaining connection failure therefore
+// almost always means the proxy (or a direct connection) still cannot reach
+// GitHub's download CDN, in which case download the new version manually
+// from the project's GitHub Releases page (or a reachable mirror).
 func (u *Updater) CheckAsync(force bool) {
 	u.mu.Lock()
 	if u.state.Checking {
@@ -176,16 +180,16 @@ func (u *Updater) Relaunch() {
 
 // updateCheckError returns a user-facing message for an update-check
 // failure. Connection/timeout errors mean the GitHub download host is
-// unreachable from the user's network (the manifest and installer both live
-// on github.com); API errors mean a proxy blocked api.github.com. Both get a
-// hint to download manually. Other errors keep mygo's wording.
+// unreachable even via the system proxy (the manifest and installer both
+// live on github.com); API errors mean a proxy blocked api.github.com. Both
+// get a hint to download manually. Other errors keep mygo's wording.
 func updateCheckError(err error) string {
 	msg := err.Error()
 	if strings.Contains(msg, "dial tcp") || strings.Contains(msg, "connectex") ||
 		strings.Contains(msg, "i/o timeout") || strings.Contains(msg, "timeout") ||
 		strings.Contains(msg, "no such host") || strings.Contains(msg, "deadline exceeded") ||
 		strings.Contains(msg, "connection") || strings.Contains(msg, "TLS handshake") {
-		return "检查更新失败：无法连接 GitHub 下载更新（受限网络下 GitHub 下载主机可能不可达）。请前往 GitHub Releases 或国内镜像手动下载新版。"
+		return "检查更新失败：无法连接 GitHub 下载更新（已尝试走系统代理仍不可达，受限网络下 GitHub 下载主机可能被封锁）。请前往 GitHub Releases 或国内镜像手动下载新版。"
 	}
 	if strings.Contains(msg, "400") || strings.Contains(msg, "403") || strings.Contains(msg, "401") {
 		return "检查更新失败：GitHub 返回了异常状态（可能被网络代理拦截）。请前往 GitHub Releases 或国内镜像手动下载新版。"

@@ -3,6 +3,26 @@
 本文件同时作为应用内「检查更新」显示的发行说明来源。
 版本号沿用 Tauri 时代的序列（0.0.1 → 0.0.2 → **0.0.3**），换引擎不重新起算。
 
+## 0.0.8
+
+### 修复
+- **检查更新在代理网络下超时（`dial tcp …:443: … failed to respond`）**：
+  Go 的 `net/http` 默认只读取 `HTTPS_PROXY` / `HTTP_PROXY` 环境变量，**不会**读取
+  操作系统里 Clash / V2Ray / Surge 等设置的系统代理，因此走代理才能上 GitHub 的用户
+  会连不上 `github.com` 下载主机。现于启动时自动读取系统代理并写入环境变量
+  （见 `internal/app/proxy.go` 的 `ApplySystemProxy`）：macOS 经 `scutil --proxy`、
+  Windows 经注册表 `Internet Settings\ProxyServer`、Linux 经 `gsettings`，
+  若环境变量已手动设置则尊重不动。更新检查所用的 `http.DefaultClient` 随即走代理
+- **版本号错乱（本地显示 0.0.4 却提示升级到 0.0.7）**：`main.go` 里硬编码了
+  `SetVersion("0.0.4")`，会覆盖 mygo 在打包时从 `mygo.json` 注入的真实版本，
+  导致每个已发布二进制都自称旧版、永远提示有"更新"。现已移除该硬编码，
+  版本完全由构建注入的打包信息决定，单机显示与线上发布一致
+
+### 已知限制（更新）
+- 自动更新依赖 GitHub 可达性这一条保持不变；但**现已自动使用系统代理**，
+  绝大部分"代理网络连不上"的情况已被解决。若仍超时，多半是该代理本身
+  也连不上 GitHub 下载 CDN，此时仍需前往 GitHub Releases 或国内镜像手动下载
+
 ## 0.0.7
 
 ### 修复
@@ -174,6 +194,8 @@
   （`github.com` 及其下载 CDN）。检查更新时先经 `api.github.com` 解析最新
   `go-v` 发布，再下载清单与安装包——这一步无法绕过，因为同仓库还托管 Tauri
   旧版（`v0.0.x`，且 `v0.0.2` 被标记为 Latest），免 API 的
-  `releases/latest/download/` 会被 Tauri 发布占用而 404。若所在网络无法连接
-  GitHub 下载主机（表现为 `dial tcp …:443: … failed to respond` 这类连接超时），
-  自动更新将不可用，请前往 GitHub Releases 或国内镜像手动下载新版。
+  `releases/latest/download/` 会被 Tauri 发布占用而 404。应用**现已在启动时
+  自动读取并使用操作系统设置的系统代理**（Clash / V2Ray / Surge 等），
+  绝大多数"代理网络连不上"的情况已解决；若仍超时（表现为
+  `dial tcp …:443: … failed to respond` 这类连接超时），多半是该代理本身也
+  连不上 GitHub 下载 CDN，此时仍需前往 GitHub Releases 或国内镜像手动下载新版。
