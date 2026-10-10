@@ -881,26 +881,54 @@ func relTime(ms int64) string {
 	return tm.Format("01-02")
 }
 
+// seekScrub is the stable binding for the seek bar's slider. The slider value
+// must live across frames: binding a fresh local (a copy of the playhead) made
+// every rebuild reset it, so a click or drag computed a target the next frame
+// immediately overwrote and OnChange could lose the edit — the bar felt dead
+// on macOS. The slider now binds this field, which the render loop keeps in
+// sync with the clock only while the user is not scrubbing.
+var seekScrub struct {
+	value float64 // milliseconds
+	// last is when OnChange last committed a value. While it is recent the
+	// user is dragging (mygo applies input after the view is built, so
+	// polling Pressed() during render would read a stale frame); once it
+	// goes stale the gesture has ended and the clock takes the bar back.
+	last time.Time
+}
+
 // seekBar is the progress bar across the top of the transport.
 //
 // A Slider is used rather than a drawn bar because it brings dragging,
-// keyboard seeking and accessibility for free; the value it binds is a local
-// copy of the position, written back to the player on change so the bar does
-// not fight the playback clock between frames.
+// keyboard seeking and accessibility for free. Its value is committed to the
+// player on every change so seeking is live, but the bound field is only
+// re-synced from the playback clock once the gesture has settled.
 func seekBar(c *myui.Context, a *app.App, skin app.Skin, pos, dur int64) myui.Element {
 	t := c.Theme()
-	seek := float64(pos)
-	if dur > 0 {
-		// A fixed height and a padded row, so the slider cannot stretch
-		// vertically and claim space the transport deck needs.
+	if dur <= 0 {
+		// Nothing loaded: show an inert, empty rail.
+		seekScrub.last = time.Time{}
 		return myui.Box(c).Height(24).Padding(9, 16).Children(func() {
-			s := myui.Slider(c, &seek, 0, float64(dur)).Fill()
-			s.OnChange(func() { a.SeekMs(int64(seek)) })
+			myui.Box(c).Fill().Height(6).Radius(3).Background(t.Border.Alpha(0.4))
 		})
 	}
-	// Nothing loaded: show an inert, empty rail.
-	return myui.Box(c).Height(24).Padding(9, 16).Children(func() {
-		myui.Box(c).Fill().Height(6).Radius(3).Background(t.Border.Alpha(0.4))
+	// A drag/tap keeps OnChange firing; treat a quiet gap as the gesture
+	// ending and resume following the playback clock.
+	const scrubHold = 250 * time.Millisecond
+	if !seekScrub.last.IsZero() && time.Since(seekScrub.last) < scrubHold {
+		// still scrubbing: leave seekScrub.value as the user set it
+	} else {
+		seekScrub.last = time.Time{}
+		seekScrub.value = float64(pos)
+	}
+	// A padded row keeps the slider from stretching vertically and claiming
+	// space the transport deck needs; a taller box (less vertical padding)
+	// gives the track a comfortable hit area on a trackpad.
+	return myui.Box(c).Height(24).Padding(4, 16).Children(func() {
+		s := myui.Slider(c, &seekScrub.value, 0, float64(dur)).Fill()
+		s.OnChange(func() {
+			seekScrub.last = time.Now()
+			a.SeekMs(int64(seekScrub.value))
+		})
 	})
 }
 
