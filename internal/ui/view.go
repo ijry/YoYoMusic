@@ -1099,55 +1099,66 @@ var mainWindow *mygo.Window
 func SetMainWindow(w *mygo.Window) { mainWindow = w }
 
 // TriggerImport opens a native file dialog and adds the chosen audio to the
-// library. Safe to call from the UI or a menu click on the main thread.
+// library. The dialog and the import run on a background goroutine: calling
+// mygo.Dialog.Open from the main thread makes its await pump the run loop in
+// kCFRunLoopDefaultMode only, which cannot service a macOS sheet (or a nested
+// runModal) and freezes the UI before the dialog appears. Off the main thread
+// await degrades to a plain channel receive while the main run loop services
+// the sheet normally. This also keeps the (synchronous, per-file) import off
+// the UI thread so the window never blocks while scanning.
 func TriggerImport(a *app.App) {
-	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
-		Parent:   mainWindow,
-		Title:    "导入音乐",
-		Multiple: true,
-		Filters: []mygo.FileFilter{
-			// Only advertise what Decode actually handles; claiming more
-			// leads to tracks that cannot be played. AAC/M4A/Opus need a
-			// pure-Go decoder that does not exist yet (all bind fdk-aac
-			// through cgo, which mygo forbids).
-			{Name: "音频文件 (WAV / MP3 / FLAC / OGG)", Extensions: []string{"wav", "mp3", "flac", "ogg"}},
-			{Name: "所有文件", Extensions: []string{"*"}},
-		},
-	})
-	if err != nil {
-		a.State.PushError("导入失败: " + err.Error())
-		return
-	}
-	if len(paths) == 0 {
-		return
-	}
-	if errs := a.ImportPaths(paths); len(errs) > 0 {
-		for _, e := range errs {
-			a.State.PushError(e.Error())
+	go func() {
+		paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
+			Parent:   mainWindow,
+			Title:    "导入音乐",
+			Multiple: true,
+			Filters: []mygo.FileFilter{
+				// Only advertise what Decode actually handles; claiming more
+				// leads to tracks that cannot be played. AAC/M4A/Opus need a
+				// pure-Go decoder that does not exist yet (all bind fdk-aac
+				// through cgo, which mygo forbids).
+				{Name: "音频文件 (WAV / MP3 / FLAC / OGG)", Extensions: []string{"wav", "mp3", "flac", "ogg"}},
+				{Name: "所有文件", Extensions: []string{"*"}},
+			},
+		})
+		if err != nil {
+			a.State.PushError("导入失败: " + err.Error())
+			return
 		}
-	}
+		if len(paths) == 0 {
+			return
+		}
+		if errs := a.ImportPaths(paths); len(errs) > 0 {
+			for _, e := range errs {
+				a.State.PushError(e.Error())
+			}
+		}
+	}()
 }
 
 // TriggerImportFolder opens a native folder dialog and recursively imports
-// every audio file beneath the chosen directory. Safe on the main thread.
+// every audio file beneath the chosen directory. Runs on a background
+// goroutine for the same macOS run-loop reason as TriggerImport.
 func TriggerImportFolder(a *app.App) {
-	path, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
-		Parent:    mainWindow,
-		Title:     "打开文件夹",
-		Directory: true,
-	})
-	if err != nil {
-		a.State.PushError("打开文件夹失败: " + err.Error())
-		return
-	}
-	if len(path) == 0 {
-		return
-	}
-	if errs := a.ImportPaths(path); len(errs) > 0 {
-		for _, e := range errs {
-			a.State.PushError(e.Error())
+	go func() {
+		path, err := mygo.Dialog.Open(mygo.OpenDialogOptions{
+			Parent:    mainWindow,
+			Title:     "打开文件夹",
+			Directory: true,
+		})
+		if err != nil {
+			a.State.PushError("打开文件夹失败: " + err.Error())
+			return
 		}
-	}
+		if len(path) == 0 {
+			return
+		}
+		if errs := a.ImportPaths(path); len(errs) > 0 {
+			for _, e := range errs {
+				a.State.PushError(e.Error())
+			}
+		}
+	}()
 }
 
 // vizLast is when the previous visualiser frame ran, for computing dt.
