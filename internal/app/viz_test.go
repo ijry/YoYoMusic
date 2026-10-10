@@ -12,8 +12,8 @@ import (
 // mygo's painter, which needs a window; what is verified here is that every
 // mode is reachable, keeps the frame in range, and does not stall playback.
 func TestAllVizModesRender(t *testing.T) {
-	if len(app.VizOrder) != 8 {
-		t.Fatalf("expected 8 modes, got %d", len(app.VizOrder))
+	if len(app.VizOrder) != 9 {
+		t.Fatalf("expected 9 modes, got %d", len(app.VizOrder))
 	}
 	// Every mode must have a label, or the picker shows a blank tooltip.
 	for _, m := range app.VizOrder {
@@ -95,4 +95,59 @@ func TestUnknownVizFallsBack(t *testing.T) {
 		t.Error("unknown mode was accepted")
 	}
 	t.Logf("unknown mode fell back to %q", b.Settings().VisualizationMode)
+}
+
+// TestVizRandom exercises the automatic rotation: off leaves the mode alone,
+// turning on switches to a different mode on a due tick (and keeps switching),
+// and turning off again freezes it.
+func TestVizRandom(t *testing.T) {
+	dir := t.TempDir()
+	a := app.NewApp(dir)
+	defer a.Stop()
+	start := a.VizMode
+
+	// Off: a far-future tick must not change anything.
+	a.TickVizRandom(time.Now().Add(10 * time.Hour))
+	if a.VizMode != start {
+		t.Errorf("off: mode changed from %d to %d", start, a.VizMode)
+	}
+
+	// On: the first due tick switches to a different mode.
+	a.SetVizRandom(true)
+	if !a.VizRandom {
+		t.Fatal("SetVizRandom(true) did not take")
+	}
+	a.TickVizRandom(time.Now().Add(10 * time.Hour))
+	if a.VizMode == start {
+		t.Errorf("on: mode did not change (stayed %d)", start)
+	}
+
+	// Each subsequent due tick must pick a mode different from the previous.
+	base := time.Now()
+	for i := 0; i < 20; i++ {
+		prev := a.VizMode
+		a.TickVizRandom(base.Add(time.Duration(i+1) * 24 * time.Hour))
+		if a.VizMode == prev {
+			t.Errorf("iteration %d: mode did not change from %d", i, prev)
+		}
+	}
+
+	// Off again: a far-future tick leaves the mode alone.
+	a.SetVizRandom(false)
+	held := a.VizMode
+	a.TickVizRandom(time.Now().Add(10 * time.Hour))
+	if a.VizMode != held {
+		t.Errorf("off after on: mode changed from %d to %d", held, a.VizMode)
+	}
+
+	// The random switches must not have overwritten the persisted mode: read
+	// the file back from disk, which should still hold the mode the app
+	// started with (spectrum), not the last random pick.
+	if loaded, err := app.LoadSettings(dir); err == nil {
+		if loaded.VisualizationMode != app.VizOrder[start] {
+			t.Errorf("persisted mode = %q, want %q", loaded.VisualizationMode, app.VizOrder[start])
+		}
+	} else {
+		t.Fatalf("LoadSettings: %v", err)
+	}
 }

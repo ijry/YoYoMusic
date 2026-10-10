@@ -17,7 +17,7 @@ const (
 	ModeShuffle   PlayMode = "shuffle"
 )
 
-// VisualizationMode is one of the eight built-in visualisers.
+// VisualizationMode is one of the built-in visualisers.
 type VisualizationMode string
 
 const (
@@ -29,6 +29,7 @@ const (
 	VizWaterfall  VisualizationMode = "waterfall"
 	VizGenerative VisualizationMode = "generative"
 	VizKaleido    VisualizationMode = "kaleidoscope"
+	VizPiano      VisualizationMode = "piano"
 )
 
 // TrackStatus / TagStatus describe a track's health.
@@ -115,6 +116,9 @@ type AppSettings struct {
 	DefaultSkin       string
 	Shortcuts         map[string]string
 	VisualizationMode VisualizationMode
+	// VizRandom turns on automatic rotation through the visualisers at random
+	// intervals, so the backdrop changes itself without the user touching it.
+	VizRandom         bool
 	Equalizer         EqualizerSettings
 	DesktopLyrics     DesktopLyricsSettings
 	RestoreSession    bool
@@ -383,6 +387,22 @@ func (s *AppState) SetVisualization(m VisualizationMode) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.settings.VisualizationMode = m
+}
+
+// SetVisualizationLive updates the active visualiser without persisting it,
+// for changes — such as an automatic random switch — that should not overwrite
+// the mode the user picked for when random mode is off.
+func (s *AppState) SetVisualizationLive(m VisualizationMode) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.settings.VisualizationMode = m
+}
+
+// SetVizRandom records the random-rotation preference.
+func (s *AppState) SetVizRandom(on bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.settings.VizRandom = on
 }
 
 func (s *AppState) SetDefaultSkin(id string) {

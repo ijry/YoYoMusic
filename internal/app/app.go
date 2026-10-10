@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -46,6 +47,15 @@ type App struct {
 	// EQBands mirrors the 10 EQ band sliders.
 	EQBands [10]float64
 
+	// VizRandom mirrors the random-rotation setting; when on, the backdrop
+	// switches between visualisers at random intervals (see TickVizRandom).
+	VizRandom bool
+	// vizRandomAt is the next scheduled automatic switch; zero means none.
+	vizRandomAt time.Time
+	// rng drives the random mode choice and the random interval. It is only
+	// touched from the UI thread, so it needs no lock.
+	rng *rand.Rand
+
 	// LibraryOpen is whether the left playlist column is expanded. It folds
 	// to an icon rail after the pointer has been still for a while.
 	LibraryOpen bool
@@ -88,20 +98,28 @@ type App struct {
 // then the two that are generated rather than plotted.
 var VizOrder = []VisualizationMode{
 	VizSpectrum, VizWaveform, VizRadial, VizAurora, VizParticles, VizWaterfall,
-	VizGenerative, VizKaleido,
+	VizGenerative, VizKaleido, VizPiano,
 }
 
 // VizLabels names each mode for the mode picker, in VizOrder.
 var VizLabels = map[VisualizationMode]string{
-	VizSpectrum:   "频谱",
-	VizWaveform:   "波形",
-	VizRadial:     "径向",
-	VizAurora:     "极光",
-	VizParticles:  "粒子",
-	VizWaterfall:  "瀑布",
-	VizGenerative: "生成",
+	VizSpectrum:   "频谱柱",
+	VizWaveform:   "示波波形",
+	VizRadial:     "环形律动",
+	VizAurora:     "音浪绸带",
+	VizParticles:  "粒子星尘",
+	VizWaterfall:  "镜像瀑布",
+	VizGenerative: "生成动画",
 	VizKaleido:    "万花筒",
+	VizPiano:      "钢琴",
 }
+
+// vizRandomMin/Max bound the random gap between automatic visualiser switches
+// when random mode is on: the backdrop rotates every 5–20 seconds.
+const (
+	vizRandomMin = 5 * time.Second
+	vizRandomMax = 20 * time.Second
+)
 
 // NewApp builds the orchestrator, loading persisted settings and library
 // when present.
@@ -125,6 +143,12 @@ func NewApp(dataDir string) *App {
 	a.Muted = st.playback.Muted
 	a.EQEnabled = st.Settings().Equalizer.Enabled
 	a.EQBands = st.Settings().Equalizer.Bands
+	// Restore the saved visualiser into the live index (not just the
+	// persisted string) so the picker and the random switcher agree with what
+	// the user last chose, and seed the random source for the rotation.
+	a.VizRandom = st.Settings().VizRandom
+	a.VizMode = indexOfViz(st.Settings().VisualizationMode)
+	a.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	a.Player.SetVolume(a.Volume)
 	a.Player.SetMuted(a.Muted)
@@ -509,6 +533,70 @@ func (a *App) SetVisualization(m VisualizationMode) {
 			break
 		}
 	}
+}
+
+// indexOfViz returns the position of m in VizOrder, or 0 for an unknown mode
+// (the fallback the picker and restore paths expect).
+func indexOfViz(m VisualizationMode) int {
+	for i, v := range VizOrder {
+		if v == m {
+			return i
+		}
+	}
+	return 0
+}
+
+// SetVizRandom turns the automatic visualiser rotation on or off and persists
+// the preference, so it is still on after a restart. Turning it on schedules
+// the first switch; turning it off cancels any pending one.
+func (a *App) SetVizRandom(on bool) {
+	if a.VizRandom == on {
+		return
+	}
+	a.VizRandom = on
+	a.State.SetVizRandom(on)
+	a.autosave()
+	if on {
+		a.vizRandomAt = time.Now().Add(vizRandomInterval(a.rng))
+	} else {
+		a.vizRandomAt = time.Time{}
+	}
+}
+
+// TickVizRandom is called every frame. While random mode is on and the
+// scheduled time has passed, it rotates to a random different visualiser and
+// schedules the next switch.
+func (a *App) TickVizRandom(now time.Time) {
+	if !a.VizRandom {
+		return
+	}
+	if a.vizRandomAt.IsZero() || !now.Before(a.vizRandomAt) {
+		a.randomizeViz()
+		a.vizRandomAt = now.Add(vizRandomInterval(a.rng))
+	}
+}
+
+// randomizeViz switches to a random visualiser other than the current one,
+// without persisting the change.
+func (a *App) randomizeViz() {
+	if len(VizOrder) < 2 {
+		return
+	}
+	n := a.rng.Intn(len(VizOrder))
+	if n == a.VizMode {
+		n = (n + 1) % len(VizOrder)
+	}
+	a.VizMode = n
+	a.State.SetVisualizationLive(VizOrder[n])
+}
+
+// vizRandomInterval returns a random duration in [vizRandomMin, vizRandomMax].
+func vizRandomInterval(rng *rand.Rand) time.Duration {
+	span := int64(vizRandomMax - vizRandomMin)
+	if span < 0 {
+		return vizRandomMin
+	}
+	return vizRandomMin + time.Duration(rng.Int63n(span+1))
 }
 
 // SetPlayMode changes the play mode and persists it with the library, so the

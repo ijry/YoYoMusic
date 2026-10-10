@@ -53,6 +53,9 @@ func View(a *app.App) func(c *myui.Context) {
 		} else {
 			c.After(40 * time.Millisecond)
 		}
+		// Drive the automatic visualiser rotation from the frame clock, so
+		// the backdrop switches at random intervals when random mode is on.
+		a.TickVizRandom(c.Now())
 		if c.Shortcut(0, myui.KeySpace) {
 			a.TogglePlay()
 		}
@@ -168,6 +171,8 @@ func visualizerBackdrop(c *myui.Context, a *app.App, skin app.Skin) {
 				drawGenerative(p, r, f, skin, dt)
 			case app.VizKaleido:
 				drawKaleidoscope(p, r, f, skin, dt)
+			case app.VizPiano:
+				drawPiano(p, r, f, skin, dt)
 			}
 		})
 	})
@@ -243,7 +248,8 @@ func topBar(c *myui.Context, a *app.App, skin app.Skin) myui.Element {
 
 		// Centre: the visualiser mode picker. Eight modes do not fit as
 		// labels, so it is a compact row of buttons with tooltips, carrying
-		// the same information as the old build's mode strip.
+		// the same information as the old build's mode strip. The random
+		// toggle folds into this same cluster.
 		vizModePicker(c, a)
 
 		myui.Box(c).Grow(1)
@@ -320,16 +326,22 @@ func playlistTip(a *app.App) string {
 // bar whether it is folded or open, vizItemSize and vizFanStep are one mode
 // button and the pitch of one button plus the gap after it, and vizFanLeft is
 // how many of the other modes sit on the left of the face.
+//
+// With nine modes the face fans four to each side, and the random-rotation
+// toggle hangs one pitch beyond the leftmost mode — ten items in all. The face
+// therefore sits at (vizFanLeft+1) pitches from the left edge, and the row is
+// exactly that span (five right of the face plus the face width).
 const (
-	vizPickerWidth float32 = 276
+	vizPickerWidth float32 = 307
 	vizItemSize    float32 = 28
 	vizFanStep     float32 = 31
-	vizFanLeft             = 3
+	vizFanLeft             = 4
 )
 
-// vizFaceX is where the face sits: the row centres it, so it is half the room
-// the fan does not use on either side.
-func vizFaceX() float32 { return (vizPickerWidth - vizItemSize) / 2 }
+// vizFaceX is where the face sits: (vizFanLeft+1) pitches from the left edge,
+// so the random toggle at k=-(vizFanLeft+1) lands exactly at x=0 and the
+// rightmost mode at k=+4 ends at vizPickerWidth.
+func vizFaceX() float32 { return float32(vizFanLeft+1) * vizFanStep }
 
 // vizSlide is the transition a mode button enters and leaves with. d is signed
 // how far the button's slot is from the face, so the motion runs along the row:
@@ -415,7 +427,11 @@ func vizModePicker(c *myui.Context, a *app.App) {
 				k = float32(slot - vizFanLeft + 1)
 			}
 			slot++
-			d := (k - 0.5) * vizFanStep
+			// Slots sit whole pitches from the face: the face anchors the
+			// centre and the other modes clear it by the 3 px gap, so every
+			// pitch on the row reads the same. A half-pitch offset here put
+			// the first button to the right on top of the face.
+			d := k * vizFanStep
 
 			b := iconButton(c, "viz-"+string(mode), vizIcon(mode), vizLabel(mode))
 			b.Absolute().Top(0).Left(vizFaceX()+d).
@@ -423,6 +439,24 @@ func vizModePicker(c *myui.Context, a *app.App) {
 				OnClick(func() { a.SetVisualization(mode) }).
 				Transition(vizSlide(d))
 		}
+
+		// The random-rotation toggle folds into the cluster one pitch to the
+		// left of the leftmost mode, so it opens and closes with the picker
+		// instead of living as a separate always-on button. Placing it there
+		// also balances the fan: four items sit on each side of the face.
+		rd := float32(-(vizFanLeft + 1)) * vizFanStep
+		rndTip := "随机切换可视化：关"
+		if a.VizRandom {
+			rndTip = "随机切换可视化：开"
+		}
+		rnd := iconButton(c, "viz-random", "shuffle", rndTip)
+		rnd.Absolute().Top(0).Left(vizFaceX()+rd).
+			Size(vizItemSize, vizItemSize).Radius(7)
+		if a.VizRandom {
+			rnd.Background(t.Accent.Alpha(0.22))
+		}
+		rnd.OnClick(func() { a.SetVizRandom(!a.VizRandom) }).
+			Transition(vizSlide(rd))
 	})
 }
 
@@ -453,6 +487,8 @@ func vizIcon(m app.VisualizationMode) string {
 		return "viz-generative"
 	case app.VizKaleido:
 		return "viz-kaleido"
+	case app.VizPiano:
+		return "viz-piano"
 	}
 	return ""
 }

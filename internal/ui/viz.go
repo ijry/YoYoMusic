@@ -60,6 +60,13 @@ type vizState struct {
 	parts      []vizParticle
 	partClk    float64
 
+	// Piano visualiser key smoothing: per-key press level (0..1) with fast
+	// attack and slow release so a key visibly depresses and lifts. 14 white
+	// keys across the two octaves, then 10 black keys.
+	pianoT float64
+	pianoW [14]float32
+	pianoB [10]float32
+
 	// Generative scene rotation.
 	genScene    string // scene on screen
 	genIncoming string // scene fading in, "" when none
@@ -353,9 +360,9 @@ func drawRadial(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Skin
 
 // --- aurora -----------------------------------------------------------------
 
-// auroraY returns one aurora layer's centre line at x: a stack of sines
-// displaced by the spectrum energy at that x. Extracted so the fill and the
-// core stroke share exactly the same curve.
+// auroraY returns one ribbon's centre line at x: a stack of sines displaced by
+// the spectrum energy at that x, straight from the canvas original. Shared by
+// drawAurora and the generative ribbon scene, whose head rides the same curve.
 func auroraY(x float32, r myui.Rect, f audio.SignalFrame, layer int, phase, amp float64) float32 {
 	prog := float64(x-r.X) / float64(r.W)
 	energy := float64(bandAt(f, prog))
@@ -366,65 +373,53 @@ func auroraY(x float32, r myui.Rect, f audio.SignalFrame, layer int, phase, amp 
 		(energy-0.35)*float64(r.H)*0.22)
 }
 
-// drawAurora flows several wide soft bands across the canvas, each a sine
-// stack displaced by the spectrum at that x, with a bright core line on top.
+// drawAurora draws the four flowing sound-wave ribbons. The Tauri build called
+// this mode 音浪绸带 and the name is the spec: wide soft strokes carrying a
+// horizontal colour flow, a bright ink core on top, and a halo standing in for
+// the canvas shadowBlur. No time term — the ribbons move with the beat and the
+// level, exactly as the original did.
 //
-// The original drew each layer twice: a 16px-wide blurred stroke for the body
-// and a 2px bright stroke for the core. mygo has no blur, so the body is a
-// translucent gradient fill closed down to the bottom edge plus a wide
-// low-alpha stroke, which reads as the same soft curtain.
-func drawAurora(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Skin, now time.Time) {
+// An earlier Go port read the mode id ("aurora") as northern lights and filled
+// each wave down to the floor, which is where the big soft washes under the
+// lines came from; this version is a straight port of the canvas one.
+func drawAurora(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Skin, _ time.Time) {
 	const layers = 4
 	const segments = 96
 	colA := colOf(skin.VizA)
 	colB := colOf(skin.VizB)
 	ink := colOf(skin.VizInk)
 	colors := []myui.Color{colB, colA, ink, colA}
-	t := float64(now.UnixNano()) / 1e9
 
 	for layer := 0; layer < layers; layer++ {
-		phase := float64(layer)*1.7 + t*0.25
+		phase := float64(layer) * 1.7
 		amp := float64(r.H) * (0.09 + float64(layer)*0.045) * (0.55 + float64(f.Level))
 
-		// Soft body: the outline closed down to the bottom edge.
-		fill := &myui.Path{}
+		line := &myui.Path{}
 		for s := 0; s <= segments; s++ {
 			x := r.X + r.W*float32(s)/float32(segments)
 			y := auroraY(x, r, f, layer, phase, amp)
 			if s == 0 {
-				fill.MoveTo(x, y)
+				line.MoveTo(x, y)
 			} else {
-				fill.LineTo(x, y)
+				line.LineTo(x, y)
 			}
 		}
-		fill.LineTo(r.X+r.W, r.Y+r.H)
-		fill.LineTo(r.X, r.Y+r.H)
-		fill.Close()
 
 		c := colors[layer%len(colors)]
 		bodyAlpha := 0.16 + float32(layer)*0.07
-		p.FillPathGradient(fill, myui.LinearGradient{
-			Angle: 90,
-			From:  colB.Alpha(bodyAlpha),
-			To:    c.Alpha(bodyAlpha),
+		bodyW := 16 - float32(layer)*2.5
+		// The halo: the canvas version let a 26px shadowBlur spread the layer
+		// colour past the stroke; a wider, fainter stroke reads the same.
+		p.StrokePath(line, bodyW+12, c.Alpha(bodyAlpha*0.5))
+		// The ribbon body, colour flowing across the canvas. The original ramp
+		// was b → layer colour → ink; mygo gradients carry two stops, so the
+		// dominant ends are kept. Angle 90 is horizontal, matching the
+		// canvas gradient that ran left → right.
+		p.StrokePathGradient(line, bodyW, myui.LinearGradient{
+			From: colB.Alpha(bodyAlpha), To: c.Alpha(bodyAlpha), Angle: 90,
 		})
-		// A wide, faint stroke widens the glow where the fill cannot reach.
-		p.StrokePath(fill, 14-float32(layer)*2.5, c.Alpha(bodyAlpha*0.5))
-
-		// Bright core line along the same outline.
-		core := &myui.Path{}
-		for s := 0; s <= segments; s++ {
-			x := r.X + r.W*float32(s)/float32(segments)
-			y := auroraY(x, r, f, layer, phase, amp)
-			if s == 0 {
-				core.MoveTo(x, y)
-			} else {
-				core.LineTo(x, y)
-			}
-		}
-		p.StrokePathGradient(core, 2, myui.LinearGradient{
-			From: ink.Alpha(0.5 - float32(layer)*0.08), To: ink.Alpha(0.2), Angle: 90,
-		})
+		// The crisp ink core.
+		p.StrokePath(line, 2, ink.Alpha(0.5-float32(layer)*0.08))
 	}
 }
 
@@ -578,7 +573,7 @@ func drawKaleidoscope(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin ap
 	// The whole flower rotates continuously — a faster base rate so it is
 	// visibly turning even when the music is quiet, plus the audio level.
 	viz.kaleidoT += float64(dt)
-	viz.kaleidoRot += float64(dt) * (0.5 + float64(f.Level)*1.6)
+	viz.kaleidoRot += float64(dt) * (0.16 + float64(f.Level)*0.9)
 
 	sectorAngle := 2 * math.Pi / kaleidoSectors
 	innerR := scale * 0.1
@@ -644,6 +639,92 @@ func drawKaleidoscope(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin ap
 	p.FillGradient(myui.Rect{X: cx - coreR*1.7, Y: cy - coreR*1.7, W: coreR * 3.4, H: coreR * 3.4},
 		myui.LinearGradient{From: ink.Alpha(0.3 + f.Beat*0.5), To: ink.Alpha(0), Angle: 0}, coreR*1.7)
 	p.Fill(myui.Rect{X: cx - coreR*0.5, Y: cy - coreR*0.5, W: coreR, H: coreR}, ink.Alpha(0.3+f.Beat*0.5), coreR*0.5)
+}
+
+// --- piano ------------------------------------------------------------------
+
+// drawPiano renders a two-octave keyboard along the bottom that plays itself:
+// each key tracks the spectrum band at its position, depresses by how hard that
+// band hits, and glows in the skin accent. Lowest keys read the bass, highest
+// the treble, so as a track plays the keys light and dip in sequence like a
+// ghost at the keys. A beat dips every key a touch, and a gentle idle shimmer
+// keeps the keyboard breathing when nothing is playing.
+func drawPiano(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Skin, dt float32) {
+	const whites = 14
+	const blacks = 10
+	// Which white key each black key sits after. Two octaves of the pattern
+	// 0,1,3,4,5 (the gap after the 3rd and 7th whites has no black).
+	blackAfter := [blacks]int{0, 1, 3, 4, 5, 7, 8, 10, 11, 12}
+
+	kbH := float32(math.Min(float64(r.H)*0.26, 130))
+	kbTop := r.Y + r.H - kbH
+	whiteW := r.W / float32(whites)
+	colA := colOf(skin.VizA)
+	colB := colOf(skin.VizB)
+	whiteBase := myui.RGB(228, 229, 238)
+	blackBase := myui.RGB(16, 17, 23)
+
+	viz.pianoT += float64(dt)
+	idleW := 1 - math.Min(1, float64(f.Level)/0.15)
+
+	// White keys first, so the black keys draw on top.
+	for i := 0; i < whites; i++ {
+		lv := pressLevel(&viz.pianoW[i], bandAt(f, float64(i)/float64(whites)),
+			viz.pianoT, float64(i)*0.9, idleW, dt)
+		depth := lv*8 + f.Beat*1.5
+		x := r.X + float32(i)*whiteW
+		y := kbTop + depth
+		h := kbH - depth
+		p.Fill(myui.Rect{X: x + 1, Y: y, W: whiteW - 2, H: h}, whiteBase, 3)
+		if lv > 0.04 {
+			g := colA.Mix(colB, float32(i)/float32(whites))
+			p.Fill(myui.Rect{X: x + 1, Y: y, W: whiteW - 2, H: h}, g.Alpha(lv*0.7), 3)
+		}
+	}
+
+	// Black keys.
+	for j := 0; j < blacks; j++ {
+		wk := blackAfter[j]
+		lv := pressLevel(&viz.pianoB[j], bandAt(f, float64(wk+1)/float64(whites)),
+			viz.pianoT, float64(wk)*1.1, idleW, dt)
+		depth := lv*7 + f.Beat*1.2
+		bw := whiteW * 0.62
+		bh := kbH * 0.62
+		x := r.X + float32(wk+1)*whiteW - bw/2
+		y := kbTop + depth
+		h := bh - depth
+		p.Fill(myui.Rect{X: x, Y: y, W: bw, H: h}, blackBase, 2)
+		if lv > 0.04 {
+			g := colB.Mix(colA, float32(j)/float32(blacks))
+			p.Fill(myui.Rect{X: x, Y: y, W: bw, H: h}, g.Alpha(lv*0.85), 2)
+		}
+	}
+}
+
+// pressLevel advances a key's smoothed press (0..1): the live band drives it, a
+// slow time sine keeps it breathing when the music is quiet, attack is fast and
+// release is a slow fall so the key visibly comes back up.
+func pressLevel(store *float32, e float32, t float64, phase, idleW float64, dt float32) float32 {
+	if idleW > 0 {
+		s := 0.5 + 0.5*math.Sin(t*2.3+phase)
+		if v := float32(s * 0.13 * idleW); v > e {
+			e = v
+		}
+	}
+	lv := *store
+	if float64(e) > float64(lv) {
+		lv += (e - lv) * 0.5
+	} else {
+		lv -= dt * 0.6
+	}
+	if lv < 0 {
+		lv = 0
+	}
+	if lv > 1 {
+		lv = 1
+	}
+	*store = lv
+	return lv
 }
 
 // --- generative -------------------------------------------------------------
