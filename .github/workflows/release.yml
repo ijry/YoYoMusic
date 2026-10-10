@@ -259,4 +259,9 @@ jobs:
               --title "$tag" --notes-file release-body.md --latest=false
           fi
           echo "published $tag"
-          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,isLatest,url,tagName
+          # isDraft, not isLatest: gh dropped the isLatest field, and asking
+          # for it fails the whole step with "Unknown JSON field" even though
+          # the release above published fine. isPrerelease is read instead, so
+          # a green run still says something about the release's visibility.
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease,url,tagName
