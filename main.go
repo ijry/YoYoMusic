@@ -272,19 +272,16 @@ func buildTray(a *app.App) {
 		mygo.Separator(),
 		{Label: "退出", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})
-	// The macOS menu bar wants a flat template image it can recolour, not the
-	// colourful app icon — that sits as an opaque square that ignores the
-	// menu bar's colour and its inverted state. Fall back to the app icon if
-	// the template could not be rendered (or on a platform without the
-	// concept, where the flag is simply ignored).
-	iconBytes := ui.TrayTemplateIcon()
-	template := iconBytes != nil
-	if !template {
-		iconBytes = trayIcon()
-	}
+	// Use the app logo for the tray on every platform. The colourful icon is
+	// the brand's own mark and is self-coloured, so it reads on both light and
+	// dark menu bars; an opaque square is exactly what the logo is, so there is
+	// no need for a separate monochrome template. The earlier music-note
+	// placeholder was dropped: its IconIsTemplate path had swallowed the logo
+	// fallback because the placeholder always rendered, so the logo never
+	// reached the tray.
 	if _, err := mygo.NewTray(mygo.TrayOptions{
-		Icon:           iconBytes,
-		IconIsTemplate: template,
+		Icon:           trayIcon(),
+		IconIsTemplate: false,
 		Title:          "悠悠乐听",
 		ToolTip:        "悠悠乐听 · 原生音乐播放器",
 		Menu:           menu,

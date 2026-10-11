@@ -675,6 +675,67 @@ func speakerIcon(vol float64, muted bool) (name, tip string) {
 	}
 }
 
+// segmentedControl is a custom segmented control that fills its parent's
+// width and slides a coloured pill between segments when the choice
+// changes, instead of the native Segmented's instant, content-width
+// highlighting. labels are the segment captions and *selected the chosen
+// index.
+//
+// The track is a 2px-inset surface with a hairline border; inside it an
+// inner box hosts two absolutely-positioned layers. The pill is the first
+// absolute child, so it paints under the captions, and slides because it
+// carries a stable Key and a Position transition: mygo animates it from the
+// previous frame's place to the new LeftPercent. The captions are absolute
+// children built after the pill, so they paint on top and stay readable,
+// and each owns the click that chooses it.
+func segmentedControl(c *myui.Context, selected *int, labels ...string) myui.Element {
+	t := c.Theme()
+	n := len(labels)
+	if n == 0 {
+		return myui.Box(c)
+	}
+	const h = 28
+	idx := *selected
+	if idx < 0 || idx >= n {
+		idx = 0
+	}
+	frac := 100 / float32(n)
+	track := myui.Column(c).Grow(1).Size(0, h).
+		Background(t.Surface.Alpha(0.9)).
+		Border(1, t.Border).
+		Radius(8).
+		Padding(2, 2)
+	track.Children(func() {
+		myui.Column(c).Fill().Children(func() {
+			myui.Column(c).Key("library-seg-indicator").Absolute().
+				LeftPercent(float32(idx) * frac).
+				WidthPercent(frac).
+				FillHeight().
+				Background(t.Accent).
+				Radius(6).
+				Transition(myui.ElementTransition{Position: true})
+			for i, label := range labels {
+				i, label := i, label
+				col := t.Text
+				if i == idx {
+					col = t.AccentText
+				}
+				myui.Column(c).Absolute().
+					LeftPercent(float32(i) * frac).
+					WidthPercent(frac).
+					FillHeight().
+					Center().
+					OnClick(func() { *selected = i }).
+					Children(func() {
+						myui.Text(c, label).SingleLine().
+							FontSize(12).TextColor(col)
+					})
+			}
+		})
+	})
+	return track
+}
+
 // playlistPanel is the expanded left column: the library list and the play
 // history, switched by a segmented control and filtered by the search field.
 func playlistPanel(c *myui.Context, a *app.App, skin app.Skin) {
@@ -688,8 +749,7 @@ func playlistPanel(c *myui.Context, a *app.App, skin app.Skin) {
 			// The play history lives here beside the list it refers to,
 			// switched by a segmented control, rather than in a panel of its
 			// own on the far side of the window.
-			seg := myui.Segmented(c, &a.LibraryTab, "列表", "历史")
-			seg.Grow(1)
+			segmentedControl(c, &a.LibraryTab, "列表", "历史")
 			// One + button opens a menu of the two ways to add music,
 			// instead of two half-width text buttons crowding the header.
 			plus := iconButton(c, "library-add", "plus", "添加音乐")
@@ -703,6 +763,14 @@ func playlistPanel(c *myui.Context, a *app.App, skin app.Skin) {
 					}
 				})
 			pin := iconButton(c, "pin-library", "pin", playlistTip(a))
+			// Light the pin while the playlist is pinned, the same way the
+			// library toggle and side-panel icons show their active state:
+			// otherwise the button looks inert — nothing says whether the
+			// click took.
+			if a.LibraryPinned {
+				pin.Background(t.Accent.Alpha(0.22))
+				pin.TextColor(t.Accent)
+			}
 			pin.Size(28, 28).Radius(7).OnClick(func() { a.ToggleLibraryPin() })
 		})
 		// One search field filters whichever tab is showing.

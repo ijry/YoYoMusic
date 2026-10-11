@@ -146,7 +146,10 @@ func drawSpectrum(p *myui.Painter, r myui.Rect, f audio.SignalFrame, skin app.Sk
 	n := audio.BandCount
 	gap := float32(math.Max(1, float64(r.W/float32(n))*0.24))
 	barW := float32(math.Max(1, float64(r.W-gap*float32(n-1))/float64(n)))
-	floor := r.Y + r.H*0.82
+	// The baseline sits lower than before so the spectrum reads nearer the
+	// bottom of its panel. The reflection is still clipped by the
+	// visualiser's own bottom inset, as before.
+	floor := r.Y + r.H*0.88
 	reach := floor - r.Y - 6
 	radius := float32(math.Min(float64(barW)/2, 4))
 
